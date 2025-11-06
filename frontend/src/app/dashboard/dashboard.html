@@ -1,0 +1,29 @@
+<div class="min-h-screen flex flex-col items-center py-10">
+  <!-- Header -->
+  <header class="mb-10 text-center">
+    <h1 class="text-4xl font-bold text-primary mb-2">Hopladay 🌞</h1>
+    <p class="text-gray-600">Plan your time off like a pro</p>
+  </header>
+
+  <!-- Input Section -->
+  <app-holiday-input
+    (fetch)="onFetch($event)"
+    (plan)="onPlan($event)">
+  </app-holiday-input>
+
+  <!-- Summary Section -->
+  <div class="mt-10 w-full max-w-3xl">
+    <app-holiday-summary [plan]="plan"></app-holiday-summary>
+  </div>
+
+  <!-- Calendar Section -->
+  <div class="mt-10 w-full max-w-5xl">
+    <app-holiday-calendar
+      [holidays]="holidays"
+      [plan]="plan"
+      [year]="selectedYear">
+    </app-holiday-calendar>
+  </div>
+
+  
+</div>

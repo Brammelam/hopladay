@@ -1,0 +1,54 @@
+<div class="bg-white shadow-md rounded-2xl p-6 flex flex-wrap gap-4 items-end justify-center">
+  <!-- Country -->
+  <div class="flex flex-col">
+    <label class="text-sm text-gray-600 mb-1">Country</label>
+    <select
+      [(ngModel)]="selectedCountry"
+      (change)="onInputChange()"
+      class="border rounded-lg px-3 py-2"
+    >
+      <option *ngFor="let c of countries" [value]="c.code">{{ c.name }}</option>
+    </select>
+  </div>
+
+  <!-- Year -->
+  <div class="flex flex-col">
+    <label class="text-sm text-gray-600 mb-1">Year</label>
+    <select
+      [(ngModel)]="selectedYear"
+      (change)="onInputChange()"
+      class="border rounded-lg px-3 py-2"
+    >
+      <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+    </select>
+  </div>
+
+  <!-- Vacation days -->
+  <div class="flex flex-col">
+    <label class="text-sm text-gray-600 mb-1">Vacation days</label>
+    <input
+      [(ngModel)]="availableDays"
+      type="number"
+      class="border rounded-lg px-3 py-2 w-24"
+    />
+  </div>
+
+  <!-- Preference -->
+  <div class="flex flex-col">
+    <label class="text-sm text-gray-600 mb-1">Preference</label>
+    <select
+      [(ngModel)]="selectedPreference"
+      (change)="onInputChange()"
+      class="border rounded-lg px-3 py-2"
+    >
+      <option *ngFor="let p of preferences" [value]="p">{{ p }}</option>
+    </select>
+  </div>
+
+  <button
+    (click)="onPlan()"
+    class="border border-primary text-primary px-4 py-2 rounded-lg font-medium hover:bg-orange-50"
+  >
+    Optimize Plan
+  </button>
+</div>

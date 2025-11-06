@@ -1,0 +1,102 @@
+# ==============================
+# Node.js / Express Backend
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+.pnpm-debug.log
+.env
+.env.*
+*.local
+coverage/
+dist/
+build/
+tmp/
+temp/
+.DS_Store
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Serverless / Deployment artifacts
+.vercel/
+.netlify/
+.render/
+functions/.cache/
+lambda/
+.serverless/
+
+# Runtime data
+pids
+*.seed
+*.pid.lock
+
+# ==============================
+# Angular Frontend
+# ==============================
+# Angular build output
+/dist/
+/out-tsc/
+.angular/
+
+# Environment files
+src/environments/environment*.ts
+
+# Compiled TypeScript
+*.js
+*.js.map
+
+# TypeScript incremental build files
+*.tsbuildinfo
+
+# Angular cache & temporary files
+.angular/cache/
+.angular/config.json
+
+# Angular Universal (SSR) build
+/server/main.js
+/server/main.js.map
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# ==============================
+# Miscellaneous
+# ==============================
+# Optional npm cache directory
+.npm/
+# Optional eslint cache
+.eslintcache
+# Optional stylelint cache
+.stylelintcache
+
+# ==============================
+# Logs
+# ==============================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==============================
+# Output & Generated Files
+# ==============================
+coverage/
+reports/
+jest-html-reporters-*
+test-results/
+.cache/
+.parcel-cache/
