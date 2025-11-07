@@ -47,7 +47,6 @@ pids
 src/environments/environment*.ts
 
 # Compiled TypeScript
-*.js
 *.js.map
 
 # TypeScript incremental build files
