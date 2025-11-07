@@ -1,16 +1,12 @@
 <div class="space-y-10">
   <div *ngFor="let month of months; let i = index" class="relative">
     <!-- Month header -->
-    <div
-      class="sticky top-0 bg-gray-100/80 backdrop-blur-sm py-2 px-4 rounded-lg shadow-sm z-10"
-    >
+    <div class="sticky top-0 bg-gray-100/80 backdrop-blur-sm py-2 px-4 rounded-lg shadow-sm z-10">
       <h2 class="text-lg font-semibold text-gray-800">{{ month.name }}</h2>
     </div>
 
     <!-- Weekday labels -->
-    <div
-      class="grid grid-cols-8 text-center mt-3 text-xs text-gray-500 font-medium"
-    >
+    <div class="grid grid-cols-8 text-center mt-3 text-xs text-gray-500 font-medium">
       <div class="text-left pl-2">Week</div>
       <div *ngFor="let d of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']">
         {{ d }}
@@ -18,7 +14,7 @@
     </div>
 
     <!-- Calendar grid -->
-    <div class="grid grid-cols-8 gap-1 text-sm mt-1">
+    <div class="day-cell grid grid-cols-8 gap-1 text-sm mt-1">
       <ng-container *ngFor="let day of month.days; let idx = index">
         <!-- Show week number on Monday -->
         <div
@@ -29,33 +25,38 @@
         </div>
 
         <!-- Day cell -->
-        <div
+        <button
+          type="button"
           [ngClass]="[getDateClass(day), isCurrentMonth(day, i) ? '' : 'opacity-40']"
-          class="p-2 text-center rounded-md border transition-colors duration-150 flex flex-col items-center justify-center relative group cursor-default"
+          (click)="toggleTooltip(day)"
+          class="p-2 text-center rounded-md border transition-colors duration-150 flex flex-col items-center justify-center relative group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
         >
-          <!-- Day number + weekday -->
-          <div class="font-medium text-[13px]">{{ day | date: 'd' }}</div>
-          <div class="text-[10px] text-gray-500">{{ day | date: 'EEE' }}</div>
+          <!-- day number -->
+          <div class="font-medium text-[13px]">{{ day | date : 'd' }}</div>
+          <div class="text-[10px] text-gray-500">{{ day | date : 'EEE' }}</div>
 
-          <!-- Tooltip: show either holiday name or plan description -->
+          <!-- HOLIDAY tooltip -->
           <ng-container *ngIf="getHoliday(day) as holiday; else planTip">
             <div
-              class="absolute bottom-full mb-1 hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-2 py-1 shadow-md whitespace-nowrap"
+              class="absolute bottom-full mb-1 hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-2 py-1 shadow-md whitespace-nowrap z-20"
+              [ngClass]="[tipAlignClass(day), isOpen(day) ? '!block' : '']"
             >
               {{ holiday.localName || holiday.name }}
             </div>
           </ng-container>
 
+          <!-- PLAN tooltip -->
           <ng-template #planTip>
             <ng-container *ngIf="getPlanDescription(day) as desc">
               <div
-                class="absolute bottom-full mb-1 hidden group-hover:block bg-blue-800 text-white text-xs rounded-md px-2 py-1 shadow-md whitespace-nowrap"
+                class="absolute bottom-full mb-1 hidden group-hover:block bg-blue-800 text-white text-xs rounded-md px-2 py-1 shadow-md whitespace-nowrap z-20"
+                 [ngClass]="[tipAlignClass(day), isOpen(day) ? '!block' : '']"
               >
                 {{ desc }}
               </div>
             </ng-container>
           </ng-template>
-        </div>
+        </button>
       </ng-container>
     </div>
   </div>

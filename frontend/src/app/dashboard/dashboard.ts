@@ -27,7 +27,7 @@ export class DashboardComponent implements OnInit {
 
   private prefetchHolidays(): void {
     this.api.getHolidays(this.selectedYear, this.selectedCountry).subscribe({
-      next: (data) => (this.holidays = data),
+      next: (data) => (this.holidays = [...data]),
       error: (err) => console.error('Failed to prefetch holidays', err),
     });
   }
@@ -35,7 +35,7 @@ export class DashboardComponent implements OnInit {
   onFetch({ country, year }: { country: string; year: number }) {
     this.selectedYear = year;
     this.api.getHolidays(year, country).subscribe({
-      next: (data: any) => (this.holidays = data),
+      next: (data: any) => (this.holidays = [...data]),
       error: (err) => console.error('Failed to fetch holidays', err),
     });
   }

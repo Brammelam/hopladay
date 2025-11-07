@@ -14,6 +14,7 @@ import {
   isSameWeek,
   getWeek,
 } from 'date-fns';
+import { PlatformService } from '../services/platform';
 
 @Component({
   selector: 'app-holiday-calendar',
@@ -30,9 +31,29 @@ export class HolidayCalendarComponent implements OnChanges {
   currentYear = new Date().getFullYear();
   today = new Date();
 
+  constructor(private platformService: PlatformService) {}
+
   ngOnChanges(changes: SimpleChanges): void {
     this.currentYear = this.year || this.plan?.year || new Date().getFullYear();
     this.generateMonths();
+  }
+
+  isMobile(): boolean {
+    return this.platformService.isMobile();
+  }
+
+  tipAlignClass(day: Date): string {
+    const dow = day.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
+    if ([0, 6].includes(dow)) {
+      // Sunday: push left (anchor right edge)
+      return 'right-0 translate-x-0 origin-right text-right';
+    }
+    if ([1, 2].includes(dow)) {
+      // Monday: push right (anchor left edge)
+      return 'left-0 translate-x-0 origin-left';
+    }
+    // Middle of the week: center
+    return 'left-1/2 -translate-x-1/2 origin-center';
   }
 
   /**
@@ -166,5 +187,21 @@ export class HolidayCalendarComponent implements OnChanges {
    */
   isCurrentMonth(date: Date, monthIndex: number): boolean {
     return date.getMonth() === monthIndex;
+  }
+  selectedKey: string | null = null;
+
+  private dayKey(d: Date): string {
+    return new Date(d).toISOString().slice(0, 10);
+  }
+
+  toggleTooltip(day: Date): void {
+    if (!this.isMobile()) return;
+
+    const key = this.dayKey(day);
+    this.selectedKey = this.selectedKey === key ? null : key;
+  }
+
+  isOpen(day: Date): boolean {
+    return this.selectedKey === this.dayKey(day);
   }
 }
