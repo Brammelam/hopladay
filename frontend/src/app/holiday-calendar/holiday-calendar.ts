@@ -93,6 +93,11 @@ export class HolidayCalendarComponent implements OnChanges {
     if (isSameWeek(date, this.today, { weekStartsOn: 1 })) {
       return 'bg-blue-100 border-blue-200';
     }
+    
+    // Public holiday
+    if (isHoliday) {
+      return 'bg-red-500 text-white border-red-500 hover:bg-red-600';
+    }
 
     // Allocated vacation day (user-used day)
     if (isVacationDay) {
@@ -102,11 +107,6 @@ export class HolidayCalendarComponent implements OnChanges {
     // Within vacation block (weekend/holiday inside vacation)
     if (isInVacationBlock) {
       return 'bg-blue-400 text-white border-blue-400 hover:bg-blue-500';
-    }
-
-    // Public holiday
-    if (isHoliday) {
-      return 'bg-red-500 text-white border-red-500 hover:bg-red-600';
     }
 
     // Weekend
