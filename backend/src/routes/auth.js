@@ -516,19 +516,10 @@ router.post("/magic-link/send", async (req, res) => {
             auth: {
               user: process.env.EMAILUSER,
               pass: process.env.EMAILPWD
-            },
-            pool: false, // Disable connection pooling
-            connectionTimeout: 5000,
-            greetingTimeout: 5000,
-            socketTimeout: 5000,
+            }
           });
 
-          // Send the email with timeout
-          await transporter.sendMail({
-            from: `"Hopladay" <${process.env.EMAILUSER}>`,
-            to: email,
-            subject: 'Sign in to Hopladay',
-            html: `
+          const emailContent = `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #2563eb;">Sign in to Hopladay</h2>
                 <p>Click the button below to access your vacation plans:</p>
@@ -544,8 +535,13 @@ router.post("/magic-link/send", async (req, res) => {
                   Or copy this link: ${magicUrl}
                 </p>
               </div>
-            `,
-            text: `Sign in to Hopladay\n\nClick this link to access your vacation plans:\n${magicUrl}\n\nThis link expires in 15 minutes.`
+            `
+
+          // Send the email with timeout
+          await transporter.sendMail({
+            to: email,
+            subject: 'Sign in to Hopladay',
+            html: emailContent
           });
 
     } else {
