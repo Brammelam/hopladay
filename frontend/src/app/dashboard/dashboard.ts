@@ -376,17 +376,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     const browserId = this.userService['getBrowserId']();
     
+    console.log('📤 Requesting magic link:', { email, browserId });
+    
     this.authService.requestMagicLink(email, browserId).subscribe({
       next: (response) => {
+        console.log('📥 Magic link response:', {
+          success: response.success,
+          hasDevLink: !!response.devLink,
+          emailError: response.emailError,
+          message: response.message,
+        });
+        
         this.magicLinkSent = true;
         this.magicLinkUrl = response.devLink || '';
         this.isLoading = false;
+        
+        if (response.emailError) {
+          console.warn('⚠️ Email sending failed, but magic link was generated');
+          alert('Email sending failed. Check console for dev link, or contact support.');
+        }
+        
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('❌ Failed to send magic link:', err);
+        console.error('❌ Failed to send magic link:', {
+          status: err.status,
+          statusText: err.statusText,
+          error: err.error,
+          message: err.message,
+        });
         this.isLoading = false;
-        alert('Failed to send magic link. Please try again.');
+        alert(`Failed to generate magic link: ${err.error?.error || err.message}`);
         this.cdr.detectChanges();
       }
     });

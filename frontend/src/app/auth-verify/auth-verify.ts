@@ -66,28 +66,52 @@ export class AuthVerifyComponent implements OnInit {
     // Get token from query params
     const token = this.route.snapshot.queryParamMap.get('token');
     
+    console.log('🔍 Auth verification page loaded:', {
+      hasToken: !!token,
+      tokenLength: token?.length,
+      tokenSample: token?.substring(0, 20) + '...',
+      fullUrl: window.location.href,
+    });
+    
     if (!token) {
+      console.error('❌ No token in URL');
       this.isVerifying = false;
       this.success = false;
       return;
     }
 
     // Verify the token
+    console.log('📤 Sending verification request to backend...');
     this.authService.verifyMagicLink(token).subscribe({
       next: (result) => {
+        console.log('📥 Verification response received:', {
+          verified: result.verified,
+          hasUser: !!result.user,
+          userEmail: result.user?.email,
+        });
+        
         if (result.verified) {
           this.userService.setCurrentUser(result.user as any);
           this.success = true;
           
+          console.log('✅ User authenticated, redirecting in 2 seconds...');
+          
           // Auto-redirect after 2 seconds
           setTimeout(() => this.goToDashboard(), 2000);
         } else {
+          console.error('❌ Verification returned false');
           this.success = false;
         }
         this.isVerifying = false;
       },
       error: (err) => {
-        console.error('❌ Magic link verification failed:', err);
+        console.error('❌ Magic link verification failed:', {
+          status: err.status,
+          statusText: err.statusText,
+          error: err.error,
+          message: err.message,
+          url: err.url,
+        });
         this.success = false;
         this.isVerifying = false;
       }

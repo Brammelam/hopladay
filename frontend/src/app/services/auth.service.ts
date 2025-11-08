@@ -71,8 +71,8 @@ export class AuthService {
   /**
    * Request a magic link for email authentication (backup method)
    */
-  requestMagicLink(email: string, browserId?: string): Observable<{ success: boolean; message: string; devLink?: string }> {
-    return this.http.post<{ success: boolean; message: string; devLink?: string }>(
+  requestMagicLink(email: string, browserId?: string): Observable<{ success: boolean; message: string; devLink?: string; emailError?: boolean }> {
+    return this.http.post<{ success: boolean; message: string; devLink?: string; emailError?: boolean }>(
       `${this.baseUrl}/auth/magic-link/send`,
       { email, browserId }
     );

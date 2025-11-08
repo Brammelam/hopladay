@@ -19,6 +19,27 @@ const rpName = "Hopladay";
 const rpID = process.env.RP_ID || "localhost";
 const origin = process.env.ORIGIN || `http://localhost:4200`;
 
+console.log('🔧 Auth module initialized:', {
+  rpID,
+  origin,
+  hasEmailUser: !!process.env.EMAILUSER,
+  hasEmailPwd: !!process.env.EMAILPWD,
+});
+
+/**
+ * GET /api/auth/config
+ * Check auth configuration (for debugging)
+ */
+router.get("/config", (req, res) => {
+  res.json({
+    rpID,
+    origin,
+    emailConfigured: !!(process.env.EMAILUSER && process.env.EMAILPWD),
+    passkeyEnabled: true,
+    magicLinkEnabled: true,
+  });
+});
+
 /**
  * POST /api/auth/register/start
  * Start passkey registration (for claiming anonymous plans)
@@ -422,26 +443,33 @@ router.post("/magic-link/send", async (req, res) => {
   try {
     const { email, browserId } = req.body;
 
+    console.log('📧 Magic link request received:', { email, hasBrowserId: !!browserId });
+
     if (!email) {
       return res.status(400).json({ error: "email is required" });
     }
 
     // Find or create user
     let user = await User.findOne({ email });
+    console.log('🔍 User lookup:', { found: !!user, email });
     
     if (!user && browserId) {
       // Claim anonymous plans if user doesn't exist
       const anonUser = await User.findOne({ browserId });
+      console.log('🔍 Anonymous user lookup:', { found: !!anonUser, browserId });
+      
       if (anonUser) {
         anonUser.email = email;
         anonUser.name = email.split('@')[0];
         user = anonUser;
         await user.save();
+        console.log('✅ Claimed anonymous user');
       }
     }
     
     if (!user) {
       // Create new user
+      console.log('➕ Creating new user for email:', email);
       user = await findOrCreateUserByEmail(email, { name: email.split('@')[0] });
     }
 
@@ -458,30 +486,98 @@ router.post("/magic-link/send", async (req, res) => {
     });
     await magicLink.save();
 
-    // In production, send email here
-    // For now, return the link in response (DEV ONLY)
     const magicUrl = `${origin}/auth/verify?token=${token}`;
     
-    console.log(`📧 Magic link generated for ${email}: ${magicUrl}`);
-
-    const transporter = nodemailer.createTransport({ 
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAILUSER,
-        pass: process.env.EMAILPWD
-      },
-    });
-    await transporter.sendMail({
-      to: email,
-      subject: 'Sign in to Hopladay',
-      html: `Click here to sign in: <a href="${magicUrl}">${magicUrl}</a>`
+    console.log(`📧 Magic link generated:`, {
+      email,
+      token: token.substring(0, 20) + '...',
+      url: magicUrl,
+      expiresAt: expiresAt.toISOString(),
+      userId: user._id.toString(),
     });
 
-    res.json({
-      success: true,
-      message: "Magic link sent to your email",
-      expiresIn: '15 minutes',
-    });
+    // Send email (with detailed error handling)
+    const hasEmailConfig = process.env.EMAILUSER && process.env.EMAILPWD;
+    
+    if (hasEmailConfig) {
+      console.log('📧 Attempting to send email via Gmail...');
+      
+      try {
+        const transporter = nodemailer.createTransport({ 
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAILUSER,
+            pass: process.env.EMAILPWD
+          },
+        });
+
+        // Verify transporter configuration
+        await transporter.verify();
+        console.log('✅ Email transporter verified');
+
+        // Send the email
+        const info = await transporter.sendMail({
+          from: `"Hopladay" <${process.env.EMAILUSER}>`,
+          to: email,
+          subject: 'Sign in to Hopladay',
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #2563eb;">Sign in to Hopladay</h2>
+              <p>Click the button below to access your vacation plans:</p>
+              <div style="margin: 30px 0;">
+                <a href="${magicUrl}" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                  Sign In to Hopladay
+                </a>
+              </div>
+              <p style="color: #6b7280; font-size: 14px;">
+                This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.
+              </p>
+              <p style="color: #9ca3af; font-size: 12px; margin-top: 30px;">
+                Or copy this link: ${magicUrl}
+              </p>
+            </div>
+          `,
+          text: `Sign in to Hopladay\n\nClick this link to access your vacation plans:\n${magicUrl}\n\nThis link expires in 15 minutes.`
+        });
+
+        console.log(`✅ Email sent successfully to ${email}`, {
+          messageId: info.messageId,
+          accepted: info.accepted,
+          rejected: info.rejected,
+        });
+
+        res.json({
+          success: true,
+          message: "Magic link sent to your email",
+          expiresIn: '15 minutes',
+        });
+      } catch (emailErr) {
+        console.error('❌ Email sending failed:', {
+          error: emailErr.message,
+          code: emailErr.code,
+          command: emailErr.command,
+        });
+
+        // Still return success with dev link for development
+        res.json({
+          success: true,
+          message: "Magic link generated (email failed to send)",
+          devLink: magicUrl, // Include link when email fails
+          emailError: true,
+          expiresIn: '15 minutes',
+        });
+      }
+    } else {
+      console.warn('⚠️ Email credentials not configured, returning dev link');
+      
+      // Development mode - return link directly
+      res.json({
+        success: true,
+        message: "Magic link generated (dev mode - no email sent)",
+        devLink: magicUrl,
+        expiresIn: '15 minutes',
+      });
+    }
   } catch (err) {
     console.error("❌ Error sending magic link:", err);
     res.status(500).json({ error: "Failed to send magic link", message: err.message });
@@ -497,25 +593,55 @@ router.post("/magic-link/verify", async (req, res) => {
   try {
     const { token } = req.body;
 
+    console.log('🔍 Magic link verification request:', {
+      hasToken: !!token,
+      tokenLength: token?.length,
+      tokenSample: token?.substring(0, 20) + '...',
+    });
+
     if (!token) {
+      console.error('❌ No token provided');
       return res.status(400).json({ error: "token is required" });
     }
 
     // Find the magic link
-    const magicLink = await MagicLink.findOne({ 
-      token,
-      used: false,
-      expiresAt: { $gt: new Date() }
+    const now = new Date();
+    const magicLink = await MagicLink.findOne({ token });
+    
+    console.log('🔍 Magic link lookup result:', {
+      found: !!magicLink,
+      used: magicLink?.used,
+      expired: magicLink ? magicLink.expiresAt < now : 'N/A',
+      expiresAt: magicLink?.expiresAt?.toISOString(),
+      currentTime: now.toISOString(),
     });
 
     if (!magicLink) {
-      return res.status(400).json({ error: "Invalid or expired magic link" });
+      console.error('❌ Magic link not found in database');
+      return res.status(400).json({ error: "Invalid magic link" });
+    }
+
+    if (magicLink.used) {
+      console.error('❌ Magic link already used');
+      return res.status(400).json({ error: "This magic link has already been used" });
+    }
+
+    if (magicLink.expiresAt < now) {
+      console.error('❌ Magic link expired');
+      return res.status(400).json({ error: "Magic link has expired" });
     }
 
     // Get the user
     const user = await User.findById(magicLink.userId);
     
+    console.log('🔍 User lookup:', {
+      found: !!user,
+      userId: magicLink.userId.toString(),
+      email: user?.email,
+    });
+    
     if (!user) {
+      console.error('❌ User not found for magic link');
       return res.status(404).json({ error: "User not found" });
     }
 
@@ -523,7 +649,10 @@ router.post("/magic-link/verify", async (req, res) => {
     magicLink.used = true;
     await magicLink.save();
 
-    console.log(`✅ Magic link verified for ${user.email}`);
+    console.log(`✅ Magic link verified successfully for ${user.email}`, {
+      userId: user._id.toString(),
+      userName: user.name,
+    });
 
     res.json({
       verified: true,
@@ -536,7 +665,10 @@ router.post("/magic-link/verify", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Error verifying magic link:", err);
+    console.error("❌ Error verifying magic link:", {
+      message: err.message,
+      stack: err.stack?.split('\n').slice(0, 5),
+    });
     res.status(500).json({ error: "Failed to verify magic link", message: err.message });
   }
 });
