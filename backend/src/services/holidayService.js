@@ -11,11 +11,11 @@ import { parseISODate, formatDate } from "../utils/dateUtils.js";
  */
 export async function getHolidaysForYear(year, countryCode = 'NO') {
   try {
-    // 1️⃣ Check cache first
-    const existing = await Holiday.find({ year });
+    // 1️⃣ Check cache first (by year AND country)
+    const existing = await Holiday.find({ year, countryCode });
     if (existing.length > 0) {
       console.log(
-        `📦 Returning ${existing.length} cached holidays for ${year}`
+        `📦 Returning ${existing.length} cached holidays for ${countryCode} ${year}`
       );
       // Normalize old data in case it was saved before date normalization was implemented
       return existing.map((h) => ({
@@ -25,9 +25,9 @@ export async function getHolidaysForYear(year, countryCode = 'NO') {
     }
 
     // 2️⃣ Fetch from Nager.Date API
-    console.log(`🌐 Fetching holidays from Nager.Date API for ${year}...`);
+    console.log(`🌐 Fetching holidays from Nager.Date API for ${countryCode} ${year}...`);
     const response = await axios.get(
-      `https://date.nager.at/api/v3/PublicHolidays/${year}/NO`
+      `https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`
     );
     const data = response.data;
 
@@ -46,7 +46,7 @@ export async function getHolidaysForYear(year, countryCode = 'NO') {
 
     // 4️⃣ Save to MongoDB
     await Holiday.insertMany(holidays);
-    console.log(`💾 Saved ${holidays.length} holidays for ${year} to DB.`);
+    console.log(`💾 Saved ${holidays.length} holidays for ${countryCode} ${year} to DB.`);
 
     return holidays;
   } catch (err) {
