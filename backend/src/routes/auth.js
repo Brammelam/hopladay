@@ -511,30 +511,20 @@ router.post("/magic-link/send", async (req, res) => {
     if (hasEmailConfig) {
       console.log('📧 Attempting to send email via Gmail (background)...');
       
-      // Use setTimeout to make it truly async
-      setImmediate(async () => {
-        try {
           const transporter = nodemailer.createTransport({ 
             service: 'gmail',
             auth: {
               user: process.env.EMAILUSER,
               pass: process.env.EMAILPWD
             },
-            connectionTimeout: 10000, // 10 second timeout
-            greetingTimeout: 10000,
+            pool: false, // Disable connection pooling
+            connectionTimeout: 5000,
+            greetingTimeout: 5000,
+            socketTimeout: 5000,
           });
 
-          // Verify with timeout
-          const verifyPromise = transporter.verify();
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Verification timeout')), 10000)
-          );
-
-          await Promise.race([verifyPromise, timeoutPromise]);
-          console.log('✅ Email transporter verified');
-
           // Send the email with timeout
-          const sendPromise = transporter.sendMail({
+          await transporter.sendMail({
             from: `"Hopladay" <${process.env.EMAILUSER}>`,
             to: email,
             subject: 'Sign in to Hopladay',
@@ -558,26 +548,6 @@ router.post("/magic-link/send", async (req, res) => {
             text: `Sign in to Hopladay\n\nClick this link to access your vacation plans:\n${magicUrl}\n\nThis link expires in 15 minutes.`
           });
 
-          const sendTimeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Send timeout')), 30000)
-          );
-
-          const info = await Promise.race([sendPromise, sendTimeoutPromise]);
-
-          console.log(`✅ Email sent successfully to ${email}`, {
-            messageId: info.messageId,
-            accepted: info.accepted,
-            rejected: info.rejected,
-          });
-        } catch (emailErr) {
-          console.error('❌ Email sending failed (background):', {
-            error: emailErr.message,
-            code: emailErr.code,
-            command: emailErr.command,
-            email,
-          });
-        }
-      });
     } else {
       console.warn('⚠️ Email credentials not configured, magic link available via devLink only');
     }
