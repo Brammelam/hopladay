@@ -1,13 +1,79 @@
 <div *ngIf="plan" class="bg-white rounded-2xl shadow-md p-6">
-  <h2 class="text-xl font-semibold mb-4">Suggested Plans for {{ plan.year }}</h2>
-  <ul class="space-y-3">
-    <li *ngFor="let s of plan.suggestions" class="border-l-4 border-primary pl-3">
-      <p class="font-medium">
-        {{ s.startDate | date:'MMM d' }} → {{ s.endDate | date:'MMM d' }}
-      </p>
-      <p class="text-gray-600 text-sm">
-        {{ s.totalDaysOff }} total days off using {{ s.vacationDaysUsed }} vacation day(s)
-      </p>
-    </li>
-  </ul>
+  <h2 class="text-xl font-semibold mb-4 text-gray-800">Your Vacation Plan for {{ plan.year }}</h2>
+  
+  <!-- AI Suggestions -->
+  <div *ngIf="getAISuggestions().length > 0" class="mb-6">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">AI Suggested Blocks</h3>
+    <ul class="space-y-3">
+      <li *ngFor="let s of getAISuggestions()" class="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 rounded-r">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-900">
+              {{ s.startDate | date:'MMM d' }} → {{ s.endDate | date:'MMM d, yyyy' }}
+            </p>
+            <p class="text-gray-600 text-sm mt-0.5">
+              {{ s.totalDaysOff }} days off using <span class="font-semibold text-blue-700">{{ s.vacationDaysUsed }}</span> vacation day{{ s.vacationDaysUsed > 1 ? 's' : '' }}
+            </p>
+          </div>
+          <div class="text-sm font-semibold text-blue-600">
+            {{ (s.totalDaysOff / s.vacationDaysUsed).toFixed(1) }}x ROI
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Manual Days -->
+  <div *ngIf="getManualSuggestions().length > 0" class="mb-6">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Manual Vacation Blocks</h3>
+    <ul class="space-y-2">
+      <li *ngFor="let s of getManualSuggestions()" class="border-l-4 border-green-500 pl-4 py-2 bg-green-50 rounded-r">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-gray-900">
+              {{ s.startDate | date:'MMM d' }} → {{ s.endDate | date:'MMM d, yyyy' }}
+            </p>
+            <p class="text-gray-600 text-sm mt-0.5">
+              {{ s.totalDaysOff }} days off using <span class="font-semibold text-green-700">{{ s.vacationDaysUsed }}</span> vacation day{{ s.vacationDaysUsed > 1 ? 's' : '' }}
+            </p>
+          </div>
+          <div class="text-sm font-semibold text-green-600">
+            {{ (s.totalDaysOff / s.vacationDaysUsed).toFixed(1) }}x ROI
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Stats -->
+  <div class="border-t pt-4 mt-4">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Summary Statistics</h3>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-gray-50 p-3 rounded-lg">
+        <div class="text-xs text-gray-600 mb-1">Total Suggestions</div>
+        <div class="text-2xl font-bold text-gray-900">{{ totalSuggestions }}</div>
+      </div>
+      <div class="bg-gray-50 p-3 rounded-lg">
+        <div class="text-xs text-gray-600 mb-1">Manual Blocks</div>
+        <div class="text-2xl font-bold text-green-600">{{ getManualSuggestions().length }}</div>
+      </div>
+      <div class="bg-gray-50 p-3 rounded-lg">
+        <div class="text-xs text-gray-600 mb-1">Longest Break</div>
+        <div class="text-2xl font-bold text-blue-600">{{ longestBreak || 0 }}</div>
+      </div>
+      <div class="bg-gray-50 p-3 rounded-lg">
+        <div class="text-xs text-gray-600 mb-1">Avg Efficiency</div>
+        <div class="text-2xl font-bold text-purple-600">{{ averageEfficiency || 0 }}x</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!plan.suggestions || plan.suggestions.length === 0" class="text-center py-8 text-gray-500">
+    <svg class="w-16 h-16 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+    <p class="font-medium">No vacation days planned yet</p>
+    <p class="text-sm mt-1">Generate a plan or add manual days to get started</p>
+  </div>
 </div>

@@ -35,8 +35,8 @@ export class HolidaySummaryComponent implements OnChanges {
    * Calculates some useful metrics to display or use later.
    */
   private calculateSummaryStats(): void {
-    const suggestions = this.plan.suggestions;
-    this.totalSuggestions = suggestions.length;
+    const suggestions = this.plan.suggestions || [];
+    this.totalSuggestions = suggestions.filter((s: any) => !s.isManual).length;
 
     if (suggestions.length > 0) {
       this.longestBreak = Math.max(...suggestions.map((s: any) => s.totalDaysOff));
@@ -47,6 +47,22 @@ export class HolidaySummaryComponent implements OnChanges {
         ).toFixed(2)
       );
     }
+  }
+
+  /**
+   * Get AI-generated suggestions
+   */
+  getAISuggestions(): any[] {
+    if (!this.plan?.suggestions) return [];
+    return this.plan.suggestions.filter((s: any) => !s.isManual);
+  }
+
+  /**
+   * Get manual suggestions
+   */
+  getManualSuggestions(): any[] {
+    if (!this.plan?.suggestions) return [];
+    return this.plan.suggestions.filter((s: any) => s.isManual);
   }
 
   /**

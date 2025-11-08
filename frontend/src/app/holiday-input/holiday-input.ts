@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -8,9 +8,11 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './holiday-input.html',
   imports: [CommonModule, FormsModule],
 })
-export class HolidayInputComponent{
+export class HolidayInputComponent implements OnInit {
   @Output() fetch = new EventEmitter<{ country: string; year: number }>();
   @Output() plan = new EventEmitter<any>();
+  @Output() manualPlan = new EventEmitter<any>();
+  @Output() settingsChange = new EventEmitter<{ country: string; year: number; availableDays: number; preference: string }>();
 
   countries = [
     { code: 'NO', name: 'Norway' },
@@ -65,17 +67,44 @@ export class HolidayInputComponent{
   availableDays = 25;
   preferences = [
     { value: 'balanced', label: 'Balanced' },
-    { value: 'few_long_vacations', label: 'Few long vacations' },
     { value: 'many_long_weekends', label: 'Many long weekends' },
+    { value: 'few_long_vacations', label: 'Few long vacations' },
+    { value: 'summer_vacation', label: 'Summer vacation focus' },
+    { value: 'spread_out', label: 'Spread throughout year' },
   ];
   selectedPreference = this.preferences[0]
 
+  ngOnInit() {
+    // Emit initial settings
+    this.settingsChange.emit({
+      country: this.selectedCountry,
+      year: this.selectedYear,
+      availableDays: this.availableDays,
+      preference: this.selectedPreference.value
+    });
+  }
+
   onInputChange() {
     this.fetch.emit({ country: this.selectedCountry, year: this.selectedYear });
+    this.settingsChange.emit({
+      country: this.selectedCountry,
+      year: this.selectedYear,
+      availableDays: this.availableDays,
+      preference: this.selectedPreference.value
+    });
   }
 
   onPlan() {
     this.plan.emit({
+      availableDays: this.availableDays,
+      year: this.selectedYear,
+      country: this.selectedCountry,
+      preference: this.selectedPreference.value,
+    });
+  }
+
+  onManualPlan() {
+    this.manualPlan.emit({
       availableDays: this.availableDays,
       year: this.selectedYear,
       country: this.selectedCountry,

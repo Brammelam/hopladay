@@ -219,12 +219,23 @@ function scoreCandidate(c, preference, isExtension) {
       else if (c.totalDaysOff >= 8) bonus += 2.25;
       else if (c.totalDaysOff >= 6) bonus += 1.25;
       break;
+    case "summer_vacation":
+      if (isSummerMonth(c.startDate)) {
+        bonus += 3.0;
+        if (c.totalDaysOff >= 7) bonus += 2.0;
+      }
+      break;
+    case "spread_out":
+      if (c.vacationDaysUsed <= 2) bonus += 0.5;
+      break;
     case "balanced":
     default:
       break;
   }
 
-  if (isExtension && isSummerMonth(c.startDate)) bonus += 1.0;
+  if (isExtension && isSummerMonth(c.startDate) && preference !== "summer_vacation") {
+    bonus += 1.0;
+  }
 
   return roi + bonus;
 }
@@ -261,7 +272,9 @@ function mergeSelections(list, holidaySet) {
 function spacingThreshold(preference) {
   if (preference === "few_long_vacations") return 0;
   if (preference === "many_long_weekends") return 0;
-  return 21; // balanced
+  if (preference === "spread_out") return 35;
+  if (preference === "summer_vacation") return 14;
+  return 21;
 }
 
 /** consider preference when spacing; whitelist ultra-high-ROI 1-day bridges */
@@ -349,6 +362,9 @@ function getPhaseCandidates(offBlocks, holidaySet, phase, remainingDays) {
     if (phase.minDaysOff) {
       list = list.filter((c) => c.totalDaysOff >= phase.minDaysOff);
     }
+    if (phase.summerOnly) {
+      list = list.filter((c) => isSummerMonth(c.startDate));
+    }
     return list;
   }
 
@@ -367,36 +383,46 @@ export function generateHolidayPlan(
   holidays,
   availableDays,
   year,
-  preference = "balanced" // "balanced" | "many_long_weekends" | "few_long_vacations"
+  preference = "balanced"
 ) {
   const { blocks: offBlocks, holidaySet } = buildOffBlocks(year, holidays);
   const picked = [];
   let remaining = availableDays;
 
-  // phase plan per preference — now truly different
+  // phase plan per preference
   let phases;
   if (preference === "few_long_vacations") {
-    // go big first: secure a long block (extensions with 3+ workdays or 7+ total days off)
     phases = [
       { type: "ext", maxK: Math.min(10, remaining), minK: 3, minDaysOff: 7 },
-      // then try longer bridges and medium add-ons
       { type: "gap", k: 3, minDaysOff: 7 },
       { type: "ext", maxK: Math.min(5, remaining), minK: 2 },
-      // finally small bridges/extensions if budget remains
       { type: "gap", k: 2 },
       { type: "gap", k: 1 },
       { type: "ext", maxK: Math.min(remaining, 2) },
     ];
   } else if (preference === "many_long_weekends") {
-    // prioritize lots of classic long weekends; avoid big extensions
     phases = [
-      { type: "gap", k: 1, minDaysOff: 3 }, // Fri–Sun or holiday-adjacent 1→3/4
+      { type: "gap", k: 1, minDaysOff: 3 },
       { type: "gap", k: 2, minDaysOff: 4 },
       { type: "gap", k: 3 },
       { type: "ext", maxK: Math.min(remaining, 2), minDaysOff: 3 },
     ];
+  } else if (preference === "summer_vacation") {
+    phases = [
+      { type: "gap", k: 1 },
+      { type: "gap", k: 2 },
+      { type: "ext", maxK: Math.min(remaining, 10), minK: 3, summerOnly: true },
+      { type: "gap", k: 3 },
+      { type: "ext", maxK: Math.min(remaining, 5) },
+    ];
+  } else if (preference === "spread_out") {
+    phases = [
+      { type: "gap", k: 1 },
+      { type: "gap", k: 2 },
+      { type: "gap", k: 3 },
+      { type: "ext", maxK: Math.min(remaining, 3) },
+    ];
   } else {
-    // balanced: ROI-first with modest breadth
     phases = [
       { type: "gap", k: 1 },
       { type: "gap", k: 2 },
@@ -428,22 +454,45 @@ export function generateHolidayPlan(
     const start = new Date(year, 0, 1);
     const end = new Date(year, 11, 31);
 
-    for (let d = new Date(start); d <= end && remaining > 0; d = nextDay(d, 1)) {
+    // Collect all potential filler days
+    const fillerDays = [];
+    for (let d = new Date(start); d <= end; d = nextDay(d, 1)) {
       const day = d.getDay();
       if (!isOffDay(d, holidaySet) && (day === 1 || day === 5)) {
         const overlaps = merged.some((c) => d >= c.startDate && d <= c.endDate);
-        if (overlaps) continue;
-
-        const expanded = expandToContiguousDays(d, d, holidaySet);
-        merged.push({
-          startDate: expanded.startDate,
-          endDate: expanded.endDate,
-          vacationDaysUsed: 1,
-          totalDaysOff: expanded.totalDaysOff,
-          description: `Use 1 vacation day for ${expanded.totalDaysOff} days off (filler)`,
-        });
-        remaining--;
+        if (!overlaps) {
+          fillerDays.push(new Date(d));
+        }
       }
+    }
+
+    // Sort filler days based on preference
+    if (preference === "summer_vacation") {
+      // Prioritize summer months
+      fillerDays.sort((a, b) => {
+        const aSummer = isSummerMonth(a) ? 1 : 0;
+        const bSummer = isSummerMonth(b) ? 1 : 0;
+        if (bSummer !== aSummer) return bSummer - aSummer;
+        return a - b;
+      });
+    } else if (preference === "spread_out") {
+      // Distribute evenly - alternate between months
+      fillerDays.sort((a, b) => a - b);
+    }
+
+    // Add filler days up to remaining budget
+    for (const d of fillerDays) {
+      if (remaining <= 0) break;
+      
+      const expanded = expandToContiguousDays(d, d, holidaySet);
+      merged.push({
+        startDate: expanded.startDate,
+        endDate: expanded.endDate,
+        vacationDaysUsed: 1,
+        totalDaysOff: expanded.totalDaysOff,
+        description: `Use 1 vacation day for ${expanded.totalDaysOff} days off`,
+      });
+      remaining--;
     }
 
     // re-merge after filler
