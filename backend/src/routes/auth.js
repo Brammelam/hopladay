@@ -496,87 +496,90 @@ router.post("/magic-link/send", async (req, res) => {
       userId: user._id.toString(),
     });
 
-    // Send email (with detailed error handling)
+    // Always respond immediately, send email in background
     const hasEmailConfig = process.env.EMAILUSER && process.env.EMAILPWD;
     
+    // Send immediate response
+    res.json({
+      success: true,
+      message: hasEmailConfig ? "Magic link sent to your email" : "Magic link generated (dev mode)",
+      devLink: hasEmailConfig ? undefined : magicUrl, // Only show in dev
+      expiresIn: '15 minutes',
+    });
+
+    // Send email in background (non-blocking)
     if (hasEmailConfig) {
-      console.log('📧 Attempting to send email via Gmail...');
+      console.log('📧 Attempting to send email via Gmail (background)...');
       
-      try {
-        const transporter = nodemailer.createTransport({ 
-          service: 'gmail',
-          auth: {
-            user: process.env.EMAILUSER,
-            pass: process.env.EMAILPWD
-          },
-        });
+      // Use setTimeout to make it truly async
+      setImmediate(async () => {
+        try {
+          const transporter = nodemailer.createTransport({ 
+            service: 'gmail',
+            auth: {
+              user: process.env.EMAILUSER,
+              pass: process.env.EMAILPWD
+            },
+            connectionTimeout: 10000, // 10 second timeout
+            greetingTimeout: 10000,
+          });
 
-        // Verify transporter configuration
-        await transporter.verify();
-        console.log('✅ Email transporter verified');
+          // Verify with timeout
+          const verifyPromise = transporter.verify();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Verification timeout')), 10000)
+          );
 
-        // Send the email
-        const info = await transporter.sendMail({
-          from: `"Hopladay" <${process.env.EMAILUSER}>`,
-          to: email,
-          subject: 'Sign in to Hopladay',
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #2563eb;">Sign in to Hopladay</h2>
-              <p>Click the button below to access your vacation plans:</p>
-              <div style="margin: 30px 0;">
-                <a href="${magicUrl}" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
-                  Sign In to Hopladay
-                </a>
+          await Promise.race([verifyPromise, timeoutPromise]);
+          console.log('✅ Email transporter verified');
+
+          // Send the email with timeout
+          const sendPromise = transporter.sendMail({
+            from: `"Hopladay" <${process.env.EMAILUSER}>`,
+            to: email,
+            subject: 'Sign in to Hopladay',
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #2563eb;">Sign in to Hopladay</h2>
+                <p>Click the button below to access your vacation plans:</p>
+                <div style="margin: 30px 0;">
+                  <a href="${magicUrl}" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+                    Sign In to Hopladay
+                  </a>
+                </div>
+                <p style="color: #6b7280; font-size: 14px;">
+                  This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.
+                </p>
+                <p style="color: #9ca3af; font-size: 12px; margin-top: 30px;">
+                  Or copy this link: ${magicUrl}
+                </p>
               </div>
-              <p style="color: #6b7280; font-size: 14px;">
-                This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.
-              </p>
-              <p style="color: #9ca3af; font-size: 12px; margin-top: 30px;">
-                Or copy this link: ${magicUrl}
-              </p>
-            </div>
-          `,
-          text: `Sign in to Hopladay\n\nClick this link to access your vacation plans:\n${magicUrl}\n\nThis link expires in 15 minutes.`
-        });
+            `,
+            text: `Sign in to Hopladay\n\nClick this link to access your vacation plans:\n${magicUrl}\n\nThis link expires in 15 minutes.`
+          });
 
-        console.log(`✅ Email sent successfully to ${email}`, {
-          messageId: info.messageId,
-          accepted: info.accepted,
-          rejected: info.rejected,
-        });
+          const sendTimeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Send timeout')), 30000)
+          );
 
-        res.json({
-          success: true,
-          message: "Magic link sent to your email",
-          expiresIn: '15 minutes',
-        });
-      } catch (emailErr) {
-        console.error('❌ Email sending failed:', {
-          error: emailErr.message,
-          code: emailErr.code,
-          command: emailErr.command,
-        });
+          const info = await Promise.race([sendPromise, sendTimeoutPromise]);
 
-        // Still return success with dev link for development
-        res.json({
-          success: true,
-          message: "Magic link generated (email failed to send)",
-          devLink: magicUrl, // Include link when email fails
-          emailError: true,
-          expiresIn: '15 minutes',
-        });
-      }
-    } else {
-      console.warn('⚠️ Email credentials not configured, returning dev link');
-      
-      // Development mode - return link directly
-      res.json({
-        success: true,
-        message: "Magic link generated (dev mode - no email sent)",
-        devLink: magicUrl,
-        expiresIn: '15 minutes',
+          console.log(`✅ Email sent successfully to ${email}`, {
+            messageId: info.messageId,
+            accepted: info.accepted,
+            rejected: info.rejected,
+          });
+        } catch (emailErr) {
+          console.error('❌ Email sending failed (background):', {
+            error: emailErr.message,
+            code: emailErr.code,
+            command: emailErr.command,
+            email,
+          });
+        }
       });
+    } else {
+      console.warn('⚠️ Email credentials not configured, magic link available via devLink only');
     }
   } catch (err) {
     console.error("❌ Error sending magic link:", err);
