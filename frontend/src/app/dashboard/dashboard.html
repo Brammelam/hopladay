@@ -61,10 +61,64 @@
   </div>
 
   <!-- Header -->
-  <header class="mb-10 text-center">
-    <h1 class="text-4xl font-bold text-primary mb-2">Hopladay</h1>
-    <p class="text-gray-600">Plan your time off like a pro</p>
+  <header class="mb-6 w-full max-w-5xl">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex-1"></div>
+      <div class="flex-1 flex justify-center">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-primary mb-2">Hopladay</h1>
+          <p class="text-gray-600">Plan your time off like a pro</p>
+        </div>
+      </div>
+      <div class="flex-1 flex justify-end">
+        <button
+          *ngIf="!isUserClaimed()"
+          type="button"
+          (click)="openAuthModal('signin')"
+          class="px-3 md:px-4 py-1.5 md:py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 hover:bg-blue-50 hover:border-blue-300 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          Sign In
+        </button>
+      </div>
+    </div>
   </header>
+
+  <!-- User Status Banner (Save Your Plan with Passkey) -->
+  <div *ngIf="plan" class="w-full max-w-5xl mb-6">
+    <div *ngIf="!isUserClaimed()" class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-3 md:p-4">
+      <div class="flex items-start md:items-center justify-between gap-3">
+        <div class="flex items-start gap-3 flex-1">
+          <svg class="w-5 h-5 text-blue-600 mt-0.5 md:mt-0 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <div class="flex-1">
+            <h3 class="text-sm md:text-base font-semibold text-gray-900 mb-1">Secure your plan with a passkey</h3>
+            <p class="text-xs md:text-sm text-gray-600">Use Face ID, Touch ID, or device PIN to save and sync your plans</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="openAuthModal('register')"
+          [disabled]="isLoading"
+          class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+        >
+          Save Plan
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="isUserClaimed()" class="bg-green-50 border border-green-200 rounded-lg p-3 md:p-4">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <div class="flex-1">
+          <p class="text-sm md:text-base font-medium text-gray-900">Secured with passkey for <span class="text-green-700 font-semibold">{{ getUserEmail() }}</span></p>
+          <p class="text-xs md:text-sm text-gray-600">Your plans are automatically saved and synced across devices</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Settings Section (only when no plan exists) -->
   <div *ngIf="!plan && !isLoading" class="w-full max-w-5xl">
@@ -259,6 +313,157 @@
   <!-- Summary Section -->
   <div class="mt-10 w-full max-w-3xl">
     <app-holiday-summary [plan]="plan"></app-holiday-summary>
+  </div>
+
+  <!-- Auth Modal -->
+  <div *ngIf="showAuthModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeAuthModal()">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 md:p-8" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">
+          {{ authMode === 'signin' ? 'Sign In' : 'Save Your Plan' }}
+        </h2>
+        <button
+          type="button"
+          (click)="closeAuthModal()"
+          class="text-gray-400 hover:text-gray-600 focus:outline-none"
+          aria-label="Close"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Auth Method Tabs -->
+      <div class="flex gap-2 p-1 bg-gray-100 rounded-lg mb-6">
+        <button
+          type="button"
+          (click)="switchAuthMethod('passkey')"
+          [class.bg-white]="authMethod === 'passkey'"
+          [class.text-gray-900]="authMethod === 'passkey'"
+          [class.text-gray-600]="authMethod !== 'passkey'"
+          [class.shadow-sm]="authMethod === 'passkey'"
+          class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          Passkey
+        </button>
+        <button
+          type="button"
+          (click)="switchAuthMethod('email')"
+          [class.bg-white]="authMethod === 'email'"
+          [class.text-gray-900]="authMethod === 'email'"
+          [class.text-gray-600]="authMethod !== 'email'"
+          [class.shadow-sm]="authMethod === 'email'"
+          class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          Email Link
+        </button>
+      </div>
+
+      <div class="mb-6">
+        <!-- Passkey Info -->
+        <div *ngIf="authMethod === 'passkey'" class="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+          <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <div class="flex-1">
+            <h3 class="font-semibold text-gray-900 mb-1">Fast & Secure</h3>
+            <p class="text-sm text-gray-600">Use Face ID, Touch ID, or device PIN. Works on this device only.</p>
+          </div>
+        </div>
+
+        <!-- Email Link Info -->
+        <div *ngIf="authMethod === 'email' && !magicLinkSent" class="flex items-start gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200 mb-4">
+          <svg class="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <div class="flex-1">
+            <h3 class="font-semibold text-gray-900 mb-1">Access from Any Device</h3>
+            <p class="text-sm text-gray-600">We'll send a secure link to your email. Click it to sign in.</p>
+          </div>
+        </div>
+
+        <!-- Magic Link Sent -->
+        <div *ngIf="magicLinkSent" class="p-4 bg-green-50 rounded-lg border border-green-200 mb-4">
+          <div class="flex items-start gap-3 mb-3">
+            <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900 mb-1">Check your email!</h3>
+              <p class="text-sm text-gray-600 mb-3">We sent a secure link to <strong>{{ authEmail }}</strong>. Click the link to sign in.</p>
+              <div *ngIf="magicLinkUrl" class="p-3 bg-white rounded border border-green-300">
+                <p class="text-xs text-gray-600 mb-2">DEV MODE: Click this link to sign in:</p>
+                <a [href]="magicLinkUrl" class="text-sm text-blue-600 hover:text-blue-700 break-all">{{ magicLinkUrl }}</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Email Address
+        </label>
+        <input
+          type="email"
+          [(ngModel)]="authEmail"
+          placeholder="your@email.com"
+          [disabled]="magicLinkSent"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          (keyup.enter)="handleAuth()"
+          autofocus
+        />
+      </div>
+
+      <button
+        *ngIf="!magicLinkSent"
+        type="button"
+        (click)="handleAuth()"
+        [disabled]="!authEmail || isLoading"
+        class="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <span *ngIf="!isLoading">
+          {{ authMethod === 'passkey' ? 
+            (authMode === 'signin' ? 'Sign In with Passkey' : 'Create Passkey') :
+            'Send Magic Link' 
+          }}
+        </span>
+        <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
+          <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Processing...
+        </span>
+      </button>
+
+      <button
+        *ngIf="magicLinkSent"
+        type="button"
+        (click)="magicLinkSent = false; authEmail = ''"
+        class="w-full py-3 text-gray-700 bg-white border border-gray-300 font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors"
+      >
+        Send to Different Email
+      </button>
+
+      <div *ngIf="authMethod === 'passkey' && !magicLinkSent" class="mt-4 text-center">
+        <button
+          type="button"
+          (click)="switchAuthMode()"
+          class="text-sm text-blue-600 hover:text-blue-700 font-medium focus:outline-none"
+        >
+          {{ authMode === 'signin' ? "Don't have an account? Save your plan" : 'Already have an account? Sign in' }}
+        </button>
+      </div>
+
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <p class="text-xs text-gray-500 text-center">
+          {{ authMethod === 'passkey' ?
+            'Passkeys use your device\'s biometric authentication (Face ID, Touch ID, Windows Hello) for secure, passwordless access.' :
+            'Magic links provide secure, one-time access from any device. The link expires after 15 minutes.'
+          }}
+        </p>
+      </div>
+    </div>
   </div>
   
 </div>

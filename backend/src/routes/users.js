@@ -1,31 +1,55 @@
 import express from "express";
 import User from "../models/User.js";
+import { findOrCreateUserByBrowserId, findOrCreateUserByEmail, claimPlansWithEmail } from "../services/userService.js";
 
 const router = express.Router();
 
 /**
- * POST /api/users
- * Create or update a user
+ * POST /api/users/init
+ * Initialize user session (by browserId or email)
+ * Body: { browserId?, email?, name?, availableDays? }
  */
-router.post("/", async (req, res) => {
+router.post("/init", async (req, res) => {
   try {
-    const { name, email, availableDays } = req.body;
+    const { browserId, email, name, availableDays } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ error: "Email is required" });
+    let user;
+
+    if (email) {
+      // Find or create by email
+      user = await findOrCreateUserByEmail(email, { name, availableDays });
+    } else if (browserId) {
+      // Find or create by browserId
+      user = await findOrCreateUserByBrowserId(browserId, { name, availableDays });
+    } else {
+      return res.status(400).json({ error: "browserId or email is required" });
     }
 
-    // Upsert user (create if not exists, otherwise update)
-    const user = await User.findOneAndUpdate(
-      { email },
-      { name, availableDays },
-      { new: true, upsert: true }
-    );
-
-    res.status(200).json(user);
+    res.json(user);
   } catch (err) {
-    console.error("❌ Error creating/updating user:", err);
-    res.status(500).json({ error: "Failed to create or update user" });
+    console.error("❌ Error initializing user:", err);
+    res.status(500).json({ error: "Failed to initialize user", message: err.message });
+  }
+});
+
+/**
+ * POST /api/users/claim
+ * Claim anonymous plans with email
+ * Body: { browserId, email }
+ */
+router.post("/claim", async (req, res) => {
+  try {
+    const { browserId, email } = req.body;
+
+    if (!browserId || !email) {
+      return res.status(400).json({ error: "browserId and email are required" });
+    }
+
+    const user = await claimPlansWithEmail(browserId, email);
+    res.json(user);
+  } catch (err) {
+    console.error("❌ Error claiming plans:", err);
+    res.status(500).json({ error: "Failed to claim plans", message: err.message });
   }
 });
 
@@ -46,6 +70,27 @@ router.get("/:id", async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching user:", err);
     res.status(500).json({ error: "Failed to fetch user" });
+  }
+});
+
+// Legacy endpoint for backwards compatibility
+router.post("/", async (req, res) => {
+  try {
+    const { name, email, availableDays, browserId } = req.body;
+    
+    let user;
+    if (email) {
+      user = await findOrCreateUserByEmail(email, { name, availableDays });
+    } else if (browserId) {
+      user = await findOrCreateUserByBrowserId(browserId, { name, availableDays });
+    } else {
+      return res.status(400).json({ error: "email or browserId is required" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error("❌ Error creating user:", err);
+    res.status(500).json({ error: "Failed to create user" });
   }
 });
 

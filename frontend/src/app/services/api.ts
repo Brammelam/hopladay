@@ -26,7 +26,8 @@ export class ApiService {
   }
 
   /**
-   * Create a new user — typically a temporary or anonymous session.
+   * Create a new user — DEPRECATED, use UserService instead
+   * @deprecated Use UserService.initializeUser() or UserService.claimWithEmail()
    */
   createUser(user: { name: string; email: string; availableDays: number }): Observable<any> {
     return this.http.post(`${this.baseUrl}/users`, user);

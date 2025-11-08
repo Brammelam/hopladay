@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import holidaysRouter from "./routes/holidays.js";
 import usersRouter from "./routes/users.js";
 import plansRouter from "./routes/plans.js";
+import authRouter from "./routes/auth.js";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use("/api/holidays", holidaysRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/plans", plansRouter);
+app.use("/api/auth", authRouter);
 
 app.get("/", (req, res) => res.send("Holiday Planner API is running"));
 
