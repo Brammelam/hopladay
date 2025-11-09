@@ -90,9 +90,15 @@ export class UserService {
 
   /**
    * Set current user (after auth)
+   * Also syncs the browserId to prevent creating duplicate users
    */
   setCurrentUser(user: User): void {
     this.currentUserSubject.next(user);
+    
+    // If the authenticated user has a different browserId, sync it
+    if (user.browserId && user.browserId !== this.getBrowserId()) {
+      localStorage.setItem(this.BROWSER_ID_KEY, user.browserId);
+    }
   }
 
   /**

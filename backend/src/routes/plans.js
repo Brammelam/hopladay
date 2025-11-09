@@ -794,15 +794,27 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
 
 /**
  * GET /api/plans/:userId/:year
- * Get plan for specific user and year
+ * Get plan for specific user and year (optionally filtered by country)
+ * Query params: ?country=XX (optional - returns 404 if country doesn't match)
  */
 router.get("/:userId/:year", async (req, res) => {
   try {
     const { userId, year } = req.params;
+    const { country } = req.query;
+    
     const plan = await HolidayPlan.findOne({ userId, year });
     
     if (!plan) {
       return res.status(404).json({ error: "Plan not found for this year" });
+    }
+
+    // If country filter is provided, check if it matches
+    if (country && plan.countryCode !== country) {
+      console.log(`ℹ️ Plan exists for ${year} but for ${plan.countryCode}, not ${country}`);
+      return res.status(404).json({ 
+        error: "Plan not found for this year/country combination",
+        existingCountry: plan.countryCode 
+      });
     }
 
     res.json(plan);

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -8,7 +8,12 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './holiday-input.html',
   imports: [CommonModule, FormsModule],
 })
-export class HolidayInputComponent implements OnInit {
+export class HolidayInputComponent implements OnInit, OnChanges {
+  @Input() country?: string;
+  @Input() year?: number;
+  @Input() days?: number;
+  @Input() preference?: string;
+  
   @Output() fetch = new EventEmitter<{ country: string; year: number }>();
   @Output() plan = new EventEmitter<any>();
   @Output() manualPlan = new EventEmitter<any>();
@@ -75,6 +80,9 @@ export class HolidayInputComponent implements OnInit {
   selectedPreference = this.preferences[0]
 
   ngOnInit() {
+    // Initialize from inputs if provided
+    this.syncFromInputs();
+    
     // Emit initial settings
     this.settingsChange.emit({
       country: this.selectedCountry,
@@ -82,6 +90,29 @@ export class HolidayInputComponent implements OnInit {
       availableDays: this.availableDays,
       preference: this.selectedPreference.value
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    // Update internal state when parent changes inputs
+    if (changes['country'] || changes['year'] || changes['days'] || changes['preference']) {
+      console.log('🔄 Input component received updates from parent:', {
+        country: changes['country']?.currentValue,
+        year: changes['year']?.currentValue,
+        days: changes['days']?.currentValue,
+        preference: changes['preference']?.currentValue,
+      });
+      this.syncFromInputs();
+    }
+  }
+
+  private syncFromInputs() {
+    if (this.country) this.selectedCountry = this.country;
+    if (this.year) this.selectedYear = this.year;
+    if (this.days) this.availableDays = this.days;
+    if (this.preference) {
+      const pref = this.preferences.find(p => p.value === this.preference);
+      if (pref) this.selectedPreference = pref;
+    }
   }
 
   onInputChange() {

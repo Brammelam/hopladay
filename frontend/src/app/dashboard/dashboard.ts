@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { HolidayInputComponent } from '../holiday-input/holiday-input';
 import { HolidayCalendarComponent } from '../holiday-calendar/holiday-calendar';
 import { HolidaySummaryComponent } from '../holiday-summary/holiday-summary';
@@ -33,8 +34,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   authEmail = '';
   magicLinkSent = false;
   magicLinkUrl = '';
+  showPlansDropdown = false;
+  savedPlans: any[] = [];
 
   private scrollHandler: () => void;
+  private userSubscription?: Subscription;
 
   constructor(
     private api: ApiService,
@@ -55,10 +59,44 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.initializeUser();
     this.prefetchHolidays();
     window.addEventListener('scroll', this.scrollHandler);
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (this.showPlansDropdown && !target.closest('.relative')) {
+        this.showPlansDropdown = false;
+        this.cdr.detectChanges();
+      }
+    });
+    
+    // Subscribe to user changes to update UI when auth state changes
+    this.userSubscription = this.userService.currentUser$.subscribe((user) => {
+      if (user) {
+        console.log('👤 User state changed:', { email: user.email, id: user._id });
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private initializeUser(): void {
-    // Initialize user session
+    // Check if user is already authenticated (e.g., from magic link)
+    const currentUser = this.userService.getCurrentUser();
+    
+    if (currentUser) {
+      console.log('✅ User already authenticated, skipping initialization:', currentUser);
+      this.userId = currentUser._id;
+      
+      if (currentUser.email) {
+        this.loadUserPlans(currentUser._id);
+        this.loadSavedPlans(); // Preload saved plans for dropdown
+      }
+      
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // Initialize new session (anonymous user)
+    console.log('🆕 No authenticated user, initializing new session...');
     this.userService.initializeUser(this.availableDays).subscribe({
       next: (user) => {
         this.userId = user._id;
@@ -68,7 +106,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (user.email) {
           console.log('🔍 Authenticated user, loading existing plan...');
           this.loadUserPlans(user._id);
+          this.loadSavedPlans(); // Preload saved plans for dropdown
         }
+        
+        // Force UI update
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('❌ Failed to initialize user:', err);
@@ -78,6 +120,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     window.removeEventListener('scroll', this.scrollHandler);
+    this.userSubscription?.unsubscribe();
   }
 
   private prefetchHolidays(): void {
@@ -93,6 +136,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   onFetch({ country, year }: { country: string; year: number }) {
     this.selectedYear = year;
     this.selectedCountry = country;
+    
     this.api.getHolidays(year, country).subscribe({
       next: (data: any) => {
         this.holidays = [...data];
@@ -107,6 +151,65 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.selectedYear = year;
     this.availableDays = availableDays;
     this.selectedPreference = preference;
+  }
+
+  startNewPlan(): void {
+    if (!this.userId) return;
+    
+    console.log('🆕 Starting new plan for:', { 
+      country: this.selectedCountry, 
+      year: this.selectedYear 
+    });
+    
+    this.plan = null;
+    this.editMode = false;
+    this.cdr.detectChanges();
+  }
+
+  togglePlansDropdown(): void {
+    this.showPlansDropdown = !this.showPlansDropdown;
+    
+    // Only load if opening and plans haven't been loaded yet
+    if (this.showPlansDropdown && this.userId && this.savedPlans.length === 0) {
+      this.loadSavedPlans();
+    }
+  }
+
+  loadSavedPlans(): void {
+    if (!this.userId) return;
+    
+    this.api.getAllPlans(this.userId).subscribe({
+      next: (plans) => {
+        this.savedPlans = plans.sort((a, b) => b.year - a.year || a.countryCode.localeCompare(b.countryCode));
+        console.log('📚 Loaded saved plans:', this.savedPlans.length);
+        this.cdr.detectChanges(); // Trigger UI update after async load
+      },
+      error: (err) => {
+        console.error('❌ Failed to load saved plans:', err);
+        this.savedPlans = [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadPlan(plan: any): void {
+    console.log('📂 Loading plan:', { year: plan.year, country: plan.countryCode });
+    
+    this.selectedYear = plan.year;
+    this.selectedCountry = plan.countryCode;
+    this.availableDays = plan.availableDays;
+    this.selectedPreference = plan.preference;
+    
+    // Load holidays first
+    this.api.getHolidays(plan.year, plan.countryCode).subscribe({
+      next: (holidayData) => {
+        this.holidays = [...holidayData];
+        this.plan = { ...plan };
+        this.showPlansDropdown = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Failed to load holidays:', err)
+    });
   }
 
   onPlan(event: { availableDays: number; year: number; country: string; preference: string }) {
@@ -161,6 +264,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
               this.isLoading = false;
               // Enable edit mode by default for manual planning
               this.editMode = !generateAI;
+              // Refresh saved plans list for dropdown
+              if (this.isUserClaimed()) {
+                this.loadSavedPlans();
+              }
               this.cdr.detectChanges();
             },
             error: (err) => {
@@ -248,6 +355,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const available = this.plan.availableDays || this.availableDays;
     const used = this.plan.usedDays || 0;
     return Math.max(0, available - used);
+  }
+
+  getCountryName(code: string): string {
+    const countries: Record<string, string> = {
+      'NO': 'Norway', 'SE': 'Sweden', 'DK': 'Denmark', 'FI': 'Finland',
+      'NL': 'Netherlands', 'IS': 'Iceland', 'DE': 'Germany', 'BE': 'Belgium',
+      'FR': 'France', 'ES': 'Spain', 'PT': 'Portugal', 'IT': 'Italy',
+      'CH': 'Switzerland', 'AT': 'Austria', 'IE': 'Ireland', 'GB': 'United Kingdom',
+      'US': 'United States', 'CA': 'Canada', 'AU': 'Australia', 'NZ': 'New Zealand',
+    };
+    return countries[code] || code;
   }
 
   claimPlans(): void {
@@ -413,19 +531,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadUserPlans(userId: string): void {
+    this.loadUserPlanForYearCountry(userId, this.selectedYear, this.selectedCountry);
+  }
+
+  private loadUserPlanForYearCountry(userId: string, year: number, country: string): void {
     this.isLoading = true;
-    this.api.getPlanByYear(userId, this.selectedYear).subscribe({
+    
+    console.log('🔍 Loading plan for:', { userId, year, country });
+    
+    this.api.getPlanByYear(userId, year, country).subscribe({
       next: (plan) => {
-        if (plan) {
-          this.plan = { ...plan };
-          
-          // Update component state from loaded plan
-          this.selectedCountry = plan.countryCode || this.selectedCountry;
-          this.selectedYear = plan.year || this.selectedYear;
-          this.availableDays = plan.availableDays || this.availableDays;
-          this.selectedPreference = plan.preference || this.selectedPreference;
-          
-          // Load holidays for the plan's country/year
+        // Backend returns plan only if year/country match
+        this.plan = { ...plan };
+        
+        // Update only non-year/country state from loaded plan
+        // (year/country are already set by user's selection)
+        this.availableDays = plan.availableDays || this.availableDays;
+        this.selectedPreference = plan.preference || this.selectedPreference;
+        
+        // Ensure holidays are loaded for this plan
+        if (!this.holidays.length || this.holidays[0]?.countryCode !== plan.countryCode) {
           this.api.getHolidays(plan.year, plan.countryCode).subscribe({
             next: (holidayData) => {
               this.holidays = [...holidayData];
@@ -433,16 +558,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
             },
             error: (err) => console.error('Failed to load holidays for plan:', err)
           });
-          
-          console.log('✅ Plan loaded:', { year: plan.year, country: plan.countryCode, usedDays: plan.usedDays });
-        } else {
-          console.log('ℹ️ No existing plan found for this year');
         }
+        
+        console.log('✅ Plan loaded:', { year: plan.year, country: plan.countryCode, usedDays: plan.usedDays });
+        
         this.isLoading = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Failed to load plans:', err);
+        if (err.status === 404) {
+          // No plan found for this year/country combination
+          console.log('ℹ️ No existing plan for', { year, country });
+          
+          if (err.error?.existingCountry) {
+            console.log(`ℹ️ Note: Plan exists for ${year} but for ${err.error.existingCountry}`);
+          }
+          
+          // Reset plan to show planning method selection
+          this.plan = null;
+        } else {
+          console.error('❌ Failed to load plan:', err);
+        }
+        
         this.isLoading = false;
         this.cdr.detectChanges();
       }

@@ -55,10 +55,20 @@ export class ApiService {
   }
 
   /**
-   * Get plan by userId and year
+   * Get all plans for a user
    */
-  getPlanByYear(userId: string, year: number): Observable<any> {
-    return this.http.get(`${this.baseUrl}/plans/${userId}/${year}`);
+  getAllPlans(userId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/plans/${userId}`);
+  }
+
+  /**
+   * Get plan by userId, year, and optionally country
+   */
+  getPlanByYear(userId: string, year: number, country?: string): Observable<any> {
+    const url = country 
+      ? `${this.baseUrl}/plans/${userId}/${year}?country=${country}`
+      : `${this.baseUrl}/plans/${userId}/${year}`;
+    return this.http.get(url);
   }
 
   /**
