@@ -9,7 +9,7 @@ import {
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import User from "../models/User.js";
 import MagicLink from "../models/MagicLink.js";
-import { findOrCreateUserByBrowserId, findOrCreateUserByEmail } from "../services/userService.js";
+import { findOrCreateUserByEmail } from "../services/userService.js";
 import nodemailer from 'nodemailer';
 
 const router = express.Router();
@@ -486,7 +486,7 @@ router.post("/magic-link/send", async (req, res) => {
     });
     await magicLink.save();
 
-    const magicUrl = `${origin}/auth/verify?token=${token}`;
+    const magicUrl = `${origin}/api/auth/verify?token=${token}`;
     
     console.log(`📧 Magic link generated:`, {
       email,
@@ -502,9 +502,8 @@ router.post("/magic-link/send", async (req, res) => {
     // Send immediate response
     res.json({
       success: true,
-      message: hasEmailConfig ? "Magic link sent to your email" : "Magic link generated (dev mode)",
-      devLink: hasEmailConfig ? undefined : magicUrl, // Only show in dev
-      expiresIn: '15 minutes',
+      message: "Magic link sent to your email",
+      expiresIn: '15 minutes'
     });
 
     // Send email in background (non-blocking)
