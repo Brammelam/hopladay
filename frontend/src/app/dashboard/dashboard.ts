@@ -32,13 +32,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   selectedCountry = 'NO';
   selectedYear = new Date().getFullYear();
-  availableDays = 25;
-  selectedPreference = 'balanced';
+  availableDays = 20;
 
   editMode = false;
   isLoading = false;
   showStickyStats = false;
   showAuthModal = false;
+
+  // Preference selection flow
+  showPreferenceSelector = false;
+  preferenceSelectionFor: 'ai' | 'optimize' | 'regenerate' = 'ai';
+  selectedPreference = 'balanced';
+  preferences = [
+    { value: 'balanced', label: 'Balanced', description: 'Mix of short and long breaks' },
+    { value: 'many_long_weekends', label: 'Long weekends', description: '3-4 day breaks throughout the year' },
+    { value: 'few_long_vacations', label: 'Long vacations', description: 'Extended 7-14 day vacations' },
+    { value: 'summer_vacation', label: 'Summer focus', description: 'Maximize summer time off' },
+    { value: 'spread_out', label: 'Spread out', description: 'Evenly distributed throughout year' },
+  ];
 
   authMode: 'signin' | 'register' = 'signin';
   authMethod: 'passkey' | 'email' = 'passkey';
@@ -156,37 +167,100 @@ export class DashboardComponent implements OnInit, OnDestroy {
     country,
     year,
     availableDays,
-    preference,
   }: {
     country: string;
     year: number;
     availableDays: number;
-    preference: string;
   }) {
     this.selectedCountry = country;
     this.selectedYear = year;
     this.availableDays = availableDays;
-    this.selectedPreference = preference;
   }
 
   /** ────────────────────────────────
    *  PLANNING LOGIC
    *  ─────────────────────────────── */
-  onPlan(event: { availableDays: number; year: number; country: string; preference: string }) {
+  // Show preference selector for AI plan
+  onPlan() {
     if (!this.validateInputs()) return;
-    const { availableDays, year, country, preference } = event;
-    this.requestPlan(this.userId, year, country, availableDays, preference, true);
+    // Reset to default preference for new AI plan
+    this.selectedPreference = 'balanced';
+    this.preferenceSelectionFor = 'ai';
+    this.showPreferenceSelector = true;
+    this.cdr.markForCheck();
   }
 
-  onManualPlan(event: {
-    availableDays: number;
-    year: number;
-    country: string;
-    preference: string;
-  }) {
+  // Create manual plan directly (no AI preference needed yet)
+  onManualPlan() {
     if (!this.validateInputs()) return;
-    const { availableDays, year, country, preference } = event;
-    this.requestPlan(this.userId, year, country, availableDays, preference, false);
+    // Create empty plan for manual planning - no AI preference needed
+    this.requestPlan(this.userId, this.selectedYear, this.selectedCountry, this.availableDays, 'balanced', false);
+  }
+
+  // Execute plan generation with selected preference
+  confirmPreferenceSelection() {
+    console.log(`✅ Confirming preference selection: ${this.selectedPreference} for ${this.preferenceSelectionFor}`);
+    this.showPreferenceSelector = false;
+    this.cdr.markForCheck();
+    
+    if (this.preferenceSelectionFor === 'ai') {
+      this.requestPlan(this.userId, this.selectedYear, this.selectedCountry, this.availableDays, this.selectedPreference, true);
+    } else if (this.preferenceSelectionFor === 'optimize') {
+      this.executeOptimizeRemaining();
+    } else if (this.preferenceSelectionFor === 'regenerate') {
+      this.regenerateWithNewStrategy();
+    }
+  }
+
+  // Select a preference in the modal
+  selectPreference(value: string) {
+    console.log(`🎯 User selected preference: ${value}`);
+    this.selectedPreference = value;
+    this.cdr.markForCheck();
+  }
+
+  cancelPreferenceSelection() {
+    this.showPreferenceSelector = false;
+  }
+
+  // Open regenerate modal with current preference pre-selected
+  openRegenerateModal() {
+    if (!this.plan) return;
+    this.selectedPreference = this.plan.preference || 'balanced';
+    this.preferenceSelectionFor = 'regenerate';
+    this.showPreferenceSelector = true;
+    this.cdr.markForCheck();
+  }
+
+  // Regenerate plan with new strategy (preserves manual days)
+  regenerateWithNewStrategy() {
+    if (!this.plan?._id) return;
+
+    this.isLoading = true;
+
+    console.log(`🔄 Regenerating with strategy: ${this.selectedPreference}`);
+
+    // Use regenerate endpoint which keeps manual days and regenerates AI suggestions
+    this.api.regeneratePlanWithStrategy(this.plan._id, this.selectedPreference).subscribe({
+      next: (updatedPlan) => {
+        console.log(`✅ Plan regenerated from API, preference: ${updatedPlan.preference}`);
+        this.plan = { ...updatedPlan };
+        this.isLoading = false;
+        this.toast(`Plan regenerated with ${this.getPreferenceLabel(updatedPlan.preference)} strategy!`);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to regenerate plan:', err);
+        this.isLoading = false;
+        this.toast('Failed to regenerate plan. Please try again.');
+      },
+    });
+  }
+
+  // Get human-readable preference label
+  getPreferenceLabel(value: string): string {
+    const pref = this.preferences.find(p => p.value === value);
+    return pref ? pref.label : value.replace(/_/g, ' ');
   }
 
   private validateInputs(): boolean {
@@ -209,7 +283,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   preference: string = 'balanced',
   generateAI = true
 ) {
-  console.log(`⚙️ Generating ${generateAI ? 'AI' : 'manual'} plan for`, { userId, year, country });
+  console.log(`⚙️ Generating ${generateAI ? 'AI' : 'manual'} plan for`, { userId, year, country, preference, availableDays });
   this.isLoading = true;
 
   this.api
@@ -217,6 +291,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     .pipe(
       switchMap((holidayData) => {
         this.holidays = [...holidayData];
+        console.log(`📡 Calling API createPlan with preference: ${preference}`);
         return this.api.createPlan(userId, year, country, availableDays, preference, generateAI);
       }),
       catchError((err) => {
@@ -230,14 +305,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     .subscribe((plan) => {
       if (!plan) return; // handled in catchError
 
-      console.log('✅ Plan successfully generated:', plan);
+      console.log('✅ Plan successfully generated:', { 
+        preference: plan.preference, 
+        suggestions: plan.suggestions?.length,
+        usedDays: plan.usedDays 
+      });
       this.plan = { ...plan };
       this.editMode = !generateAI;
       this.isLoading = false;
 
       if (this.isUserClaimed()) this.loadSavedPlans();
 
-      this.toast('Plan generated successfully!', 'success');
+      this.toast(`Plan generated with ${this.getPreferenceLabel(plan.preference)} strategy!`, 'success');
       this.cdr.detectChanges();
     });
 }
@@ -247,6 +326,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  // Show preference selector for optimize
   optimizeRemaining(): void {
     if (!this.plan?._id) return;
 
@@ -256,21 +336,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const confirmOptimize = window.confirm(
-      `Optimize ${remaining} remaining vacation day${remaining > 1 ? 's' : ''}? ` +
-        `This will keep your existing vacation days and add AI suggestions for the rest.`
-    );
-    if (!confirmOptimize) return;
+    // Pre-select current plan's preference
+    this.selectedPreference = this.plan.preference || 'balanced';
+    this.preferenceSelectionFor = 'optimize';
+    this.showPreferenceSelector = true;
+    this.cdr.markForCheck();
+  }
 
+  // Execute optimization with selected preference
+  private executeOptimizeRemaining(): void {
+    if (!this.plan?._id) return;
+
+    const remaining = this.getRemainingDays();
     this.isLoading = true;
-    const preference = this.plan.preference || 'balanced';
 
-    this.api.optimizeRemainingDays(this.plan._id, preference).subscribe({
+    console.log(`🎯 Optimizing with preference: ${this.selectedPreference}`);
+
+    this.api.optimizeRemainingDays(this.plan._id, this.selectedPreference).subscribe({
       next: (updatedPlan) => {
+        console.log(`✅ Plan updated from API, preference: ${updatedPlan.preference}`);
         this.plan = { ...updatedPlan };
         this.isLoading = false;
         this.editMode = false;
-        this.toast('Optimization complete!');
+        this.toast(`Optimized with ${this.getPreferenceLabel(updatedPlan.preference)} strategy!`);
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -332,6 +420,59 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.savedPlans = [];
         this.cdr.detectChanges();
       },
+    });
+  }
+
+   togglePlansDropdown(): void {
+    this.showPlansDropdown = !this.showPlansDropdown;
+    
+    // Only load if opening and plans haven't been loaded yet
+    if (this.showPlansDropdown && this.userId && this.savedPlans.length === 0) {
+      this.loadSavedPlans();
+    }
+  }
+
+  startNewPlan(): void {
+    if (!this.userId) return;
+    
+    console.log('🆕 Starting new plan for:', { 
+      country: this.selectedCountry, 
+      year: this.selectedYear 
+    });
+    
+    this.plan = null;
+    this.editMode = false;
+    this.cdr.detectChanges();
+  }
+
+  getCountryName(code: string): string {
+    const countries: Record<string, string> = {
+      'NO': 'Norway', 'SE': 'Sweden', 'DK': 'Denmark', 'FI': 'Finland',
+      'NL': 'Netherlands', 'IS': 'Iceland', 'DE': 'Germany', 'BE': 'Belgium',
+      'FR': 'France', 'ES': 'Spain', 'PT': 'Portugal', 'IT': 'Italy',
+      'CH': 'Switzerland', 'AT': 'Austria', 'IE': 'Ireland', 'GB': 'United Kingdom',
+      'US': 'United States', 'CA': 'Canada', 'AU': 'Australia', 'NZ': 'New Zealand',
+    };
+    return countries[code] || code;
+  }
+
+  loadPlan(plan: any): void {
+    console.log('📂 Loading plan:', { year: plan.year, country: plan.countryCode });
+    
+    this.selectedYear = plan.year;
+    this.selectedCountry = plan.countryCode;
+    this.availableDays = plan.availableDays;
+    this.selectedPreference = plan.preference;
+    
+    // Load holidays first
+    this.api.getHolidays(plan.year, plan.countryCode).subscribe({
+      next: (holidayData) => {
+        this.holidays = [...holidayData];
+        this.plan = { ...plan };
+        this.showPlansDropdown = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Failed to load holidays:', err)
     });
   }
 
@@ -500,5 +641,5 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   toast(message: string, type: 'info' | 'success' | 'error' = 'info'): void {
     this.toastService.show(message, type);
-  }
+}
 }

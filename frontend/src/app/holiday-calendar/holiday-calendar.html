@@ -64,12 +64,16 @@
 
           <!-- PLAN tooltip -->
           <ng-template #planTip>
-            <ng-container *ngIf="getPlanDescription(day) as desc">
+            <ng-container *ngIf="getPlanSuggestion(day) as suggestion">
               <div
-                class="absolute bottom-full mb-1 hidden group-hover:block bg-blue-800 text-white text-xs rounded-md px-2 py-1 shadow-md whitespace-nowrap z-20"
+                class="absolute bottom-full mb-1 w-30 hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-2 py-1 shadow-md z-20 whitespace-normal max-w-xs"
                 [ngClass]="[tipAlignClass(day), isOpen(day) ? '!block' : '']"
               >
-                {{ desc }}
+                <div class="text-left mb-1">{{ suggestion.description }}</div>
+                <div *ngIf="suggestion.reason" class="text-left text-gray-300 text-[11px] mb-1">{{ suggestion.reason }}</div>
+                <div *ngIf="suggestion.roi" class="text-right text-gray-400 text-[10px]">
+                  ROI: {{ suggestion.roi }}x
+                </div>
               </div>
             </ng-container>
           </ng-template>

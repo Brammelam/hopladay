@@ -53,11 +53,15 @@ export class HolidayCalendarComponent implements OnChanges {
 
   tipAlignClass(day: Date): string {
     const dow = day.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
-    if ([0, 6].includes(dow)) {
+    if (dow === 0) {
       // Sunday: push left (anchor right edge)
       return 'right-0 translate-x-0 origin-right text-right';
     }
-    if ([1, 2].includes(dow)) {
+    if (dow === 6) {
+      // Sunday: push left (anchor right edge)
+      return 'right-[-20px] translate-x-0 origin-right text-right';
+    }
+    if (dow === 1) {
       // Monday: push right (anchor left edge)
       return 'left-0 translate-x-0 origin-left';
     }
@@ -183,15 +187,22 @@ export class HolidayCalendarComponent implements OnChanges {
    * Returns plan description (if date falls within a vacation suggestion).
    */
   getPlanDescription(date: Date): string | null {
-    const block = this.plan?.suggestions?.find((s: any) => {
+    const block = this.getPlanSuggestion(date);
+    return block ? block.description : null;
+  }
+
+  /**
+   * Returns the full suggestion object for a date (if within a vacation suggestion).
+   */
+  getPlanSuggestion(date: Date): any | null {
+    return this.plan?.suggestions?.find((s: any) => {
       const start = new Date(s.startDate);
       const end = new Date(s.endDate);
       return (
         (isAfter(date, start) || isSameDay(date, start)) &&
         (isBefore(date, end) || isSameDay(date, end))
       );
-    });
-    return block ? block.description : null;
+    }) || null;
   }
 
   /**

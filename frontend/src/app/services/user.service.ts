@@ -18,11 +18,24 @@ export interface User {
 export class UserService {
   private baseUrl = environment.apiUrl;
   private readonly BROWSER_ID_KEY = 'hopladay_browser_id';
+  private readonly USER_KEY = 'hopladay_user';
   
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private currentUserSubject = new BehaviorSubject<User | null>(this.restoreUser());
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {}
+
+  private restoreUser(): User | null {
+    const stored = localStorage.getItem(this.USER_KEY);
+    if (!stored) return null;
+
+    try {
+      return JSON.parse(stored);
+    } catch {
+      localStorage.removeItem(this.USER_KEY);
+      return null;
+    }
+  }
 
   /**
    * Get or generate browser ID
@@ -88,17 +101,18 @@ export class UserService {
     );
   }
 
-  /**
-   * Set current user (after auth)
-   * Also syncs the browserId to prevent creating duplicate users
-   */
   setCurrentUser(user: User): void {
-    this.currentUserSubject.next(user);
-    
-    // If the authenticated user has a different browserId, sync it
+    this.saveUser(user);
+
+    // Ensure correct browserId stays synced
     if (user.browserId && user.browserId !== this.getBrowserId()) {
       localStorage.setItem(this.BROWSER_ID_KEY, user.browserId);
     }
+  }
+
+  private saveUser(user: User) {
+    this.currentUserSubject.next(user);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
 
   /**
@@ -147,8 +161,8 @@ export class UserService {
   }
 
   clearCurrentUser() {
-  localStorage.removeItem(this.BROWSER_ID_KEY);
   this.currentUserSubject.next(null);
+  localStorage.removeItem(this.USER_KEY);
 }
 
 }

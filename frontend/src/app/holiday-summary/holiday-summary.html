@@ -3,20 +3,44 @@
   
   <!-- AI Suggestions -->
   <div *ngIf="getAISuggestions().length > 0" class="mb-6">
-    <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">AI Suggested Blocks</h3>
+    <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide flex items-center gap-2">
+      <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+      AI suggested blocks
+    </h3>
     <ul class="space-y-3">
-      <li *ngFor="let s of getAISuggestions()" class="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 rounded-r">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="font-medium text-gray-900">
-              {{ s.startDate | date:'MMM d' }} → {{ s.endDate | date:'MMM d, yyyy' }}
-            </p>
-            <p class="text-gray-600 text-sm mt-0.5">
-              {{ s.totalDaysOff }} days off using <span class="font-semibold text-blue-700">{{ s.vacationDaysUsed }}</span> vacation day{{ s.vacationDaysUsed > 1 ? 's' : '' }}
-            </p>
+      <li *ngFor="let s of getAISuggestions()" 
+          [class.border-purple-500]="s.isMerged"
+          [class.border-blue-500]="!s.isMerged"
+          class="border-l-4 pl-4 py-3 bg-gradient-to-r from-blue-50 to-transparent rounded-r hover:from-blue-100 transition-colors">
+        <div class="space-y-2">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <p class="font-semibold text-gray-900 text-base">
+                  {{ s.startDate | date:'MMM d' }} → {{ s.endDate | date:'MMM d, yyyy' }}
+                </p>
+                <span *ngIf="s.isMerged" class="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                  Mixed
+                </span>
+              </div>
+              <p class="text-blue-700 text-sm font-medium">
+                {{ s.description || (s.totalDaysOff + ' days off using ' + s.vacationDaysUsed + ' vacation day' + (s.vacationDaysUsed > 1 ? 's' : '')) }}
+              </p>
+            </div>
+            <div class="flex flex-col items-end gap-1 flex-shrink-0">
+              <div class="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-900">
+                {{ s.roi || (s.totalDaysOff / s.vacationDaysUsed).toFixed(1) }}x
+              </div>
+              <div *ngIf="s.efficiency === 'high'" class="text-xs text-orange-600 font-medium">⭐ High ROI</div>
+            </div>
           </div>
-          <div class="text-sm font-semibold text-blue-600">
-            {{ (s.totalDaysOff / s.vacationDaysUsed).toFixed(1) }}x ROI
+          <div *ngIf="s.reason" class="flex items-start gap-2 text-gray-600 text-sm pl-0">
+            <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="leading-tight">{{ s.reason }}</span>
           </div>
         </div>
       </li>
@@ -25,20 +49,35 @@
 
   <!-- Manual Days -->
   <div *ngIf="getManualSuggestions().length > 0" class="mb-6">
-    <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Manual Vacation Blocks</h3>
-    <ul class="space-y-2">
-      <li *ngFor="let s of getManualSuggestions()" class="border-l-4 border-green-500 pl-4 py-2 bg-green-50 rounded-r">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="font-medium text-gray-900">
-              {{ s.startDate | date:'MMM d' }} → {{ s.endDate | date:'MMM d, yyyy' }}
-            </p>
-            <p class="text-gray-600 text-sm mt-0.5">
-              {{ s.totalDaysOff }} days off using <span class="font-semibold text-green-700">{{ s.vacationDaysUsed }}</span> vacation day{{ s.vacationDaysUsed > 1 ? 's' : '' }}
-            </p>
+    <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide flex items-center gap-2">
+      <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+      </svg>
+      Manual vacation blocks
+    </h3>
+    <ul class="space-y-3">
+      <li *ngFor="let s of getManualSuggestions()" class="border-l-4 border-green-500 pl-4 py-3 bg-gradient-to-r from-green-50 to-transparent rounded-r hover:from-green-100 transition-colors">
+        <div class="space-y-2">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-gray-900 text-base">
+                {{ s.startDate | date:'MMM d' }} → {{ s.endDate | date:'MMM d, yyyy' }}
+              </p>
+              <p class="text-green-700 text-sm font-medium mt-1">
+                {{ s.description || (s.totalDaysOff + ' days off using ' + s.vacationDaysUsed + ' vacation day' + (s.vacationDaysUsed > 1 ? 's' : '')) }}
+              </p>
+            </div>
+            <div class="flex flex-col items-end gap-1 flex-shrink-0">
+              <div class="px-2 py-0.5 rounded-full text-xs font-bold bg-green-200 text-green-900">
+                {{ s.roi || (s.totalDaysOff / s.vacationDaysUsed).toFixed(1) }}x
+              </div>
+            </div>
           </div>
-          <div class="text-sm font-semibold text-green-600">
-            {{ (s.totalDaysOff / s.vacationDaysUsed).toFixed(1) }}x ROI
+          <div *ngIf="s.reason" class="flex items-start gap-2 text-gray-600 text-sm pl-0">
+            <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="leading-tight">{{ s.reason }}</span>
           </div>
         </div>
       </li>
@@ -47,22 +86,22 @@
 
   <!-- Stats -->
   <div class="border-t pt-4 mt-4">
-    <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Summary Statistics</h3>
+    <h3 class="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Summary statistics</h3>
     <div class="grid grid-cols-2 gap-4">
       <div class="bg-gray-50 p-3 rounded-lg">
-        <div class="text-xs text-gray-600 mb-1">Total Suggestions</div>
+        <div class="text-xs text-gray-600 mb-1">Total suggestions</div>
         <div class="text-2xl font-bold text-gray-900">{{ totalSuggestions }}</div>
       </div>
       <div class="bg-gray-50 p-3 rounded-lg">
-        <div class="text-xs text-gray-600 mb-1">Manual Blocks</div>
+        <div class="text-xs text-gray-600 mb-1">Manual blocks</div>
         <div class="text-2xl font-bold text-green-600">{{ getManualSuggestions().length }}</div>
       </div>
       <div class="bg-gray-50 p-3 rounded-lg">
-        <div class="text-xs text-gray-600 mb-1">Longest Break</div>
+        <div class="text-xs text-gray-600 mb-1">Longest break</div>
         <div class="text-2xl font-bold text-blue-600">{{ longestBreak || 0 }} days</div>
       </div>
       <div class="bg-gray-50 p-3 rounded-lg">
-        <div class="text-xs text-gray-600 mb-1">Avg Efficiency</div>
+        <div class="text-xs text-gray-600 mb-1">Avg. efficiency</div>
         <div class="text-2xl font-bold text-purple-600">{{ averageEfficiency || 0 }}x</div>
       </div>
     </div>

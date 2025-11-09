@@ -19,7 +19,7 @@ import { FormsModule } from '@angular/forms';
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-2xl font-bold text-gray-900">
-            {{ mode === 'signin' ? 'Sign In' : 'Save Your Plan' }}
+            {{ mode === 'signin' ? 'Sign in' : 'Save your plan' }}
           </h2>
           <button
             type="button"
@@ -84,7 +84,7 @@ import { FormsModule } from '@angular/forms';
                 />
               </svg>
               <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1">Fast & Secure</h3>
+                <h3 class="font-semibold text-gray-900 mb-1">Fast & secure</h3>
                 <p class="text-sm text-gray-600">
                   Use Face ID, Touch ID, or device PIN. Works on this device only.
                 </p>
@@ -110,7 +110,7 @@ import { FormsModule } from '@angular/forms';
                 />
               </svg>
               <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1">Access from Any Device</h3>
+                <h3 class="font-semibold text-gray-900 mb-1">Access from any device</h3>
                 <p class="text-sm text-gray-600">
                   We'll send a secure link to your email. Click it to sign in.
                 </p>

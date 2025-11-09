@@ -6,7 +6,11 @@ const suggestionSchema = new mongoose.Schema({
   vacationDaysUsed: Number,
   totalDaysOff: Number,
   description: String,
+  reason: String,
+  roi: String,
+  efficiency: String,
   isManual: { type: Boolean, default: false },
+  isMerged: { type: Boolean, default: false },
 });
 
 const manualDaySchema = new mongoose.Schema({

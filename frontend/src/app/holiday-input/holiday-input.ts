@@ -12,12 +12,9 @@ export class HolidayInputComponent implements OnInit, OnChanges {
   @Input() country?: string;
   @Input() year?: number;
   @Input() days?: number;
-  @Input() preference?: string;
   
   @Output() fetch = new EventEmitter<{ country: string; year: number }>();
-  @Output() plan = new EventEmitter<any>();
-  @Output() manualPlan = new EventEmitter<any>();
-  @Output() settingsChange = new EventEmitter<{ country: string; year: number; availableDays: number; preference: string }>();
+  @Output() settingsChange = new EventEmitter<{ country: string; year: number; availableDays: number }>();
 
   countries = [
     { code: 'NO', name: 'Norway' },
@@ -70,14 +67,6 @@ export class HolidayInputComponent implements OnInit, OnChanges {
   selectedCountry = 'NO';
   selectedYear = new Date().getFullYear();
   availableDays = 20;
-  preferences = [
-    { value: 'balanced', label: 'Balanced' },
-    { value: 'many_long_weekends', label: 'Many long weekends' },
-    { value: 'few_long_vacations', label: 'Few long vacations' },
-    { value: 'summer_vacation', label: 'Summer vacation focus' },
-    { value: 'spread_out', label: 'Spread throughout year' },
-  ];
-  selectedPreference = this.preferences[0]
 
   ngOnInit() {
     // Initialize from inputs if provided
@@ -87,20 +76,13 @@ export class HolidayInputComponent implements OnInit, OnChanges {
     this.settingsChange.emit({
       country: this.selectedCountry,
       year: this.selectedYear,
-      availableDays: this.availableDays,
-      preference: this.selectedPreference.value
+      availableDays: this.availableDays
     });
   }
 
   ngOnChanges(changes: SimpleChanges) {
     // Update internal state when parent changes inputs
-    if (changes['country'] || changes['year'] || changes['days'] || changes['preference']) {
-      console.log('🔄 Input component received updates from parent:', {
-        country: changes['country']?.currentValue,
-        year: changes['year']?.currentValue,
-        days: changes['days']?.currentValue,
-        preference: changes['preference']?.currentValue,
-      });
+    if (changes['country'] || changes['year'] || changes['days']) {
       this.syncFromInputs();
     }
   }
@@ -109,10 +91,6 @@ export class HolidayInputComponent implements OnInit, OnChanges {
     if (this.country) this.selectedCountry = this.country;
     if (this.year) this.selectedYear = this.year;
     if (this.days) this.availableDays = this.days;
-    if (this.preference) {
-      const pref = this.preferences.find(p => p.value === this.preference);
-      if (pref) this.selectedPreference = pref;
-    }
   }
 
   onInputChange() {
@@ -120,26 +98,7 @@ export class HolidayInputComponent implements OnInit, OnChanges {
     this.settingsChange.emit({
       country: this.selectedCountry,
       year: this.selectedYear,
-      availableDays: this.availableDays,
-      preference: this.selectedPreference.value
-    });
-  }
-
-  onPlan() {
-    this.plan.emit({
-      availableDays: this.availableDays,
-      year: this.selectedYear,
-      country: this.selectedCountry,
-      preference: this.selectedPreference.value,
-    });
-  }
-
-  onManualPlan() {
-    this.manualPlan.emit({
-      availableDays: this.availableDays,
-      year: this.selectedYear,
-      country: this.selectedCountry,
-      preference: this.selectedPreference.value,
+      availableDays: this.availableDays
     });
   }
 }

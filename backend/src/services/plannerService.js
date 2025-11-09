@@ -203,6 +203,119 @@ function isLongBlock(c) {
   return c.totalDaysOff >= 7;
 }
 
+/** ---------- description generation ---------- */
+
+/**
+ * Find holidays that fall within or immediately adjacent to a date range
+ */
+function findHolidaysInRange(startDate, endDate, holidays, holidaySet) {
+  const result = [];
+  const expandedStart = previousDay(startDate, 3);
+  const expandedEnd = nextDay(endDate, 3);
+  
+  for (const h of holidays) {
+    const hDate = parseISODate(h.date);
+    if (hDate >= expandedStart && hDate <= expandedEnd) {
+      result.push({ ...h, parsedDate: hDate });
+    }
+  }
+  
+  return result.sort((a, b) => a.parsedDate - b.parsedDate);
+}
+
+/**
+ * Generate intelligent description for a vacation selection
+ */
+function generateDescription(selection, holidays, holidaySet, preference) {
+  const { startDate, endDate, vacationDaysUsed, totalDaysOff, meta } = selection;
+  const roi = totalDaysOff / vacationDaysUsed;
+  
+  // Find relevant holidays
+  const nearbyHolidays = findHolidaysInRange(startDate, endDate, holidays, holidaySet);
+  const holidaysInRange = nearbyHolidays.filter(
+    h => h.parsedDate >= startDate && h.parsedDate <= endDate
+  );
+  
+  // Build holiday names string
+  const getHolidayNames = (hols) => {
+    if (hols.length === 0) return "";
+    if (hols.length === 1) return hols[0].name || hols[0].localName;
+    if (hols.length === 2) return `${hols[0].name || hols[0].localName} and ${hols[1].name || hols[1].localName}`;
+    return `${hols[0].name || hols[0].localName} and ${hols.length - 1} other holiday${hols.length > 2 ? 's' : ''}`;
+  };
+  
+  // Determine strategy type
+  let strategy = "Bridge";
+  let reason = "";
+  
+  if (meta?.kind === "gap") {
+    strategy = "Bridge";
+    if (holidaysInRange.length >= 2) {
+      reason = `Connects ${getHolidayNames(holidaysInRange)} into one continuous break`;
+    } else if (nearbyHolidays.length >= 2) {
+      const before = nearbyHolidays.filter(h => h.parsedDate < startDate);
+      const after = nearbyHolidays.filter(h => h.parsedDate > endDate);
+      if (before.length && after.length) {
+        reason = `Bridges ${getHolidayNames([before[before.length - 1]])} to ${getHolidayNames([after[0]])}`;
+      } else {
+        reason = `Creates a ${totalDaysOff}-day break`;
+      }
+    } else {
+      reason = `Turns a weekend into ${totalDaysOff} days off`;
+    }
+  } else if (meta?.kind === "extend-before") {
+    strategy = "Extend";
+    if (holidaysInRange.length > 0) {
+      reason = `Adds days before ${getHolidayNames([holidaysInRange[0]])} for a longer break`;
+    } else {
+      reason = `Extends a holiday weekend into ${totalDaysOff} days off`;
+    }
+  } else if (meta?.kind === "extend-after") {
+    strategy = "Extend";
+    if (holidaysInRange.length > 0) {
+      reason = `Adds days after ${getHolidayNames([holidaysInRange[holidaysInRange.length - 1]])} for a longer break`;
+    } else {
+      reason = `Extends a holiday weekend into ${totalDaysOff} days off`;
+    }
+  } else {
+    // Filler day
+    strategy = "Optimize";
+    const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][startDate.getDay()];
+    if (roi >= 4) {
+      reason = `Highly efficient: Taking ${dayName} off gives you ${totalDaysOff} consecutive days`;
+    } else {
+      reason = `Adds a ${dayName} off for a ${totalDaysOff}-day break`;
+    }
+  }
+  
+  // Add ROI context
+  let efficiency = "";
+  if (roi >= 5) {
+    efficiency = " (⭐ Exceptional efficiency)";
+  } else if (roi >= 4) {
+    efficiency = " (⭐ Great value)";
+  } else if (roi >= 3) {
+    efficiency = " (✓ Good value)";
+  }
+  
+  // Add preference-specific context
+  let prefContext = "";
+  if (preference === "summer_vacation" && isSummerMonth(startDate)) {
+    prefContext = " ☀️ Summer period";
+  } else if (preference === "few_long_vacations" && totalDaysOff >= 10) {
+    prefContext = " 🏖️ Extended vacation";
+  } else if (preference === "many_long_weekends" && vacationDaysUsed <= 2 && totalDaysOff >= 3) {
+    prefContext = " 🎯 Long weekend";
+  }
+  
+  return {
+    title: `${strategy}: ${vacationDaysUsed} day${vacationDaysUsed > 1 ? 's' : ''} → ${totalDaysOff} days off${efficiency}`,
+    reason: reason + prefContext,
+    roi: roi.toFixed(1),
+    efficiency: roi >= 4 ? "high" : roi >= 3 ? "good" : "normal"
+  };
+}
+
 /** ---------- scoring & picking ---------- */
 
 function scoreCandidate(c, preference, isExtension) {
@@ -255,11 +368,18 @@ function mergeSelections(list, holidaySet) {
       const end   = last.endDate   > cur.endDate   ? last.endDate   : cur.endDate;
       const used  = countWorkdaysInRange(start, end, holidaySet);
       const total = countDaysBetween(start, end);
+      
+      // Keep the meta from the selection with the higher score/ROI if available
+      const lastRoi = last.totalDaysOff / last.vacationDaysUsed;
+      const curRoi = cur.totalDaysOff / cur.vacationDaysUsed;
+      const keepMeta = (last.score || lastRoi) >= (cur.score || curRoi) ? last.meta : cur.meta;
+      
       out[out.length - 1] = {
         startDate: start,
         endDate: end,
         vacationDaysUsed: used,
         totalDaysOff: total,
+        meta: keepMeta || { kind: "merged" },
       };
     } else {
       out.push(cur);
@@ -271,18 +391,42 @@ function mergeSelections(list, holidaySet) {
 /** spacing tuned by preference */
 function spacingThreshold(preference) {
   if (preference === "few_long_vacations") return 0;
-  if (preference === "many_long_weekends") return 0;
+  if (preference === "many_long_weekends") return 21; // ✅ Changed from 0 to 21 for better distribution
   if (preference === "spread_out") return 35;
   if (preference === "summer_vacation") return 14;
   return 21;
 }
 
-/** consider preference when spacing; whitelist ultra-high-ROI 1-day bridges */
-function wellDistributed(candidate, chosen, preference) {
-  const roi = candidate.totalDaysOff / candidate.vacationDaysUsed;
-  if (candidate.vacationDaysUsed === 1 && roi >= 4) return true; // never block the classic 1→4+ bridges
+/** adaptive spacing based on remaining days */
+function adaptiveSpacingThreshold(preference, remainingDays, totalAvailableDays) {
+  const base = spacingThreshold(preference);
+  
+  // If we have lots of days to spend (>50% remaining), allow tighter clustering
+  if (remainingDays > totalAvailableDays * 0.5) {
+    return Math.max(0, base - 7);
+  }
+  
+  // If we're running low on days (<25% remaining), space them out more
+  if (remainingDays < totalAvailableDays * 0.25) {
+    return base + 7;
+  }
+  
+  return base;
+}
 
-  const minSpacingDays = spacingThreshold(preference);
+/** consider preference when spacing; whitelist ultra-high-ROI 1-day bridges */
+function wellDistributed(candidate, chosen, preference, remainingDays, totalAvailableDays) {
+  const roi = candidate.totalDaysOff / candidate.vacationDaysUsed;
+  
+  // For distribution-focused preferences, enforce spacing even for high-ROI bridges
+  const enforceSpacing = preference === "many_long_weekends" || preference === "spread_out";
+  
+  // Only bypass spacing for exceptional bridges if NOT a distribution-focused preference
+  if (!enforceSpacing && candidate.vacationDaysUsed === 1 && roi >= 4) {
+    return true; // allow ultra-efficient 1→4+ bridges to bypass spacing
+  }
+
+  const minSpacingDays = adaptiveSpacingThreshold(preference, remainingDays, totalAvailableDays);
   if (minSpacingDays === 0) return true;
 
   for (const c of chosen) {
@@ -299,19 +443,36 @@ function wellDistributed(candidate, chosen, preference) {
 
 /** greedy selector with optional long-block requirement */
 function pickGreedy(candidates, availableDays, preference, already = [], isExtension = false, opts = {}) {
-  const { requireLong = false } = opts;
+  const { requireLong = false, totalAvailableDays = availableDays } = opts;
 
   const scored = candidates.map((c) => ({
     ...c,
     score: scoreCandidate(c, preference, isExtension),
   }));
 
-  scored.sort((a, b) =>
-    b.score !== a.score ? b.score - a.score :
-    b.totalDaysOff !== a.totalDaysOff ? b.totalDaysOff - a.totalDaysOff :
-    a.vacationDaysUsed !== b.vacationDaysUsed ? a.vacationDaysUsed - b.vacationDaysUsed :
-    a.startDate - b.startDate
-  );
+  // Special sorting for many_long_weekends: distribute across months
+  if (preference === "many_long_weekends") {
+    scored.sort((a, b) => {
+      // First by score tier (high vs normal)
+      const aScoreTier = a.score >= 4 ? 'high' : 'normal';
+      const bScoreTier = b.score >= 4 ? 'high' : 'normal';
+      if (aScoreTier !== bScoreTier) {
+        return aScoreTier === 'high' ? -1 : 1;
+      }
+      
+      // Within same tier, prefer chronological distribution
+      // This encourages spacing throughout the year instead of clustering
+      return a.startDate - b.startDate;
+    });
+  } else {
+    // Default sorting: highest score first
+    scored.sort((a, b) =>
+      b.score !== a.score ? b.score - a.score :
+      b.totalDaysOff !== a.totalDaysOff ? b.totalDaysOff - a.totalDaysOff :
+      a.vacationDaysUsed !== b.vacationDaysUsed ? a.vacationDaysUsed - b.vacationDaysUsed :
+      a.startDate - b.startDate
+    );
+  }
 
   const taken = [];
   let used = 0;
@@ -323,7 +484,9 @@ function pickGreedy(candidates, availableDays, preference, already = [], isExten
     const overlaps = [...already, ...taken].some((x) => rangesOverlap(x, cand));
     if (overlaps) continue;
 
-    if (!wellDistributed(cand, [...already, ...taken], preference)) continue;
+    // Calculate current remaining days for adaptive spacing
+    const currentRemaining = availableDays - used;
+    if (!wellDistributed(cand, [...already, ...taken], preference, currentRemaining, totalAvailableDays)) continue;
 
     taken.push(cand);
     used += cand.vacationDaysUsed;
@@ -388,7 +551,7 @@ export function generateHolidayPlan(
   const { blocks: offBlocks, holidaySet } = buildOffBlocks(year, holidays);
   const picked = [];
   let remaining = availableDays;
-
+  
   // phase plan per preference
   let phases;
   if (preference === "few_long_vacations") {
@@ -437,9 +600,12 @@ export function generateHolidayPlan(
     const cands = getPhaseCandidates(offBlocks, holidaySet, phase, remaining);
     if (!cands.length) continue;
 
-    const chosen = pickGreedy(cands, remaining, preference, picked, phase.type === "ext");
+    const chosen = pickGreedy(cands, remaining, preference, picked, phase.type === "ext", { 
+      totalAvailableDays: availableDays
+    });
     if (chosen.length) {
-      picked.push(...chosen);
+      // Preserve meta for description generation
+      picked.push(...chosen.map(c => ({ ...c, meta: c.meta })));
       remaining -= chosen.reduce((s, c) => s + c.vacationDaysUsed, 0);
     }
   }
@@ -449,48 +615,113 @@ export function generateHolidayPlan(
   let usedDays = merged.reduce((s, c) => s + c.vacationDaysUsed, 0);
   let totalDaysOff = merged.reduce((s, c) => s + c.totalDaysOff, 0);
 
-  // final fallback: spend any leftover days on Mon/Fri that doesn't overlap
+  // final fallback: spend any leftover days on high-ROI bridge opportunities
   if (remaining > 0) {
     const start = new Date(year, 0, 1);
     const end = new Date(year, 11, 31);
 
-    // Collect all potential filler days
-    const fillerDays = [];
+    // Collect all potential filler days with ROI scoring
+    const fillerCandidates = [];
     for (let d = new Date(start); d <= end; d = nextDay(d, 1)) {
-      const day = d.getDay();
-      if (!isOffDay(d, holidaySet) && (day === 1 || day === 5)) {
-        const overlaps = merged.some((c) => d >= c.startDate && d <= c.endDate);
-        if (!overlaps) {
-          fillerDays.push(new Date(d));
+      if (isOffDay(d, holidaySet)) continue;
+      
+      const overlaps = merged.some((c) => d >= c.startDate && d <= c.endDate);
+      if (overlaps) continue;
+
+      // Check if this day bridges two off-days (any day of the week)
+      const dayBefore = previousDay(d, 1);
+      const dayAfter = nextDay(d, 1);
+      const isBridge = isOffDay(dayBefore, holidaySet) && isOffDay(dayAfter, holidaySet);
+      
+      if (isBridge) {
+        // Calculate the ROI if we take this day off
+        const expanded = expandToContiguousDays(d, d, holidaySet);
+        const roi = expanded.totalDaysOff / 1; // Always uses 1 vacation day
+        
+        fillerCandidates.push({
+          date: new Date(d),
+          expanded,
+          roi,
+          isMidWeek: d.getDay() !== 1 && d.getDay() !== 5, // Track mid-week bridges
+        });
+      } else {
+        // Also consider Monday/Friday as traditional filler days (lower priority)
+        const day = d.getDay();
+        if (day === 1 || day === 5) {
+          const expanded = expandToContiguousDays(d, d, holidaySet);
+          const roi = expanded.totalDaysOff / 1;
+          
+          fillerCandidates.push({
+            date: new Date(d),
+            expanded,
+            roi,
+            isMidWeek: false,
+          });
         }
       }
     }
 
-    // Sort filler days based on preference
+    // Sort by ROI (highest first), then prioritize bridges over regular days
+    fillerCandidates.sort((a, b) => {
+      // First, prioritize high-ROI bridges (ROI >= 4)
+      if (a.roi >= 4 && b.roi < 4) return -1;
+      if (b.roi >= 4 && a.roi < 4) return 1;
+      
+      // Then sort by ROI
+      if (b.roi !== a.roi) return b.roi - a.roi;
+      
+      // Then prioritize bridges over regular Mon/Fri
+      if (a.isMidWeek && !b.isMidWeek) return -1;
+      if (b.isMidWeek && !a.isMidWeek) return 1;
+      
+      return a.date - b.date;
+    });
+
+    // Apply preference-based sorting to fillerCandidates before extracting dates
     if (preference === "summer_vacation") {
-      // Prioritize summer months
-      fillerDays.sort((a, b) => {
-        const aSummer = isSummerMonth(a) ? 1 : 0;
-        const bSummer = isSummerMonth(b) ? 1 : 0;
+      // Further prioritize summer months within same ROI tier
+      fillerCandidates.sort((a, b) => {
+        const aSummer = isSummerMonth(a.date) ? 1 : 0;
+        const bSummer = isSummerMonth(b.date) ? 1 : 0;
         if (bSummer !== aSummer) return bSummer - aSummer;
-        return a - b;
+        return b.roi - a.roi || a.date - b.date;
       });
-    } else if (preference === "spread_out") {
-      // Distribute evenly - alternate between months
-      fillerDays.sort((a, b) => a - b);
     }
+    
+    const fillerDays = fillerCandidates.map(c => c.date);
 
     // Add filler days up to remaining budget
+    const fillerMonthCounts = new Map();
+    
+    // Pre-populate with existing selections for many_long_weekends
+    if (preference === "many_long_weekends") {
+      merged.forEach(m => {
+        const month = m.startDate.getMonth();
+        fillerMonthCounts.set(month, (fillerMonthCounts.get(month) || 0) + 1);
+      });
+    }
+    
     for (const d of fillerDays) {
       if (remaining <= 0) break;
       
+      // For many_long_weekends, enforce monthly cap even in filler
+      if (preference === "many_long_weekends") {
+        const month = d.getMonth();
+        const countInMonth = fillerMonthCounts.get(month) || 0;
+        if (countInMonth >= 2) {
+          continue; // Skip to maintain distribution
+        }
+        fillerMonthCounts.set(month, countInMonth + 1);
+      }
+      
       const expanded = expandToContiguousDays(d, d, holidaySet);
+      
       merged.push({
         startDate: expanded.startDate,
         endDate: expanded.endDate,
         vacationDaysUsed: 1,
         totalDaysOff: expanded.totalDaysOff,
-        description: `Use 1 vacation day for ${expanded.totalDaysOff} days off`,
+        meta: { kind: "filler" },
       });
       remaining--;
     }
@@ -501,18 +732,23 @@ export function generateHolidayPlan(
     totalDaysOff = merged.reduce((s, c) => s + c.totalDaysOff, 0);
   }
 
+  // Generate intelligent descriptions for all selections
+  const suggestionsWithDescriptions = merged.map((c) => {
+    const desc = generateDescription(c, holidays, holidaySet, preference);
+    return {
+      ...c,
+      description: desc.title,
+      reason: desc.reason,
+      roi: desc.roi,
+      efficiency: desc.efficiency,
+    };
+  });
+
   return {
     year,
     usedDays,
     totalDaysOff,
-    suggestions: normalizeSuggestionDates(
-      merged.map((c) => ({
-        ...c,
-        description: `Use ${c.vacationDaysUsed} vacation day${
-          c.vacationDaysUsed > 1 ? "s" : ""
-        } for ${c.totalDaysOff} days off`,
-      }))
-    ),
+    suggestions: normalizeSuggestionDates(suggestionsWithDescriptions),
   };
 }
 

@@ -106,6 +106,10 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/plans/${planId}/optimize-remaining`, { preference });
   }
 
+  regeneratePlanWithStrategy(planId: string, preference: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/plans/${planId}/regenerate`, { preference });
+  }
+
   /**
    * Create initial plan with manual days (use case 1: start with manual, then optimize)
    */

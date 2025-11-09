@@ -2,62 +2,111 @@
   <!-- Sticky Minimal Stats Bar -->
   <div
     *ngIf="plan && showStickyStats"
-    class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-md py-3 px-4 transition-all duration-300"
+    class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-md py-2 md:py-3 px-3 md:px-4 transition-all duration-300"
   >
-    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3 md:gap-4">
+    <div class="max-w-7xl mx-auto">
+      <!-- Mobile Layout -->
+      <div class="flex md:hidden items-center justify-between gap-3">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-semibold text-gray-900">Hopladay</span>
-          <span
-            *ngIf="editMode"
-            class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded"
-            >Editing</span
+          <span class="font-bold text-gray-900">{{ plan.usedDays }}/{{ plan.availableDays }}</span>
+          <span class="text-blue-600 font-semibold">{{ plan.totalDaysOff }}</span>
+          <span *ngIf="getRemainingDays() > 0" class="text-orange-600 font-semibold">+{{ getRemainingDays() }}</span>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button
+            *ngIf="!editMode"
+            type="button"
+            (click)="toggleEditMode()"
+            [disabled]="isLoading"
+            class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
           >
-        </div>
-        <div class="h-4 w-px bg-gray-300"></div>
-        <div class="text-sm">
-          <span class="text-gray-600">Days:</span>
-          <span class="font-bold text-gray-900 ml-1">{{ plan.usedDays }}</span>
-          <span class="text-gray-500">/{{ plan.availableDays }}</span>
-        </div>
-        <div class="text-sm">
-          <span class="text-gray-600">Off:</span>
-          <span class="font-bold text-blue-600 ml-1">{{ plan.totalDaysOff }}</span>
-        </div>
-        <div *ngIf="getRemainingDays() > 0" class="text-sm">
-          <span class="text-gray-600">Remaining:</span>
-          <span class="font-bold text-orange-600 ml-1">{{ getRemainingDays() }}</span>
+            Edit plan
+          </button>
+          <button
+            *ngIf="editMode && getRemainingDays() > 0"
+            type="button"
+            (click)="optimizeRemaining()"
+            [disabled]="isLoading"
+            class="px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Optimize {{ getRemainingDays() }}</span>
+          </button>
+          <button
+            *ngIf="editMode"
+            type="button"
+            (click)="toggleEditMode()"
+            [disabled]="isLoading"
+            class="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50"
+          >
+            Done
+          </button>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <button
-          *ngIf="!editMode"
-          type="button"
-          (click)="toggleEditMode()"
-          [disabled]="isLoading"
-          class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
-        >
-          Edit
-        </button>
-        <button
-          *ngIf="editMode && getRemainingDays() > 0"
-          type="button"
-          (click)="optimizeRemaining()"
-          [disabled]="isLoading"
-          class="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg font-medium hover:bg-purple-700 focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50"
-        >
-          Optimize
-        </button>
-        <button
-          *ngIf="editMode"
-          type="button"
-          (click)="toggleEditMode()"
-          [disabled]="isLoading"
-          class="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50"
-        >
-          Done
-        </button>
+      <!-- Desktop Layout -->
+      <div class="hidden md:flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold text-gray-900">Hopladay</span>
+            <span
+              *ngIf="editMode"
+              class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded"
+            >
+              Editing
+            </span>
+          </div>
+          <div class="h-4 w-px bg-gray-300"></div>
+          <div class="text-sm">
+            <span class="text-gray-600">Days:</span>
+            <span class="font-bold text-gray-900 ml-1">{{ plan.usedDays }}</span>
+            <span class="text-gray-500">/{{ plan.availableDays }}</span>
+          </div>
+          <div class="text-sm">
+            <span class="text-gray-600">Off:</span>
+            <span class="font-bold text-blue-600 ml-1">{{ plan.totalDaysOff }}</span>
+          </div>
+          <div *ngIf="getRemainingDays() > 0" class="text-sm">
+            <span class="text-gray-600">Remaining:</span>
+            <span class="font-bold text-orange-600 ml-1">{{ getRemainingDays() }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            *ngIf="!editMode"
+            type="button"
+            (click)="toggleEditMode()"
+            [disabled]="isLoading"
+            class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+          >
+            Edit plan
+          </button>
+          <button
+            *ngIf="editMode && getRemainingDays() > 0"
+            type="button"
+            (click)="optimizeRemaining()"
+            [disabled]="isLoading"
+            class="px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Optimize {{ getRemainingDays() }}</span>
+          </button>
+          <button
+            *ngIf="editMode"
+            type="button"
+            (click)="toggleEditMode()"
+            [disabled]="isLoading"
+            class="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50"
+          >
+            Done
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -95,6 +144,106 @@
     </div>
   </header>
 
+  <!-- Action Bar -->
+  <div
+    class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 py-3"
+  >
+    <div class="flex items-center gap-2 relative">
+      <button
+        type="button"
+        (click)="togglePlansDropdown()"
+        class="flex-1 sm:flex-none px-4 py-2 bg-white text-gray-700 border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
+          />
+        </svg>
+        <span>My Plans</span>
+      </button>
+
+      <!-- Plans Dropdown -->
+      <div
+        *ngIf="showPlansDropdown"
+        class="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="p-3 border-b border-gray-200 bg-gray-50">
+          <h3 class="text-sm font-semibold text-gray-900">Your Saved Plans</h3>
+        </div>
+
+        <div *ngIf="savedPlans.length === 0" class="p-4 text-center text-sm text-gray-500">
+          No other plans found
+        </div>
+
+        <div *ngIf="savedPlans.length > 0" class="py-2">
+          <button
+            *ngFor="let savedPlan of savedPlans"
+            type="button"
+            (click)="loadPlan(savedPlan)"
+            [class.bg-blue-50]="savedPlan._id === plan?._id"
+            [class.border-l-4]="savedPlan._id === plan?._id"
+            [class.border-blue-500]="savedPlan._id === plan?._id"
+            class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-semibold text-gray-900"
+                    >{{ getCountryName(savedPlan.countryCode) }} {{ savedPlan.year }}</span
+                  >
+                  <span
+                    *ngIf="savedPlan._id === plan?._id"
+                    class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded"
+                  >
+                    Current
+                  </span>
+                </div>
+                <div class="text-xs text-gray-600 flex items-center gap-2">
+                  <span>{{ savedPlan.usedDays }}/{{ savedPlan.availableDays }} days</span>
+                  <span class="text-gray-400">•</span>
+                  <span>{{ savedPlan.totalDaysOff }} days off</span>
+                </div>
+              </div>
+              <svg
+                class="w-5 h-5 text-gray-400 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        (click)="startNewPlan()"
+        class="flex-1 sm:flex-none px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        <span>New Plan</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Onboarding Message for First-Time Users -->
   <div *ngIf="!plan && !isLoading" class="w-full max-w-3xl mb-6 mx-auto">
     <div
@@ -126,11 +275,10 @@
       Enter details
     </h3>
 
-    <app-holiday-input
+    <app-holiday-input *ngIf="!plan && !isLoading"
       [country]="selectedCountry"
       [year]="selectedYear"
       [days]="availableDays"
-      [preference]="selectedPreference"
       (fetch)="onFetch($event)"
       (settingsChange)="onSettingsChange($event)"
     >
@@ -150,7 +298,7 @@
     <div class="grid md:grid-cols-2 gap-6">
       <!-- Manual -->
       <button
-        (click)="onManualPlan({ availableDays, year: selectedYear, country: selectedCountry, preference: selectedPreference })"
+        (click)="onManualPlan()"
         [disabled]="!selectedCountry || !selectedYear || !availableDays || isLoading"
         class="bg-white rounded-xl border-1 py-8 px-4 text-left transition-all shadow-sm border-gray-200 hover:border-gray-400 focus-visible:ring-4 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
@@ -173,7 +321,7 @@
           <div>
             <h3 class="text-xl font-bold text-gray-900 mb-1">Manual plan first</h3>
             <p class="text-gray-600 mb-3">
-              Pick your vacation days first, then let AI fill the rest.
+              Start with an empty calendar, add your preferred vacation days, and let AI fill in the rest.
             </p>
             <span class="text-blue-600 font-medium inline-flex items-center">
               Start planning
@@ -192,7 +340,7 @@
 
       <!-- AI -->
       <button
-        (click)="onPlan({ availableDays, year: selectedYear, country: selectedCountry, preference: selectedPreference })"
+        (click)="onPlan()"
         [disabled]="!selectedCountry || !selectedYear || !availableDays || isLoading"
         class="relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border-2 border-orange-200 py-8 px-4 text-left transition-all hover:border-orange-400 focus-visible:ring-4 focus-visible:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
@@ -223,7 +371,7 @@
           <div>
             <h3 class="text-xl font-bold text-gray-900 mb-1">Generate AI plan</h3>
             <p class="text-gray-600 mb-3">
-              Let AI maximize your time off automatically in seconds.
+              Let AI automatically maximize your time off and generate your perfect plan.
             </p>
 
             <span class="text-orange-600 font-medium inline-flex items-center">
@@ -270,9 +418,9 @@
           />
         </svg>
         <div>
-          <h3 class="font-semibold text-gray-900">Secure your plan</h3>
+          <h3 class="font-semibold text-gray-900">Sync your plan</h3>
           <p class="text-sm text-gray-600">
-            Save your plan using a passkey or email link for syncing.
+            Access your plans on any device with a passkey or email.
           </p>
         </div>
       </div>
@@ -281,32 +429,114 @@
         (click)="openAuthModal('register')"
         class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500"
       >
-        Save Plan
+        Sync now
       </button>
     </div>
 
+    <!-- Plan Settings & Strategy -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <!-- Plan Info -->
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+            </svg>
+            <span class="font-medium text-gray-900">{{ getCountryName(selectedCountry) }} {{ selectedYear }}</span>
+          </div>
+          <div class="h-4 w-px bg-gray-300"></div>
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>{{ plan.usedDays }}/{{ plan.availableDays }} vacation days</span>
+          </div>
+          <div class="h-4 w-px bg-gray-300"></div>
+          <div class="flex items-center gap-2 text-sm">
+            <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span class="text-gray-600">Strategy:</span>
+            <span class="font-medium text-gray-900 capitalize">{{ getPreferenceLabel(plan.preference || 'balanced') }}</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-2">
+          <button
+            *ngIf="!editMode"
+            type="button"
+            (click)="openRegenerateModal()"
+            [disabled]="isLoading"
+            class="px-3 py-2 text-sm font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Change strategy</span>
+          </button>
+          
+          <button
+            *ngIf="!editMode"
+            type="button"
+            (click)="toggleEditMode()"
+            [disabled]="isLoading"
+            class="px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            <span>Edit</span>
+          </button>
+
+          <button
+            *ngIf="editMode && getRemainingDays() > 0"
+            type="button"
+            (click)="optimizeRemaining()"
+            [disabled]="isLoading"
+            class="px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Optimize {{ getRemainingDays() }}</span>
+          </button>
+
+          <button
+            *ngIf="editMode"
+            type="button"
+            (click)="toggleEditMode()"
+            [disabled]="isLoading"
+            class="px-3 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50 flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Done</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Existing plan summary & calendar -->
-    <app-holiday-input
+    <app-holiday-input *ngIf="!plan && !isLoading"
       [country]="selectedCountry"
       [year]="selectedYear"
       [days]="availableDays"
-      [preference]="selectedPreference"
       (fetch)="onFetch($event)"
       (settingsChange)="onSettingsChange($event)"
     >
     </app-holiday-input>
 
-    
-      <app-holiday-calendar
-        [holidays]="holidays"
-        [plan]="plan"
-        [year]="selectedYear"
-        [editable]="editMode"
-        [availableDays]="availableDays"
-        (planUpdated)="onPlanUpdated($event)"
-      >
-      </app-holiday-calendar>
-    
+    <app-holiday-calendar
+      [holidays]="holidays"
+      [plan]="plan"
+      [year]="selectedYear"
+      [editable]="editMode"
+      [availableDays]="availableDays"
+      (planUpdated)="onPlanUpdated($event)"
+    >
+    </app-holiday-calendar>
 
     <app-holiday-summary [plan]="plan"></app-holiday-summary>
   </div>
@@ -329,6 +559,106 @@
       ></path>
     </svg>
     <span class="font-medium">Generating plan...</span>
+  </div>
+
+  <!-- Preference Selector Modal -->
+  <div
+    *ngIf="showPreferenceSelector"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    (click)="cancelPreferenceSelection()"
+  >
+    <div
+      class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Choose AI Strategy</h2>
+          <p class="text-sm text-gray-600 mt-1">
+            {{
+              preferenceSelectionFor === 'ai'
+                ? 'How should AI generate your vacation plan?'
+                : preferenceSelectionFor === 'regenerate'
+                ? 'Try a different strategy and regenerate your plan'
+                : 'How should AI optimize your remaining vacation days?'
+            }}
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="cancelPreferenceSelection()"
+          class="text-gray-400 hover:text-gray-600 focus:outline-none"
+          aria-label="Close"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 mb-6">
+        <button
+          *ngFor="let pref of preferences"
+          type="button"
+          (click)="selectPreference(pref.value)"
+          [class.border-blue-500]="selectedPreference === pref.value"
+          [class.bg-blue-50]="selectedPreference === pref.value"
+          [class.border-gray-200]="selectedPreference !== pref.value"
+          class="w-full p-4 border-2 rounded-lg text-left transition-all hover:border-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-1">{{ pref.label }}</div>
+              <div class="text-sm text-gray-600">{{ pref.description }}</div>
+            </div>
+            <div
+              *ngIf="selectedPreference === pref.value"
+              class="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+            >
+              <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div
+              *ngIf="selectedPreference !== pref.value"
+              class="w-5 h-5 border-2 border-gray-300 rounded-full flex-shrink-0 mt-0.5"
+            ></div>
+          </div>
+        </button>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          type="button"
+          (click)="cancelPreferenceSelection()"
+          class="flex-1 px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="confirmPreferenceSelection()"
+          class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          {{
+            preferenceSelectionFor === 'ai' 
+              ? 'Generate Plan' 
+              : preferenceSelectionFor === 'regenerate'
+              ? 'Regenerate Plan'
+              : 'Optimize Remaining'
+          }}
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Auth Modal -->
