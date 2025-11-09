@@ -11,6 +11,7 @@ import User from "../models/User.js";
 import MagicLink from "../models/MagicLink.js";
 import { findOrCreateUserByEmail } from "../services/userService.js";
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 const router = express.Router();
 
@@ -506,10 +507,60 @@ router.post("/magic-link/send", async (req, res) => {
       expiresIn: '15 minutes'
     });
 
+    // Email HTML template
+    const emailContent = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Sign in to Hopladay</h2>
+        <p>Click the button below to access your vacation plans:</p>
+        <div style="margin: 30px 0;">
+          <a href="${magicUrl}" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+            Sign In to Hopladay
+          </a>
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">
+          This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.
+        </p>
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 30px;">
+          Or copy this link: ${magicUrl}
+        </p>
+      </div>
+    `;
+
     // Send email in background (non-blocking)
-    if (hasEmailConfig) {
-      console.log('📧 Attempting to send email via Gmail (background)...');
+    // Priority: 1) Resend (production), 2) Gmail (local dev)
+    const hasResend = process.env.RESEND_API_KEY;
+    
+    if (hasResend) {
+      // Use Resend (recommended for production - works on Render.com)
+      console.log('📧 Sending via Resend API...');
       
+      setImmediate(async () => {
+        try {
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          
+          const { data, error } = await resend.emails.send({
+            from: process.env.RESEND_FROM || 'Buddybake <hello@buddybake.com>',
+            to: email,
+            subject: 'Sign in to Hopladay',
+            html: emailContent,
+          });
+
+          if (error) {
+            console.error('❌ Resend error:', error);
+          } else {
+            console.log(`✅ Email sent via Resend`, { to: email, id: data.id });
+          }
+        } catch (err) {
+          console.error('❌ Resend exception:', err);
+        }
+      });
+    } else if (hasEmailConfig) {
+      // Gmail fallback (local dev only - won't work on Render.com)
+      console.log('📧 Sending via Gmail (local dev fallback)...');
+      console.warn('⚠️ Gmail may not work in production. Add RESEND_API_KEY for reliable delivery.');
+      
+      setImmediate(async () => {
+        try {
           const transporter = nodemailer.createTransport({ 
             service: 'gmail',
             auth: {
@@ -518,33 +569,20 @@ router.post("/magic-link/send", async (req, res) => {
             }
           });
 
-          const emailContent = `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #2563eb;">Sign in to Hopladay</h2>
-                <p>Click the button below to access your vacation plans:</p>
-                <div style="margin: 30px 0;">
-                  <a href="${magicUrl}" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
-                    Sign In to Hopladay
-                  </a>
-                </div>
-                <p style="color: #6b7280; font-size: 14px;">
-                  This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.
-                </p>
-                <p style="color: #9ca3af; font-size: 12px; margin-top: 30px;">
-                  Or copy this link: ${magicUrl}
-                </p>
-              </div>
-            `
-
-          // Send the email with timeout
           await transporter.sendMail({
+            from: `"Hopladay" <${process.env.EMAILUSER}>`,
             to: email,
             subject: 'Sign in to Hopladay',
-            html: emailContent
+            html: emailContent,
           });
 
+          console.log(`✅ Email sent via Gmail to ${email}`);
+        } catch (err) {
+          console.error('❌ Gmail failed:', err.message);
+        }
+      });
     } else {
-      console.warn('⚠️ Email credentials not configured, magic link available via devLink only');
+      console.warn('⚠️ No email provider configured (add RESEND_API_KEY or EMAILUSER/EMAILPWD)');
     }
   } catch (err) {
     console.error("❌ Error sending magic link:", err);
