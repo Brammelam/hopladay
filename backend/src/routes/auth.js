@@ -486,7 +486,7 @@ router.post("/magic-link/send", async (req, res) => {
     });
     await magicLink.save();
 
-    const magicUrl = `${origin}/api/auth/verify?token=${token}`;
+    const magicUrl = `${origin}/auth/verify?token=${token}`;
     
     console.log(`📧 Magic link generated:`, {
       email,
