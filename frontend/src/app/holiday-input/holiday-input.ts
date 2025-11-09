@@ -69,7 +69,7 @@ export class HolidayInputComponent implements OnInit, OnChanges {
   years = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
   selectedCountry = 'NO';
   selectedYear = new Date().getFullYear();
-  availableDays = 25;
+  availableDays = 20;
   preferences = [
     { value: 'balanced', label: 'Balanced' },
     { value: 'many_long_weekends', label: 'Many long weekends' },

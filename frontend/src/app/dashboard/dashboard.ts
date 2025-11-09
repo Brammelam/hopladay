@@ -8,7 +8,7 @@ import { HolidaySummaryComponent } from '../holiday-summary/holiday-summary';
 import { ApiService } from '../services/api';
 import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
-import { ToastService } from '../services/toast';
+import { ToastService } from '../services/toast.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal';
 
 @Component({
@@ -88,7 +88,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.userId = user._id;
         this.isUserReady = true;
         this.cdr.detectChanges();
-        this.toast("hello " + this.userId);
       }
     });
   }

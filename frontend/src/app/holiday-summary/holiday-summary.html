@@ -1,5 +1,5 @@
 <div *ngIf="plan" class="bg-white rounded-2xl shadow-md p-6">
-  <h2 class="text-xl font-semibold mb-4 text-gray-800">Your Vacation Plan for {{ plan.year }}</h2>
+  <h2 class="text-xl font-semibold mb-4 text-gray-800">Your vacation plan for {{ plan.year }}</h2>
   
   <!-- AI Suggestions -->
   <div *ngIf="getAISuggestions().length > 0" class="mb-6">
@@ -59,7 +59,7 @@
       </div>
       <div class="bg-gray-50 p-3 rounded-lg">
         <div class="text-xs text-gray-600 mb-1">Longest Break</div>
-        <div class="text-2xl font-bold text-blue-600">{{ longestBreak || 0 }}</div>
+        <div class="text-2xl font-bold text-blue-600">{{ longestBreak || 0 }} days</div>
       </div>
       <div class="bg-gray-50 p-3 rounded-lg">
         <div class="text-xs text-gray-600 mb-1">Avg Efficiency</div>

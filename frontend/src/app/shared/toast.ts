@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { ToastService } from '../services/toast';
+import { ToastService } from '../services/toast.service';
 import { trigger, style, transition, animate } from '@angular/animations';
 
 @Component({
@@ -14,9 +14,9 @@ import { trigger, style, transition, animate } from '@angular/animations';
       [@fadeInOut]
       class="fixed bottom-6 right-6 z-[1000] flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white cursor-pointer select-none"
       [ngClass]="{
-        'bg-green-600': toast?.type === 'success',
-        'bg-red-600': toast?.type === 'error',
-        'bg-blue-600': toast?.type === 'info'
+        'bg-green-600': toast.type === 'success',
+        'bg-red-600': toast.type === 'error',
+        'bg-blue-600': toast.type === 'info'
       }"
       (click)="dismiss()"
     >
@@ -32,7 +32,7 @@ import { trigger, style, transition, animate } from '@angular/animations';
       </svg>
 
       <!-- Message -->
-      <span class="text-sm font-medium">{{ toast?.text }}</span>
+      <span class="text-sm font-medium">{{ toast.text }}</span>
 
       <!-- Close button -->
       <button
