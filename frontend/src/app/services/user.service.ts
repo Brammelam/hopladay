@@ -145,5 +145,11 @@ export class UserService {
       tap(user => this.currentUserSubject.next(user))
     );
   }
+
+  clearCurrentUser() {
+  localStorage.removeItem(this.BROWSER_ID_KEY);
+  this.currentUserSubject.next(null);
+}
+
 }
 

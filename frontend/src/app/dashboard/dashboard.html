@@ -1,5 +1,5 @@
 <div class="min-h-screen flex flex-col items-center py-10 px-4">
-  <!-- Sticky Minimal Stats Bar (appears when scrolled) -->
+  <!-- Sticky Minimal Stats Bar -->
   <div
     *ngIf="plan && showStickyStats"
     class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-md py-3 px-4 transition-all duration-300"
@@ -32,27 +32,25 @@
           type="button"
           (click)="toggleEditMode()"
           [disabled]="isLoading"
-          class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg font-medium transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+          class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
         >
           Edit
         </button>
-
         <button
           *ngIf="editMode && getRemainingDays() > 0"
           type="button"
           (click)="optimizeRemaining()"
           [disabled]="isLoading"
-          class="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg font-medium transition-colors hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50"
+          class="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg font-medium hover:bg-purple-700 focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50"
         >
           Optimize
         </button>
-
         <button
           *ngIf="editMode"
           type="button"
           (click)="toggleEditMode()"
           [disabled]="isLoading"
-          class="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium transition-colors hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50"
+          class="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50"
         >
           Done
         </button>
@@ -61,130 +59,54 @@
   </div>
 
   <!-- Header -->
-  <header class="mb-6 w-full max-w-5xl">
-    <!-- Desktop Layout -->
-    <div class="hidden md:flex items-center justify-between mb-4">
-      <div class="flex-1"></div>
-      <div class="flex-1 flex justify-center">
-        <div class="text-center">
-          <h1 class="text-4xl font-bold text-primary mb-2">Hopladay</h1>
-          <p class="text-gray-600">Plan your time off like a pro</p>
-        </div>
-      </div>
-      <div class="flex-1 flex justify-end items-center">
-        <!-- Not Logged In: Sign In Button -->
+  <header class="mb-8 w-full max-w-5xl text-center">
+    <h1 class="text-4xl font-bold text-primary mb-1">Hopladay</h1>
+    <p class="text-gray-600 text-sm md:text-base">Plan your time off like a pro</p>
+
+    <div class="mt-4 flex justify-center">
+      <ng-container *ngIf="!isUserClaimed(); else loggedInUser">
         <button
-          *ngIf="!isUserClaimed()"
           type="button"
           (click)="openAuthModal('signin')"
-          class="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 hover:bg-blue-50 hover:border-blue-300 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          class="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 hover:bg-blue-50 rounded-lg focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           Sign In
         </button>
-        <!-- Logged In: User Badge -->
-        <div
-          *ngIf="isUserClaimed()"
-          class="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg"
-        >
-          <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          <span class="text-sm font-medium text-green-900">{{ getUserEmail() }}</span>
-        </div>
-      </div>
-    </div>
+      </ng-container>
 
-    <!-- Mobile Layout -->
-    <div class="md:hidden mb-4">
-      <div class="text-center mb-3">
-        <h1 class="text-3xl font-bold text-primary mb-1">Hopladay</h1>
-        <p class="text-sm text-gray-600">Plan your time off like a pro</p>
-      </div>
-      <!-- Auth Actions Centered Below Logo -->
-      <div class="flex justify-center">
-        <!-- Not Logged In: Sign In Button -->
-        <button
-          *ngIf="!isUserClaimed()"
-          type="button"
-          (click)="openAuthModal('signin')"
-          class="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-200 hover:bg-blue-50 hover:border-blue-300 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        >
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
-            <span>Sign In</span>
-          </div>
-        </button>
-        <!-- Logged In: User Badge -->
-        <div
-          *ngIf="isUserClaimed()"
-          class="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg"
-        >
+      <ng-template #loggedInUser>
+        <div class="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
           <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
           <span class="text-sm font-medium text-green-900 truncate max-w-[200px]">{{ getUserEmail() }}</span>
+        <button
+    type="button"
+    (click)="logout()"
+    class="px-3 py-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
+  >
+    Logout
+  </button>
         </div>
-      </div>
+      </ng-template>
     </div>
   </header>
 
-  <!-- User Status Banner (Save Your Plan with Passkey) -->
-  <div *ngIf="plan" class="w-full max-w-5xl mb-6">
-    <div *ngIf="!isUserClaimed()" class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-3 md:p-4">
-      <div class="flex items-start md:items-center justify-between gap-3">
-        <div class="flex items-start gap-3 flex-1">
-          <svg class="w-5 h-5 text-blue-600 mt-0.5 md:mt-0 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <div class="flex-1">
-            <h3 class="text-sm md:text-base font-semibold text-gray-900 mb-1">Secure your plan with a passkey</h3>
-            <p class="text-xs md:text-sm text-gray-600">Use Face ID, Touch ID, or device PIN to save and sync your plans</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          (click)="openAuthModal('register')"
-          [disabled]="isLoading"
-          class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-        >
-          Save Plan
-        </button>
-      </div>
-    </div>
-
-    <div *ngIf="isUserClaimed()" class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-lg p-3 md:p-4 shadow-sm">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="flex-1">
-          <p class="text-sm md:text-base font-semibold text-gray-900">
-            Signed in as <span class="text-green-700">{{ getUserEmail() }}</span>
-          </p>
-          <p class="text-xs md:text-sm text-gray-600">Your plans are automatically saved and synced</p>
-        </div>
-        <svg class="hidden md:block w-6 h-6 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-        </svg>
-      </div>
+  <!-- Onboarding Message for First-Time Users -->
+  <div *ngIf="!plan && !isLoading" class="w-full max-w-3xl mb-6 text-center">
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 text-gray-800">
+      👋 Welcome! Start by selecting your <strong>year</strong> and <strong>country</strong> below to begin planning.
     </div>
   </div>
 
-  <!-- Settings Section (when no plan exists) -->
+  <!-- STEP 1: Select Year & Country -->
   <div *ngIf="!plan && !isLoading" class="w-full max-w-5xl">
-    <div *ngIf="isUserClaimed()" class="mb-3">
-      <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        Select Year & Country
-        <span class="text-xs font-normal text-gray-500">(Each year/country has a separate plan)</span>
-      </h3>
-    </div>
+    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+      <span class="inline-block bg-blue-100 text-blue-700 rounded-full w-6 h-6 text-center text-sm font-bold">1</span>
+      Enter details
+      
+    </h3>
+
     <app-holiday-input
       [country]="selectedCountry"
       [year]="selectedYear"
@@ -195,74 +117,107 @@
     </app-holiday-input>
   </div>
 
-  <!-- STEP 1: Choose Planning Method (only when no plan exists) -->
+  <!-- STEP 2: Choose Planning Method -->
   <div *ngIf="!plan && !isLoading" class="mt-8 w-full max-w-5xl">
-    <div class="text-center mb-6">
-      <h2 class="text-2xl font-bold text-gray-900 mb-2">
-        {{ isUserClaimed() ? 'Create Plan for ' + getCountryName(selectedCountry) + ' ' + selectedYear : 'Choose your planning method' }}
-      </h2>
-      <p class="text-gray-600">
-        {{ isUserClaimed() ? 
-          'You haven\'t created a vacation plan for this year/country yet.' : 
-          'How would you like to plan your vacation days?' 
-        }}
-      </p>
-    </div>
-    
+    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+      <span class="inline-block bg-orange-100 text-orange-700 rounded-full w-6 h-6 text-center text-sm font-bold">2</span>
+      Choose method
+    </h3>
+
     <div class="grid md:grid-cols-2 gap-6">
-      <!-- Manual Planning Card -->
+      <!-- Manual -->
       <button
         (click)="onManualPlan({ availableDays, year: selectedYear, country: selectedCountry, preference: selectedPreference })"
-        class="bg-white rounded-xl shadow-md border-2 border-gray-200 p-8 text-left transition-all hover:border-blue-500 hover:shadow-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500 focus-visible:ring-opacity-50"
+        [disabled]="!selectedCountry || !selectedYear || !availableDays || isLoading"
+        class="bg-white rounded-xl border-1 p-8 text-left transition-all shadow-sm border-gray-200 hover:border-gray-400 focus-visible:ring-4 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         <div class="flex items-start gap-4">
-          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
           </div>
-          <div class="flex-1">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Start manual planning</h3>
-            <p class="text-gray-600 mb-4">I want to fill in my preferred vacation days first, and let AI fill out the rest.</p>
-            <div class="flex items-center text-blue-600 font-medium">
-              <span>Start planning</span>
-              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 mb-1">Manual plan first</h3>
+            <p class="text-gray-600 mb-3">Pick your vacation days first, then let AI fill the rest.</p>
+            <span class="text-blue-600 font-medium inline-flex items-center">
+              Start Planning
+              <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
-            </div>
+            </span>
           </div>
         </div>
       </button>
 
-      <!-- AI Planning Card -->
+      <!-- AI -->
       <button
-        (click)="onPlan({ availableDays, year: selectedYear, country: selectedCountry, preference: selectedPreference })"
-        class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-md border-2 border-orange-200 p-8 text-left transition-all hover:border-orange-500 hover:shadow-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-500 focus-visible:ring-opacity-50"
-      >
-        <div class="flex items-start gap-4">
-          <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <div class="flex-1">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Generate AI plan</h3>
-            <p class="text-gray-600 mb-4">I want AI to generate a plan to maximize my time off given my available vacation days.</p>
-            <div class="flex items-center text-orange-600 font-medium">
-              <span>Generate plan</span>
-              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </button>
+  (click)="onPlan({ availableDays, year: selectedYear, country: selectedCountry, preference: selectedPreference })"
+  [disabled]="!selectedCountry || !selectedYear || !availableDays || isLoading"
+  class="relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border-2 border-orange-200 p-8 text-left transition-all hover:border-orange-400 focus-visible:ring-4 focus-visible:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+>
+  <!-- Recommended badge (top right corner) -->
+  <span
+    class="absolute top-3 right-3 bg-orange-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full shadow-sm"
+  >
+    Recommended
+  </span>
+
+  <div class="flex items-start gap-4">
+    <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
+      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    </div>
+
+    <div>
+      <h3 class="text-xl font-bold text-gray-900 mb-1">Generate AI Plan</h3>
+      <p class="text-gray-600 mb-3">Let AI maximize your time off automatically in seconds.</p>
+
+      <span class="text-orange-600 font-medium inline-flex items-center">
+        Generate Plan
+        <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </span>
     </div>
   </div>
+</button>
 
-  <!-- Plan Selector (when authenticated and has plan) -->
-  <div *ngIf="plan" class="mt-8 w-full max-w-5xl space-y-4">
-    <!-- Settings Form -->
+    </div>
+
+    <!-- Disabled Hint -->
+    <p
+      *ngIf="!selectedCountry || !selectedYear"
+      class="text-sm text-gray-500 mt-3 text-center"
+    >
+      ⚠️ Select year and country before creating a plan.
+    </p>
+  </div>
+
+  <!-- Plan Loaded -->
+  <div *ngIf="plan" class="mt-8 w-full max-w-5xl space-y-6">
+    <!-- Save Plan Banner -->
+    <div *ngIf="!isUserClaimed()" class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 flex items-start justify-between gap-3">
+      <div class="flex items-start gap-3 flex-1">
+        <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <div>
+          <h3 class="font-semibold text-gray-900">Secure your plan</h3>
+          <p class="text-sm text-gray-600">Save your plan using a passkey or email link for syncing.</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        (click)="openAuthModal('register')"
+        class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500"
+      >
+        Save Plan
+      </button>
+    </div>
+
+    <!-- Existing plan summary & calendar -->
     <app-holiday-input
       [country]="selectedCountry"
       [year]="selectedYear"
@@ -271,192 +226,22 @@
       (fetch)="onFetch($event)"
       (settingsChange)="onSettingsChange($event)">
     </app-holiday-input>
-    
-    <!-- Action Bar -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 py-3">
-      
-      <div class="flex items-center gap-2 relative">
-        <button
-          type="button"
-          (click)="togglePlansDropdown()"
-          class="flex-1 sm:flex-none px-4 py-2 bg-white text-gray-700 border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
-          </svg>
-          <span>My Plans</span>
-        </button>
-        
-        <!-- Plans Dropdown -->
-        <div
-          *ngIf="showPlansDropdown"
-          class="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto"
-          (click)="$event.stopPropagation()"
-        >
-          <div class="p-3 border-b border-gray-200 bg-gray-50">
-            <h3 class="text-sm font-semibold text-gray-900">Your Saved Plans</h3>
-          </div>
-          
-          <div *ngIf="savedPlans.length === 0" class="p-4 text-center text-sm text-gray-500">
-            No other plans found
-          </div>
-          
-          <div *ngIf="savedPlans.length > 0" class="py-2">
-            <button
-              *ngFor="let savedPlan of savedPlans"
-              type="button"
-              (click)="loadPlan(savedPlan)"
-              [class.bg-blue-50]="savedPlan._id === plan?._id"
-              [class.border-l-4]="savedPlan._id === plan?._id"
-              [class.border-blue-500]="savedPlan._id === plan?._id"
-              class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="font-semibold text-gray-900">{{ getCountryName(savedPlan.countryCode) }} {{ savedPlan.year }}</span>
-                    <span *ngIf="savedPlan._id === plan?._id" class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
-                      Current
-                    </span>
-                  </div>
-                  <div class="text-xs text-gray-600 flex items-center gap-2">
-                    <span>{{ savedPlan.usedDays }}/{{ savedPlan.availableDays }} days</span>
-                    <span class="text-gray-400">•</span>
-                    <span>{{ savedPlan.totalDaysOff }} days off</span>
-                  </div>
-                </div>
-                <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </button>
-          </div>
-        </div>
-        
-        <button
-          type="button"
-          (click)="startNewPlan()"
-          class="flex-1 sm:flex-none px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          <span>New Plan</span>
-        </button>
-      </div>
+
+    <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+      <app-holiday-calendar
+        [holidays]="holidays"
+        [plan]="plan"
+        [year]="selectedYear"
+        [editable]="editMode"
+        [availableDays]="availableDays"
+        (planUpdated)="onPlanUpdated($event)">
+      </app-holiday-calendar>
     </div>
+
+    <app-holiday-summary [plan]="plan"></app-holiday-summary>
   </div>
 
-  <!-- STEP 2: Plan Summary & Actions (when plan exists) -->
-  <div *ngIf="plan" class="mt-8 w-full max-w-5xl bg-white rounded-lg shadow-md border border-gray-200 p-4 md:p-6">
-      <!-- Plan Context -->
-    <div class="mb-4 pb-3 border-b border-gray-200 flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2 text-sm">
-        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <span class="font-semibold text-gray-900">{{ getCountryName(plan.countryCode) }} {{ plan.year }}</span>
-        <span class="hidden sm:inline text-gray-400">•</span>
-        <span class="hidden sm:inline text-gray-600 capitalize">{{ plan.preference?.replace('_', ' ') }}</span>
-      </div>
-    </div>
-    
-    <!-- Stats -->
-    <div class="grid grid-cols-3 gap-3 md:gap-6 mb-4 md:mb-6">
-      <div>
-        <div class="text-xs md:text-sm text-gray-600 font-medium">Vacation days</div>
-        <div class="text-xl md:text-3xl font-bold text-gray-900">{{ plan.usedDays }}<span class="text-sm md:text-lg text-gray-500">/{{ plan.availableDays }}</span></div>
-      </div>
-      <div>
-        <div class="text-xs md:text-sm text-gray-600 font-medium">Days off</div>
-        <div class="text-xl md:text-3xl font-bold text-blue-600">{{ plan.totalDaysOff }}</div>
-      </div>
-      <div>
-        <div class="text-xs md:text-sm text-gray-600 font-medium">Left</div>
-        <div class="text-xl md:text-3xl font-bold" [class.text-green-600]="getRemainingDays() > 5" [class.text-orange-600]="getRemainingDays() > 0 && getRemainingDays() <= 5" [class.text-gray-400]="getRemainingDays() === 0">
-          {{ getRemainingDays() }}
-        </div>
-      </div>
-    </div>
-
-    <!-- Actions: View Mode (not editing) -->
-    <div *ngIf="!editMode" class="space-y-3">
-      <div class="flex items-center gap-2 p-3 md:p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <svg class="w-4 h-4 md:w-5 md:h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-        </svg>
-        <span class="text-sm md:text-base font-medium text-gray-700 flex-1">Plan ready</span>
-        <span *ngIf="plan.isModifiedByUser" class="hidden sm:inline text-xs md:text-sm text-orange-600">(modified)</span>
-      </div>
-      <div class="flex flex-col sm:flex-row gap-2">
-        <button
-          type="button"
-          (click)="toggleEditMode()"
-          [disabled]="isLoading"
-          class="flex-1 px-4 py-2 md:py-2.5 text-sm md:text-base bg-blue-600 text-white rounded-lg font-medium transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50"
-        >
-          <span class="md:hidden">Edit</span>
-          <span class="hidden md:inline">Edit Plan</span>
-        </button>
-        <button
-          type="button"
-          (click)="regeneratePlan()"
-          [disabled]="isLoading"
-          class="flex-1 px-4 py-2 md:py-2.5 text-sm md:text-base text-gray-700 bg-white border border-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 disabled:opacity-50"
-        >
-          <span class="md:hidden">Regenerate</span>
-          <span class="hidden md:inline">Regenerate with AI</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Actions: Edit Mode (actively editing) -->
-    <div *ngIf="editMode" class="space-y-2 md:space-y-3">
-      <div class="flex items-center justify-between gap-2 p-3 md:p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
-        <div class="flex items-center gap-2 text-blue-900">
-          <svg class="w-4 h-4 md:w-5 md:h-5 text-blue-600 animate-pulse flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-          </svg>
-          <span class="text-sm md:text-base font-semibold">Editing</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <button
-            *ngIf="getRemainingDays() > 0"
-            type="button"
-            (click)="optimizeRemaining()"
-            [disabled]="isLoading"
-            class="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-purple-600 text-white rounded-lg font-medium transition-colors hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50"
-          >
-            <span class="md:hidden">Fill {{ getRemainingDays() }}</span>
-            <span class="hidden md:inline">Optimize {{ getRemainingDays() }}</span>
-          </button>
-          <button
-            type="button"
-            (click)="toggleEditMode()"
-            [disabled]="isLoading"
-            class="px-3 py-1.5 md:px-5 md:py-2 text-xs md:text-sm bg-green-600 text-white rounded-lg font-medium transition-colors hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50"
-          >
-            <span class="md:hidden">Done</span>
-            <span class="hidden md:inline">Done Editing</span>
-          </button>
-        </div>
-      </div>
-      
-      <!-- Edit Instructions -->
-      <div class="p-2 md:p-3 bg-white rounded-lg border border-blue-200">
-        <div class="flex items-start gap-2">
-          <svg class="w-4 h-4 md:w-5 md:h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-          </svg>
-          <div class="text-xs md:text-sm text-gray-700">
-            <strong class="font-semibold">Tap</strong> any workday below to add/remove vacation days. Use <strong>"Fill"</strong> to optimize remaining days with AI.
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Loading State -->
+  <!-- Loading -->
   <div *ngIf="isLoading" class="mt-10 flex items-center justify-center gap-3 text-blue-600">
     <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -465,187 +250,21 @@
     <span class="font-medium">Generating plan...</span>
   </div>
 
-  <!-- Calendar Section -->
-  <div *ngIf="plan" class="mt-10 w-full max-w-5xl">
-    <app-holiday-calendar
-      [holidays]="holidays"
-      [plan]="plan"
-      [year]="selectedYear"
-      [editable]="editMode"
-      [availableDays]="availableDays"
-      (planUpdated)="onPlanUpdated($event)">
-    </app-holiday-calendar>
-  </div>
-
-  <!-- Summary Section -->
-  <div class="mt-10 w-full max-w-3xl">
-    <app-holiday-summary [plan]="plan"></app-holiday-summary>
-  </div>
-
   <!-- Auth Modal -->
-  <div *ngIf="showAuthModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeAuthModal()">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 md:p-8" (click)="$event.stopPropagation()">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-900">
-          {{ authMode === 'signin' ? 'Sign In' : 'Save Your Plan' }}
-        </h2>
-        <button
-          type="button"
-          (click)="closeAuthModal()"
-          class="text-gray-400 hover:text-gray-600 focus:outline-none"
-          aria-label="Close"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
+  <app-auth-modal
+  [show]="showAuthModal"
+  [mode]="authMode"
+  [method]="authMethod"
+  [(email)]="authEmail"
+  [isLoading]="isLoading"
+  [magicLinkSent]="magicLinkSent"
+  [magicLinkUrl]="magicLinkUrl"
+  (submit)="handleAuth()"
+  (close)="closeAuthModal()"
+  (switchMode)="switchAuthMode()"
+  (switchMethod)="switchAuthMethod($event)"
+  (reset)="magicLinkSent = false; authEmail = ''"
+></app-auth-modal>
 
-      <!-- Auth Method Tabs -->
-      <div class="flex gap-2 p-1 bg-gray-100 rounded-lg mb-6">
-        <button
-          type="button"
-          (click)="switchAuthMethod('passkey')"
-          [class.bg-white]="authMethod === 'passkey'"
-          [class.text-gray-900]="authMethod === 'passkey'"
-          [class.text-gray-600]="authMethod !== 'passkey'"
-          [class.shadow-sm]="authMethod === 'passkey'"
-          class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        >
-          Passkey
-        </button>
-        <button
-          type="button"
-          (click)="switchAuthMethod('email')"
-          [class.bg-white]="authMethod === 'email'"
-          [class.text-gray-900]="authMethod === 'email'"
-          [class.text-gray-600]="authMethod !== 'email'"
-          [class.shadow-sm]="authMethod === 'email'"
-          class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        >
-          Email Link
-        </button>
-      </div>
 
-      <div class="mb-6">
-        <!-- Passkey Info -->
-        <div *ngIf="authMethod === 'passkey'" class="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200 mb-4">
-          <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <div class="flex-1">
-            <h3 class="font-semibold text-gray-900 mb-1">Fast & Secure</h3>
-            <p class="text-sm text-gray-600">Use Face ID, Touch ID, or device PIN. Works on this device only.</p>
-          </div>
-        </div>
-
-        <!-- Email Link Info -->
-        <div *ngIf="authMethod === 'email' && !magicLinkSent" class="flex items-start gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200 mb-4">
-          <svg class="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-          <div class="flex-1">
-            <h3 class="font-semibold text-gray-900 mb-1">Access from Any Device</h3>
-            <p class="text-sm text-gray-600">We'll send a secure link to your email. Click it to sign in.</p>
-          </div>
-        </div>
-
-        <!-- Magic Link Sent -->
-        <div *ngIf="magicLinkSent" class="mb-4">
-          <div *ngIf="!magicLinkUrl" class="p-4 bg-green-50 rounded-lg border border-green-200">
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-              </svg>
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1">Check your email!</h3>
-                <p class="text-sm text-gray-600">We sent a secure link to <strong>{{ authEmail }}</strong>. Click the link to sign in.</p>
-                <p class="text-xs text-gray-500 mt-2">The link expires in 15 minutes.</p>
-              </div>
-            </div>
-          </div>
-
-          <div *ngIf="magicLinkUrl" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <div class="flex items-start gap-3 mb-3">
-              <svg class="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-              </svg>
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1">Email not configured</h3>
-                <p class="text-sm text-gray-600 mb-3">Development mode: Use this link to sign in</p>
-                <div class="p-3 bg-white rounded border border-yellow-300">
-                  <a [href]="magicLinkUrl" class="text-sm text-blue-600 hover:text-blue-700 break-all font-medium">{{ magicLinkUrl }}</a>
-                </div>
-                <p class="text-xs text-gray-500 mt-2">In production, this link will be sent via email automatically.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <label class="block text-sm font-medium text-gray-700 mb-2">
-          Email Address
-        </label>
-        <input
-          type="email"
-          [(ngModel)]="authEmail"
-          placeholder="your@email.com"
-          [disabled]="magicLinkSent"
-          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-          (keyup.enter)="handleAuth()"
-          autofocus
-        />
-      </div>
-
-      <button
-        *ngIf="!magicLinkSent"
-        type="button"
-        (click)="handleAuth()"
-        [disabled]="!authEmail || isLoading"
-        class="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        <span *ngIf="!isLoading">
-          {{ authMethod === 'passkey' ? 
-            (authMode === 'signin' ? 'Sign In with Passkey' : 'Create Passkey') :
-            'Send Magic Link' 
-          }}
-        </span>
-        <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
-          <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          Processing...
-        </span>
-      </button>
-
-      <button
-        *ngIf="magicLinkSent"
-        type="button"
-        (click)="magicLinkSent = false; authEmail = ''"
-        class="w-full py-3 text-gray-700 bg-white border border-gray-300 font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors"
-      >
-        Send to Different Email
-      </button>
-
-      <div *ngIf="authMethod === 'passkey' && !magicLinkSent" class="mt-4 text-center">
-        <button
-          type="button"
-          (click)="switchAuthMode()"
-          class="text-sm text-blue-600 hover:text-blue-700 font-medium focus:outline-none"
-        >
-          {{ authMode === 'signin' ? "Don't have an account? Save your plan" : 'Already have an account? Sign in' }}
-        </button>
-      </div>
-
-      <div class="mt-6 pt-6 border-t border-gray-200">
-        <p class="text-xs text-gray-500 text-center">
-          {{ authMethod === 'passkey' ?
-            'Passkeys use your device\'s biometric authentication (Face ID, Touch ID, Windows Hello) for secure, passwordless access.' :
-            'Magic links provide secure, one-time access from any device. The link expires after 15 minutes.'
-          }}
-        </p>
-      </div>
-    </div>
-  </div>
-  
 </div>

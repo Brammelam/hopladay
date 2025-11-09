@@ -444,8 +444,6 @@ router.post("/magic-link/send", async (req, res) => {
   try {
     const { email, browserId } = req.body;
 
-    console.log('📧 Magic link request received:', { email, hasBrowserId: !!browserId });
-
     if (!email) {
       return res.status(400).json({ error: "email is required" });
     }
@@ -488,24 +486,9 @@ router.post("/magic-link/send", async (req, res) => {
     await magicLink.save();
 
     const magicUrl = `${origin}/auth/verify?token=${token}`;
-    
-    console.log(`📧 Magic link generated:`, {
-      email,
-      token: token.substring(0, 20) + '...',
-      url: magicUrl,
-      expiresAt: expiresAt.toISOString(),
-      userId: user._id.toString(),
-    });
 
     // Always respond immediately, send email in background
     const hasEmailConfig = process.env.EMAILUSER && process.env.EMAILPWD;
-    
-    // Send immediate response
-    res.json({
-      success: true,
-      message: "Magic link sent to your email",
-      expiresIn: '15 minutes'
-    });
 
     // Email HTML template
     const emailContent = `
@@ -539,7 +522,7 @@ router.post("/magic-link/send", async (req, res) => {
           const resend = new Resend(process.env.RESEND_API_KEY);
           
           const { data, error } = await resend.emails.send({
-            from: process.env.RESEND_FROM || 'Buddybake <hello@buddybake.com>',
+            from: process.env.RESEND_FROM || 'Hopladay <hello@buddybake.com>',
             to: email,
             subject: 'Sign in to Hopladay',
             html: emailContent,
@@ -547,6 +530,7 @@ router.post("/magic-link/send", async (req, res) => {
 
           if (error) {
             console.error('❌ Resend error:', error);
+            res.status(500).json({ error: "Failed to send magic link" });
           } else {
             console.log(`✅ Email sent via Resend`, { to: email, id: data.id });
           }
@@ -555,10 +539,6 @@ router.post("/magic-link/send", async (req, res) => {
         }
       });
     } else if (hasEmailConfig) {
-      // Gmail fallback (local dev only - won't work on Render.com)
-      console.log('📧 Sending via Gmail (local dev fallback)...');
-      console.warn('⚠️ Gmail may not work in production. Add RESEND_API_KEY for reliable delivery.');
-      
       setImmediate(async () => {
         try {
           const transporter = nodemailer.createTransport({ 
@@ -588,6 +568,13 @@ router.post("/magic-link/send", async (req, res) => {
     console.error("❌ Error sending magic link:", err);
     res.status(500).json({ error: "Failed to send magic link", message: err.message });
   }
+
+      // Send immediate response
+    res.json({
+      success: true,
+      message: "Magic link sent to your email",
+      expiresIn: '15 minutes'
+    });
 });
 
 /**
