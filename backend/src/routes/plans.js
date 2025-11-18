@@ -80,7 +80,7 @@ function expandManualDay(date, holidaySet, endDateParam, existingBlocks = []) {
     next = addDays(next, 1);
     forwardCount++;
     if (forwardCount > 10) {
-      console.log('  ⚠️ Breaking expansion - safety limit reached');
+      console.log('  Breaking expansion - safety limit reached');
       break;
     }
   }
@@ -209,7 +209,7 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
         const aiGain = totalDaysOff - current.totalDaysOff;
         const actualRoi = aiGain / aiContribution;
         
-        console.log(`  📊 Manual+AI merge: Manual had ${current.totalDaysOff} days, AI adds ${aiContribution} days for ${aiGain} extra → ROI: ${actualRoi.toFixed(1)}x`);
+        console.log(`  Manual+AI merge: Manual had ${current.totalDaysOff} days, AI adds ${aiContribution} days for ${aiGain} extra → ROI: ${actualRoi.toFixed(1)}x`);
         
         roi = actualRoi.toFixed(1);
         efficiency = actualRoi >= 4 ? 'high' : actualRoi >= 3 ? 'good' : 'normal';
@@ -221,7 +221,7 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
         const aiGain = totalDaysOff - next.totalDaysOff;
         const actualRoi = aiGain / aiContribution;
         
-        console.log(`  📊 AI+Manual merge: Manual had ${next.totalDaysOff} days, AI adds ${aiContribution} days for ${aiGain} extra → ROI: ${actualRoi.toFixed(1)}x`);
+        console.log(`  AI+Manual merge: Manual had ${next.totalDaysOff} days, AI adds ${aiContribution} days for ${aiGain} extra → ROI: ${actualRoi.toFixed(1)}x`);
         
         roi = actualRoi.toFixed(1);
         efficiency = actualRoi >= 4 ? 'high' : actualRoi >= 3 ? 'good' : 'normal';
@@ -271,7 +271,7 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
   console.log(`\nMerge complete: ${merged.length} suggestions (started with ${suggestions.length})`);
   
   if (merged.length < suggestions.length) {
-    console.log(`⚠️ WARNING: Lost ${suggestions.length - merged.length} suggestions during merge!`);
+    console.log(`WARNING: Lost ${suggestions.length - merged.length} suggestions during merge!`);
   }
 
   return merged;
@@ -331,7 +331,7 @@ router.post('/', async (req, res) => {
     await plan.save();
     res.json(plan);
   } catch (err) {
-    console.error('❌ Error creating plan:', err);
+    console.error('Error creating plan:', err);
     res.status(500).json({ message: 'Failed to create plan', error: err.message });
   }
 });
@@ -346,7 +346,7 @@ router.get("/:userId", async (req, res) => {
     const plans = await HolidayPlan.find({ userId }).sort({ year: -1 });
     res.json(plans);
   } catch (err) {
-    console.error("❌ Error fetching plans:", err);
+    console.error("Error fetching plans:", err);
     res.status(500).json({ error: "Failed to fetch plans" });
   }
 });
@@ -433,7 +433,7 @@ router.post("/:planId/manual-days", async (req, res) => {
 
       if (dayAlreadyAllocated) {
         const blockType = dayAlreadyAllocated.isManual ? 'manual' : 'AI';
-        console.log(`❌ Skipping ${date} - workday already allocated in ${blockType} block`);
+        console.log(`Skipping ${date} - workday already allocated in ${blockType} block`);
         skippedDays.push({ 
           date, 
           reason: `Workday already allocated in ${blockType} vacation block` 
@@ -444,7 +444,7 @@ router.post("/:planId/manual-days", async (req, res) => {
       // Create expanded block for this manual day (stop at existing blocks)
       const expanded = expandManualDay(dayDate, holidaySet, null, plan.suggestions);
       
-      console.log(`✓ Expanded ${date} to ${expanded.startDate.toDateString()} - ${expanded.endDate.toDateString()} (${expanded.vacationDaysUsed} vacation days, ${expanded.totalDaysOff} total days)`);
+      console.log(`Expanded ${date} to ${expanded.startDate.toDateString()} - ${expanded.endDate.toDateString()} (${expanded.vacationDaysUsed} vacation days, ${expanded.totalDaysOff} total days)`);
 
       // Add as new block (merge will happen later if adjacent)
       const manualRoi = (expanded.totalDaysOff / expanded.vacationDaysUsed).toFixed(1);
@@ -508,7 +508,7 @@ router.post("/:planId/manual-days", async (req, res) => {
     
     // Include info about skipped days in response and logs
     if (skippedDays.length > 0) {
-      console.log('⚠️ Some days were skipped:', skippedDays);
+      console.log('Some days were skipped:', skippedDays);
       
       // If ALL days were skipped, return error with details
       if (newManualBlocks.length === 0) {
@@ -521,11 +521,11 @@ router.post("/:planId/manual-days", async (req, res) => {
       }
     }
     
-    console.log(`✓ Manual days processed. Added ${newManualBlocks.length} new blocks, skipped ${skippedDays.length} days.`);
+    console.log(`Manual days processed. Added ${newManualBlocks.length} new blocks, skipped ${skippedDays.length} days.`);
     
     res.json(plan);
   } catch (err) {
-    console.error("❌ Error adding manual days:", err);
+    console.error("Error adding manual days:", err);
     res.status(500).json({ error: "Failed to add manual days", message: err.message });
   }
 });
@@ -560,7 +560,7 @@ router.delete("/:planId/suggestions/:suggestionId", async (req, res) => {
     await plan.save();
     res.json(plan);
   } catch (err) {
-    console.error("❌ Error removing suggestion:", err);
+    console.error("Error removing suggestion:", err);
     res.status(500).json({ error: "Failed to remove suggestion", message: err.message });
   }
 });
@@ -685,7 +685,7 @@ router.delete("/:planId/suggestions/:suggestionId/days/:date", async (req, res) 
         updatedBridge.totalDaysOff = expanded.totalDaysOff;
         updatedBridge.description = `Use ${expanded.vacationDaysUsed} vacation day${expanded.vacationDaysUsed > 1 ? 's' : ''} for ${expanded.totalDaysOff} days off`;
         
-        console.log(`✓ Updated bridge in place (keeping _id): ${expanded.startDate.toDateString()} - ${expanded.endDate.toDateString()}`);
+        console.log(`Updated bridge in place (keeping _id): ${expanded.startDate.toDateString()} - ${expanded.endDate.toDateString()}`);
       } else {
         // Split into multiple bridges - remove old and add new ones
         console.log(`Splitting bridge into ${validGroups.length} new bridges`);
@@ -722,7 +722,7 @@ router.delete("/:planId/suggestions/:suggestionId/days/:date", async (req, res) 
     await plan.save();
     res.json(plan);
   } catch (err) {
-    console.error("❌ Error removing day from suggestion:", err);
+    console.error("Error removing day from suggestion:", err);
     res.status(500).json({ error: "Failed to remove day", message: err.message });
   }
 });
@@ -843,11 +843,11 @@ router.post("/:planId/regenerate", async (req, res) => {
 
     await plan.save();
 
-    console.log(`✅ Plan regenerated: ${plan.usedDays}/${availableDays} days, ${plan.totalDaysOff} days off`);
+    console.log(`Plan regenerated: ${plan.usedDays}/${availableDays} days, ${plan.totalDaysOff} days off`);
 
     res.json(plan);
   } catch (err) {
-    console.error('❌ Error regenerating plan:', err);
+    console.error('Error regenerating plan:', err);
     res.status(500).json({ error: "Failed to regenerate plan", details: err.message });
   }
 });
@@ -952,7 +952,7 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
     const usage = calculatePlanUsage(plan.suggestions, holidays);
     plan.usedDays = usage.usedDays;
     plan.totalDaysOff = usage.totalDaysOff;
-    plan.preference = preference; // ✅ Update the plan's preference
+    plan.preference = preference; // Update the plan's preference
     plan.markModified('suggestions');
 
     await plan.save();
@@ -961,7 +961,7 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
 
     res.json(plan);
   } catch (err) {
-    console.error("❌ Error optimizing remaining days:", err);
+    console.error("Error optimizing remaining days:", err);
     res.status(500).json({ error: "Failed to optimize remaining days", message: err.message });
   }
 });
@@ -984,7 +984,7 @@ router.get("/:userId/:year", async (req, res) => {
 
     // If country filter is provided, check if it matches
     if (country && plan.countryCode !== country) {
-      console.log(`ℹ️ Plan exists for ${year} but for ${plan.countryCode}, not ${country}`);
+      console.log(`Plan exists for ${year} but for ${plan.countryCode}, not ${country}`);
       return res.status(404).json({ 
         error: "Plan not found for this year/country combination",
         existingCountry: plan.countryCode 
@@ -993,7 +993,7 @@ router.get("/:userId/:year", async (req, res) => {
 
     res.json(plan);
   } catch (err) {
-    console.error("❌ Error fetching plan:", err);
+    console.error("Error fetching plan:", err);
     res.status(500).json({ error: "Failed to fetch plan", message: err.message });
   }
 });

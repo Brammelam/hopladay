@@ -27,7 +27,7 @@ router.post("/init", async (req, res) => {
 
     res.json(user);
   } catch (err) {
-    console.error("❌ Error initializing user:", err);
+    console.error("Error initializing user:", err);
     res.status(500).json({ error: "Failed to initialize user", message: err.message });
   }
 });
@@ -48,7 +48,7 @@ router.post("/claim", async (req, res) => {
     const user = await claimPlansWithEmail(browserId, email);
     res.json(user);
   } catch (err) {
-    console.error("❌ Error claiming plans:", err);
+    console.error(" Error claiming plans:", err);
     res.status(500).json({ error: "Failed to claim plans", message: err.message });
   }
 });
@@ -68,7 +68,7 @@ router.get("/:id", async (req, res) => {
 
     res.json(user);
   } catch (err) {
-    console.error("❌ Error fetching user:", err);
+    console.error(" Error fetching user:", err);
     res.status(500).json({ error: "Failed to fetch user" });
   }
 });
@@ -89,7 +89,7 @@ router.post("/", async (req, res) => {
 
     res.json(user);
   } catch (err) {
-    console.error("❌ Error creating user:", err);
+    console.error(" Error creating user:", err);
     res.status(500).json({ error: "Failed to create user" });
   }
 });

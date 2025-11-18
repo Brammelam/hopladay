@@ -15,6 +15,6 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes),
-    provideAnimations() // ✅ enable animations for standalone apps
+    provideAnimations() //  enable animations for standalone apps
   ]
 };

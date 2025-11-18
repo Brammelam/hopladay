@@ -20,7 +20,7 @@ const rpName = "Hopladay";
 const rpID = process.env.RP_ID || "localhost";
 const origin = process.env.ORIGIN || `http://localhost:4200`;
 
-console.log('🔧 Auth module initialized:', {
+console.log('Auth module initialized:', {
   rpID,
   origin,
   hasEmailUser: !!process.env.EMAILUSER,
@@ -99,7 +99,7 @@ router.post("/register/start", async (req, res) => {
 
     res.json(options);
   } catch (err) {
-    console.error("❌ Error starting registration:", err);
+    console.error(" Error starting registration:", err);
     res.status(500).json({ error: "Failed to start registration", message: err.message });
   }
 });
@@ -137,7 +137,7 @@ router.post("/register/finish", async (req, res) => {
     const regInfo = verification.registrationInfo;
 
     // Log the structure to understand v13 format
-    console.log('📝 Full verification object structure:', {
+    console.log('Full verification object structure:', {
       verified: verification.verified,
       registrationInfoKeys: Object.keys(regInfo),
       hasCredential: !!regInfo.credential,
@@ -148,11 +148,11 @@ router.post("/register/finish", async (req, res) => {
     const cred = regInfo.credential;
     
     if (!cred || !cred.id || !cred.publicKey) {
-      console.error('❌ Missing credential data in registrationInfo');
+      console.error(' Missing credential data in registrationInfo');
       return res.status(500).json({ error: 'Invalid credential structure' });
     }
 
-    console.log('📝 Credential details:', {
+    console.log('Credential details:', {
       idType: typeof cred.id,
       idConstructor: cred.id?.constructor?.name,
       idIsUint8Array: cred.id instanceof Uint8Array,
@@ -175,7 +175,7 @@ router.post("/register/finish", async (req, res) => {
       transports: cred.transports || [],
     };
 
-    console.log('📝 Saving authenticator:', {
+    console.log('Saving authenticator:', {
       credentialIDType: typeof newAuthenticator.credentialID,
       credentialIDLength: newAuthenticator.credentialID.length,
       credentialID: newAuthenticator.credentialID,
@@ -189,7 +189,7 @@ router.post("/register/finish", async (req, res) => {
     user.currentChallenge = undefined;
     await user.save();
 
-    console.log(`✅ Passkey registered for ${email}`);
+    console.log(` Passkey registered for ${email}`);
 
     res.json({
       verified: true,
@@ -201,7 +201,7 @@ router.post("/register/finish", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Error finishing registration:", err);
+    console.error(" Error finishing registration:", err);
     res.status(500).json({ error: "Failed to finish registration", message: err.message });
   }
 });
@@ -225,7 +225,7 @@ router.post("/login/start", async (req, res) => {
       return res.status(404).json({ error: "No passkey found for this email" });
     }
 
-    console.log('🔍 Found user with authenticators:', {
+    console.log(' Found user with authenticators:', {
       authenticatorCount: user.authenticators.length,
       firstAuthType: typeof user.authenticators[0]?.credentialID,
       firstAuthSample: user.authenticators[0]?.credentialID?.substring?.(0, 50),
@@ -238,7 +238,7 @@ router.post("/login/start", async (req, res) => {
       // Convert to plain object to ensure we have clean data
       const authObj = auth.toObject ? auth.toObject() : auth;
       
-      console.log('🔑 Raw authenticator from DB:', {
+      console.log('Raw authenticator from DB:', {
         credentialID: authObj.credentialID,
         credentialIDType: typeof authObj.credentialID,
         credentialIDLength: authObj.credentialID?.length,
@@ -255,7 +255,7 @@ router.post("/login/start", async (req, res) => {
       };
     });
 
-    console.log('🎯 Generated allowCredentials:', {
+    console.log(' Generated allowCredentials:', {
       count: allowCredentials.length,
       firstId: allowCredentials[0]?.id,
       firstIdType: typeof allowCredentials[0]?.id,
@@ -276,7 +276,7 @@ router.post("/login/start", async (req, res) => {
 
     res.json(options);
   } catch (err) {
-    console.error("❌ Error starting login:", err);
+    console.error(" Error starting login:", err);
     res.status(500).json({ error: "Failed to start login", message: err.message });
   }
 });
@@ -294,7 +294,7 @@ router.post("/login/finish", async (req, res) => {
       return res.status(400).json({ error: "email and credential are required" });
     }
 
-    console.log('📥 Login finish received:', {
+    console.log('Login finish received:', {
       email,
       credentialKeys: credential ? Object.keys(credential) : 'N/A',
       credentialId: credential?.id,
@@ -314,7 +314,7 @@ router.post("/login/finish", async (req, res) => {
     // Find the authenticator - credential.id is already base64url string
     const credentialIDFromClient = credential.id; // Already base64url string from browser
     
-    console.log('🔍 Looking for authenticator:', {
+    console.log(' Looking for authenticator:', {
       clientCredentialID: credentialIDFromClient,
       clientIDType: typeof credentialIDFromClient,
       clientIDLength: credentialIDFromClient?.length,
@@ -328,7 +328,7 @@ router.post("/login/finish", async (req, res) => {
     });
 
     if (!authenticator) {
-      console.error('❌ Authenticator not found. Looking for:', credentialIDFromClient);
+      console.error(' Authenticator not found. Looking for:', credentialIDFromClient);
       console.error('Available:', user.authenticators.map(a => String(a.credentialID)));
       return res.status(400).json({ error: "Authenticator not found" });
     }
@@ -336,7 +336,7 @@ router.post("/login/finish", async (req, res) => {
     // Convert to plain object for processing
     const authObj = authenticator.toObject ? authenticator.toObject() : authenticator;
 
-    console.log('🔐 Preparing verification with authenticator:', {
+    console.log('Preparing verification with authenticator:', {
       credentialIDLength: String(authObj.credentialID).length,
       publicKeyLength: String(authObj.credentialPublicKey).length,
       counter: authObj.counter,
@@ -346,7 +346,7 @@ router.post("/login/finish", async (req, res) => {
     const credentialIDUint8 = isoBase64URL.toBuffer(String(authObj.credentialID));
     const publicKeyUint8 = isoBase64URL.toBuffer(String(authObj.credentialPublicKey));
 
-    console.log('🔐 Calling verifyAuthenticationResponse with:', {
+    console.log('Calling verifyAuthenticationResponse with:', {
       hasResponse: !!credential,
       hasChallenge: !!user.currentChallenge,
       expectedOrigin: origin,
@@ -360,7 +360,7 @@ router.post("/login/finish", async (req, res) => {
     // Verify the credential
     let verification;
     try {
-      console.log('🔐 Credential object for verification:', {
+      console.log('Credential object for verification:', {
         credentialIDType: credentialIDUint8?.constructor?.name,
         credentialIDLength: credentialIDUint8?.length,
         publicKeyType: publicKeyUint8?.constructor?.name,
@@ -383,13 +383,13 @@ router.post("/login/finish", async (req, res) => {
         },
       });
       
-      console.log('✅ Verification result:', {
+      console.log(' Verification result:', {
         verified: verification.verified,
         hasAuthInfo: !!verification.authenticationInfo,
         authInfoKeys: verification.authenticationInfo ? Object.keys(verification.authenticationInfo) : 'N/A',
       });
     } catch (err) {
-      console.error('❌ verifyAuthenticationResponse error:', err);
+      console.error(' verifyAuthenticationResponse error:', err);
       console.error('Error details:', {
         message: err.message,
         stack: err.stack?.split('\n').slice(0, 5),
@@ -409,15 +409,15 @@ router.post("/login/finish", async (req, res) => {
     
     if (authIndex !== -1 && verification.authenticationInfo?.newCounter !== undefined) {
       user.authenticators[authIndex].counter = verification.authenticationInfo.newCounter;
-      console.log(`✅ Updated counter to ${verification.authenticationInfo.newCounter} for authenticator ${authIndex}`);
+      console.log(` Updated counter to ${verification.authenticationInfo.newCounter} for authenticator ${authIndex}`);
     } else {
-      console.warn('⚠️ Could not update counter:', { authIndex, hasNewCounter: !!verification.authenticationInfo?.newCounter });
+      console.warn(' Could not update counter:', { authIndex, hasNewCounter: !!verification.authenticationInfo?.newCounter });
     }
     
     user.currentChallenge = undefined;
     await user.save();
 
-    console.log(`✅ User logged in: ${email}`);
+    console.log(` User logged in: ${email}`);
 
     res.json({
       verified: true,
@@ -430,7 +430,7 @@ router.post("/login/finish", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Error finishing login:", err);
+    console.error(" Error finishing login:", err);
     res.status(500).json({ error: "Failed to finish login", message: err.message });
   }
 });
@@ -450,25 +450,25 @@ router.post("/magic-link/send", async (req, res) => {
 
     // Find or create user
     let user = await User.findOne({ email });
-    console.log('🔍 User lookup:', { found: !!user, email });
+    console.log(' User lookup:', { found: !!user, email });
     
     if (!user && browserId) {
       // Claim anonymous plans if user doesn't exist
       const anonUser = await User.findOne({ browserId });
-      console.log('🔍 Anonymous user lookup:', { found: !!anonUser, browserId });
+      console.log(' Anonymous user lookup:', { found: !!anonUser, browserId });
       
       if (anonUser) {
         anonUser.email = email;
         anonUser.name = email.split('@')[0];
         user = anonUser;
         await user.save();
-        console.log('✅ Claimed anonymous user');
+        console.log(' Claimed anonymous user');
       }
     }
     
     if (!user) {
       // Create new user
-      console.log('➕ Creating new user for email:', email);
+      console.log('Creating new user for email:', email);
       user = await findOrCreateUserByEmail(email, { name: email.split('@')[0] });
     }
 
@@ -515,7 +515,7 @@ router.post("/magic-link/send", async (req, res) => {
     
     if (hasResend) {
       // Use Resend (recommended for production - works on Render.com)
-      console.log('📧 Sending via Resend API...');
+      console.log(' Sending via Resend API...');
       
       setImmediate(async () => {
         try {
@@ -529,13 +529,13 @@ router.post("/magic-link/send", async (req, res) => {
           });
 
           if (error) {
-            console.error('❌ Resend error:', error);
+            console.error(' Resend error:', error);
             res.status(500).json({ error: "Failed to send magic link" });
           } else {
-            console.log(`✅ Email sent via Resend`, { to: email, id: data.id });
+            console.log(` Email sent via Resend`, { to: email, id: data.id });
           }
         } catch (err) {
-          console.error('❌ Resend exception:', err);
+          console.error(' Resend exception:', err);
         }
       });
     } else if (hasEmailConfig) {
@@ -556,16 +556,16 @@ router.post("/magic-link/send", async (req, res) => {
             html: emailContent,
           });
 
-          console.log(`✅ Email sent via Gmail to ${email}`);
+          console.log(` Email sent via Gmail to ${email}`);
         } catch (err) {
-          console.error('❌ Gmail failed:', err.message);
+          console.error(' Gmail failed:', err.message);
         }
       });
     } else {
-      console.warn('⚠️ No email provider configured (add RESEND_API_KEY or EMAILUSER/EMAILPWD)');
+      console.warn(' No email provider configured (add RESEND_API_KEY or EMAILUSER/EMAILPWD)');
     }
   } catch (err) {
-    console.error("❌ Error sending magic link:", err);
+    console.error(" Error sending magic link:", err);
     res.status(500).json({ error: "Failed to send magic link", message: err.message });
   }
 
@@ -586,14 +586,14 @@ router.post("/magic-link/verify", async (req, res) => {
   try {
     const { token } = req.body;
 
-    console.log('🔍 Magic link verification request:', {
+    console.log(' Magic link verification request:', {
       hasToken: !!token,
       tokenLength: token?.length,
       tokenSample: token?.substring(0, 20) + '...',
     });
 
     if (!token) {
-      console.error('❌ No token provided');
+      console.error(' No token provided');
       return res.status(400).json({ error: "token is required" });
     }
 
@@ -601,7 +601,7 @@ router.post("/magic-link/verify", async (req, res) => {
     const now = new Date();
     const magicLink = await MagicLink.findOne({ token });
     
-    console.log('🔍 Magic link lookup result:', {
+    console.log(' Magic link lookup result:', {
       found: !!magicLink,
       used: magicLink?.used,
       expired: magicLink ? magicLink.expiresAt < now : 'N/A',
@@ -610,31 +610,31 @@ router.post("/magic-link/verify", async (req, res) => {
     });
 
     if (!magicLink) {
-      console.error('❌ Magic link not found in database');
+      console.error(' Magic link not found in database');
       return res.status(400).json({ error: "Invalid magic link" });
     }
 
     if (magicLink.used) {
-      console.error('❌ Magic link already used');
+      console.error(' Magic link already used');
       return res.status(400).json({ error: "This magic link has already been used" });
     }
 
     if (magicLink.expiresAt < now) {
-      console.error('❌ Magic link expired');
+      console.error(' Magic link expired');
       return res.status(400).json({ error: "Magic link has expired" });
     }
 
     // Get the user
     const user = await User.findById(magicLink.userId);
     
-    console.log('🔍 User lookup:', {
+    console.log(' User lookup:', {
       found: !!user,
       userId: magicLink.userId.toString(),
       email: user?.email,
     });
     
     if (!user) {
-      console.error('❌ User not found for magic link');
+      console.error(' User not found for magic link');
       return res.status(404).json({ error: "User not found" });
     }
 
@@ -642,7 +642,7 @@ router.post("/magic-link/verify", async (req, res) => {
     magicLink.used = true;
     await magicLink.save();
 
-    console.log(`✅ Magic link verified successfully for ${user.email}`, {
+    console.log(` Magic link verified successfully for ${user.email}`, {
       userId: user._id.toString(),
       userName: user.name,
     });
@@ -658,7 +658,7 @@ router.post("/magic-link/verify", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Error verifying magic link:", {
+    console.error(" Error verifying magic link:", {
       message: err.message,
       stack: err.stack?.split('\n').slice(0, 5),
     });

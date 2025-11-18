@@ -14,7 +14,7 @@ router.get('/:year', async (req, res) => {
     const holidays = await getHolidaysForYear(year, country);
     res.json(holidays);
   } catch (err) {
-    console.error('❌ Failed to fetch holidays route:', err);
+    console.error(' Failed to fetch holidays route:', err);
     res.status(500).json({ error: err.message });
   }
 });

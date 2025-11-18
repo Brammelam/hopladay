@@ -74,7 +74,7 @@ export class AuthVerifyComponent implements OnInit {
     });
     
     if (!token) {
-      console.error('❌ No token in URL');
+      console.error(' No token in URL');
       this.isVerifying = false;
       this.success = false;
       return;
@@ -94,18 +94,18 @@ export class AuthVerifyComponent implements OnInit {
           this.userService.setCurrentUser(result.user as any);
           this.success = true;
           
-          console.log('✅ User authenticated, redirecting in 2 seconds...');
+          console.log(' User authenticated, redirecting in 2 seconds...');
           
           // Auto-redirect after 2 seconds
           setTimeout(() => this.goToDashboard(), 2000);
         } else {
-          console.error('❌ Verification returned false');
+          console.error(' Verification returned false');
           this.success = false;
         }
         this.isVerifying = false;
       },
       error: (err) => {
-        console.error('❌ Magic link verification failed:', {
+        console.error(' Magic link verification failed:', {
           status: err.status,
           statusText: err.statusText,
           error: err.error,

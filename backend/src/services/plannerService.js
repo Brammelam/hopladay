@@ -291,21 +291,21 @@ function generateDescription(selection, holidays, holidaySet, preference) {
   // Add ROI context
   let efficiency = "";
   if (roi >= 5) {
-    efficiency = " (⭐ Exceptional efficiency)";
+    efficiency = " (Exceptional efficiency)";
   } else if (roi >= 4) {
-    efficiency = " (⭐ Great value)";
+    efficiency = " (Great value)";
   } else if (roi >= 3) {
-    efficiency = " (✓ Good value)";
+    efficiency = " (Good value)";
   }
   
   // Add preference-specific context
   let prefContext = "";
   if (preference === "summer_vacation" && isSummerMonth(startDate)) {
-    prefContext = " ☀️ Summer period";
+      prefContext = " Summer period";
   } else if (preference === "few_long_vacations" && totalDaysOff >= 10) {
-    prefContext = " 🏖️ Extended vacation";
+      prefContext = " Extended vacation";
   } else if (preference === "many_long_weekends" && vacationDaysUsed <= 2 && totalDaysOff >= 3) {
-    prefContext = " 🎯 Long weekend";
+      prefContext = " Long weekend";
   }
   
   return {
@@ -391,7 +391,7 @@ function mergeSelections(list, holidaySet) {
 /** spacing tuned by preference */
 function spacingThreshold(preference) {
   if (preference === "few_long_vacations") return 0;
-  if (preference === "many_long_weekends") return 21; // ✅ Changed from 0 to 21 for better distribution
+  if (preference === "many_long_weekends") return 21; // Changed from 0 to 21 for better distribution
   if (preference === "spread_out") return 35;
   if (preference === "summer_vacation") return 14;
   return 21;

@@ -10,6 +10,7 @@ import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal';
+import { ExportService } from '../services/export.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -59,6 +60,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   showPlansDropdown = false;
   savedPlans: any[] = [];
+  showExportMenu = false;
 
   private scrollHandler: () => void;
   private userSubscription?: Subscription;
@@ -68,7 +70,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private exportService: ExportService
   ) {
     this.scrollHandler = () => {
       const scrolled = window.scrollY > 400;
@@ -89,6 +92,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const target = e.target as HTMLElement;
       if (this.showPlansDropdown && !target.closest('.relative')) {
         this.showPlansDropdown = false;
+        this.cdr.detectChanges();
+      }
+      if (this.showExportMenu && !target.closest('.relative')) {
+        this.showExportMenu = false;
         this.cdr.detectChanges();
       }
     });
@@ -140,7 +147,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('❌ Failed to initialize user:', err),
+      error: (err) => console.error('Failed to initialize user:', err),
     });
   }
 
@@ -199,7 +206,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Execute plan generation with selected preference
   confirmPreferenceSelection() {
-    console.log(`✅ Confirming preference selection: ${this.selectedPreference} for ${this.preferenceSelectionFor}`);
+    console.log(`Confirming preference selection: ${this.selectedPreference} for ${this.preferenceSelectionFor}`);
     this.showPreferenceSelector = false;
     this.cdr.markForCheck();
     
@@ -214,7 +221,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Select a preference in the modal
   selectPreference(value: string) {
-    console.log(`🎯 User selected preference: ${value}`);
+    console.log(`User selected preference: ${value}`);
     this.selectedPreference = value;
     this.cdr.markForCheck();
   }
@@ -238,12 +245,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
-    console.log(`🔄 Regenerating with strategy: ${this.selectedPreference}`);
+    console.log(`Regenerating with strategy: ${this.selectedPreference}`);
 
     // Use regenerate endpoint which keeps manual days and regenerates AI suggestions
     this.api.regeneratePlanWithStrategy(this.plan._id, this.selectedPreference).subscribe({
       next: (updatedPlan) => {
-        console.log(`✅ Plan regenerated from API, preference: ${updatedPlan.preference}`);
+        console.log(`Plan regenerated from API, preference: ${updatedPlan.preference}`);
         this.plan = { ...updatedPlan };
         this.isLoading = false;
         this.toast(`Plan regenerated with ${this.getPreferenceLabel(updatedPlan.preference)} strategy!`);
@@ -283,7 +290,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   preference: string = 'balanced',
   generateAI = true
 ) {
-  console.log(`⚙️ Generating ${generateAI ? 'AI' : 'manual'} plan for`, { userId, year, country, preference, availableDays });
+  console.log(`Generating ${generateAI ? 'AI' : 'manual'} plan for`, { userId, year, country, preference, availableDays });
   this.isLoading = true;
 
   this.api
@@ -291,11 +298,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     .pipe(
       switchMap((holidayData) => {
         this.holidays = [...holidayData];
-        console.log(`📡 Calling API createPlan with preference: ${preference}`);
+        console.log(`Calling API createPlan with preference: ${preference}`);
         return this.api.createPlan(userId, year, country, availableDays, preference, generateAI);
       }),
       catchError((err) => {
-        console.error('❌ Failed during plan generation pipeline:', err);
+        console.error('Failed during plan generation pipeline:', err);
         this.toast('Could not load holidays or generate plan.');
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -305,7 +312,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     .subscribe((plan) => {
       if (!plan) return; // handled in catchError
 
-      console.log('✅ Plan successfully generated:', { 
+      console.log('Plan successfully generated:', { 
         preference: plan.preference, 
         suggestions: plan.suggestions?.length,
         usedDays: plan.usedDays 
@@ -350,11 +357,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const remaining = this.getRemainingDays();
     this.isLoading = true;
 
-    console.log(`🎯 Optimizing with preference: ${this.selectedPreference}`);
+    console.log(`Optimizing with preference: ${this.selectedPreference}`);
 
     this.api.optimizeRemainingDays(this.plan._id, this.selectedPreference).subscribe({
       next: (updatedPlan) => {
-        console.log(`✅ Plan updated from API, preference: ${updatedPlan.preference}`);
+        console.log(`Plan updated from API, preference: ${updatedPlan.preference}`);
         this.plan = { ...updatedPlan };
         this.isLoading = false;
         this.editMode = false;
@@ -362,7 +369,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('❌ Failed to optimize remaining days:', err);
+        console.error('Failed to optimize remaining days:', err);
         this.isLoading = false;
         this.toast('Failed to optimize remaining days.');
         this.cdr.detectChanges();
@@ -397,7 +404,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         if (err.status === 404) this.plan = null;
-        else console.error('❌ Failed to load plan:', err);
+        else console.error('Failed to load plan:', err);
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -412,11 +419,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.savedPlans = plans.sort(
           (a, b) => b.year - a.year || a.countryCode.localeCompare(b.countryCode)
         );
-        console.log('📚 Loaded saved plans:', this.savedPlans.length);
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('❌ Failed to load saved plans:', err);
+        console.error('Failed to load saved plans:', err);
         this.savedPlans = [];
         this.cdr.detectChanges();
       },
@@ -435,14 +441,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
   startNewPlan(): void {
     if (!this.userId) return;
     
-    console.log('🆕 Starting new plan for:', { 
-      country: this.selectedCountry, 
-      year: this.selectedYear 
-    });
-    
     this.plan = null;
     this.editMode = false;
     this.cdr.detectChanges();
+  }
+
+  exportToICS(): void {
+    if (!this.plan) {
+      this.toast('No plan to export');
+      return;
+    }
+    const countryName = this.getCountryName(this.selectedCountry);
+    this.exportService.exportToICS(this.plan, countryName);
+    this.toast('Calendar file downloaded! Import it into Google Calendar, Outlook, or Apple Calendar.');
+    this.showExportMenu = false;
+  }
+
+  exportToPDF(): void {
+    if (!this.plan) {
+      this.toast('No plan to export');
+      return;
+    }
+    const countryName = this.getCountryName(this.selectedCountry);
+    this.exportService.exportToPDF(this.plan, countryName, this.holidays);
+    this.showExportMenu = false;
   }
 
   getCountryName(code: string): string {
@@ -456,9 +478,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return countries[code] || code;
   }
 
-  loadPlan(plan: any): void {
-    console.log('📂 Loading plan:', { year: plan.year, country: plan.countryCode });
-    
+  loadPlan(plan: any): void {    
     this.selectedYear = plan.year;
     this.selectedCountry = plan.countryCode;
     this.availableDays = plan.availableDays;
@@ -522,7 +542,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       }
     } catch (err: any) {
-      console.error('❌ Auth error:', err);
+      console.error('Auth error:', err);
       if (err.error?.error?.includes('already has a passkey')) {
         this.toast('This email already has a passkey. Please sign in.');
         this.authMode = 'signin';
@@ -560,7 +580,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('❌ Magic link error:', err);
+        console.error('Magic link error:', err);
         this.toast('Failed to generate magic link.');
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -594,12 +614,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-  console.log('🚪 Logging out user');
+  console.log('Logging out user');
 
-  // 1️⃣ Clear authentication info
+  // Clear authentication info
   this.userService.clearCurrentUser(); // if your service has a method for this
 
-  // 2️⃣ Reset local state
+  // Reset local state
   this.userId = '';
   this.plan = null;
   this.savedPlans = [];
@@ -609,10 +629,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   this.authMode = 'signin';
   this.authMethod = 'passkey';
 
-  // 4️⃣ Let the user know
+  // Let the user know
   this.toast('You have been logged out.');
 
-  // 5️⃣ Trigger UI refresh
+  // Trigger UI refresh
   this.cdr.detectChanges();
 }
 

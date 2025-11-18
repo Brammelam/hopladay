@@ -11,11 +11,11 @@ import { parseISODate, formatDate } from "../utils/dateUtils.js";
  */
 export async function getHolidaysForYear(year, countryCode = 'NO') {
   try {
-    // 1️⃣ Check cache first (by year AND country)
+    // 1 Check cache first (by year AND country)
     const existing = await Holiday.find({ year, countryCode });
     if (existing.length > 0) {
       console.log(
-        `📦 Returning ${existing.length} cached holidays for ${countryCode} ${year}`
+        ` Returning ${existing.length} cached holidays for ${countryCode} ${year}`
       );
       // Normalize old data in case it was saved before date normalization was implemented
       return existing.map((h) => ({
@@ -24,7 +24,7 @@ export async function getHolidaysForYear(year, countryCode = 'NO') {
       }));
     }
 
-    // 2️⃣ Fetch from Nager.Date API
+    // 2 Fetch from Nager.Date API
     console.log(`🌐 Fetching holidays from Nager.Date API for ${countryCode} ${year}...`);
     const response = await axios.get(
       `https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`
@@ -35,7 +35,7 @@ export async function getHolidaysForYear(year, countryCode = 'NO') {
       throw new Error("No holiday data returned from API");
     }
 
-    // 3️⃣ Normalize and prepare for DB
+    // 3 Normalize and prepare for DB
     const holidays = data.map((h) => ({
       date: h.date.split("T")[0], // safely extract YYYY-MM-DD
       localName: h.localName,
@@ -44,13 +44,13 @@ export async function getHolidaysForYear(year, countryCode = 'NO') {
       year: Number(year),
     }));
 
-    // 4️⃣ Save to MongoDB
+    // 4 Save to MongoDB
     await Holiday.insertMany(holidays);
     console.log(`💾 Saved ${holidays.length} holidays for ${countryCode} ${year} to DB.`);
 
     return holidays;
   } catch (err) {
-    console.error("❌ Error fetching holidays:", err.message);
+    console.error(" Error fetching holidays:", err.message);
     throw new Error("Failed to fetch holidays");
   }
 }
@@ -67,7 +67,7 @@ export async function clearCachedHolidays(year) {
     console.log(`🧹 Cleared ${result.deletedCount} holidays for ${year}`);
     return result.deletedCount;
   } catch (err) {
-    console.error("❌ Failed to clear holidays:", err.message);
+    console.error(" Failed to clear holidays:", err.message);
     throw err;
   }
 }

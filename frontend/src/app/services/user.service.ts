@@ -74,10 +74,10 @@ export class UserService {
     }).pipe(
       tap(user => {
         this.currentUserSubject.next(user);
-        console.log('✅ User initialized:', user);
+        console.log(' User initialized:', user);
       }),
       catchError(err => {
-        console.error('❌ Failed to initialize user:', err);
+        console.error(' Failed to initialize user:', err);
         throw err;
       })
     );
@@ -96,7 +96,7 @@ export class UserService {
     }).pipe(
       tap(user => {
         this.currentUserSubject.next(user);
-        console.log('✅ Plans claimed with email:', email);
+        console.log(' Plans claimed with email:', email);
       })
     );
   }

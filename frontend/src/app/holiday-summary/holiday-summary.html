@@ -33,7 +33,7 @@
               <div class="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-900">
                 {{ s.roi || (s.totalDaysOff / s.vacationDaysUsed).toFixed(1) }}x
               </div>
-              <div *ngIf="s.efficiency === 'high'" class="text-xs text-orange-600 font-medium">⭐ High ROI</div>
+              <div *ngIf="s.efficiency === 'high'" class="text-xs text-orange-600 font-medium">High ROI</div>
             </div>
           </div>
           <div *ngIf="s.reason" class="flex items-start gap-2 text-gray-600 text-sm pl-0">
