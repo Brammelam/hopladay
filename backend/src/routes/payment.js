@@ -2,6 +2,8 @@ import express from "express";
 import Stripe from "stripe";
 import User from "../models/User.js";
 import emailService from "../services/emailService.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const router = express.Router();
 
@@ -60,7 +62,7 @@ router.post("/create-checkout-session", async (req, res) => {
     }
 
     // Get base URL from environment or request
-    const baseUrl = process.env.FRONTEND_URL || req.headers.origin || "http://localhost:4200";
+    const baseUrl = process.env.FRONTEND_URL;
     const defaultSuccessUrl = `${baseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
     const defaultCancelUrl = `${baseUrl}/payment/cancel`;
 

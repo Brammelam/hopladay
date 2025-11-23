@@ -18,12 +18,10 @@ const router = express.Router();
 
 // Configuration
 const rpName = "Hopladay";
-const rpID = process.env.RP_ID || "localhost";
 
 const origin = process.env.FRONTEND_URL;
 
 console.log('Auth module initialized:', {
-  rpID,
   origin,
   hasEmailUser: !!process.env.EMAILUSER,
   hasEmailPwd: !!process.env.EMAILPWD,
@@ -36,7 +34,6 @@ console.log('Auth module initialized:', {
  */
 router.get("/config", (req, res) => {
   res.json({
-    rpID,
     origin,
     emailConfigured: !!(process.env.EMAILUSER && process.env.EMAILPWD),
     passkeyEnabled: true,

@@ -1,15 +1,15 @@
 import nodemailer from 'nodemailer';
-import { Resend } from 'resend';
 import crypto from 'crypto';
+import dotenv from "dotenv";
+dotenv.config();
 
 /**
  * Email Service
- * Centralized email sending service supporting both Resend and Nodemailer (Outlook)
+ * Centralized email sending service using Nodemailer
  * Uses lazy initialization to ensure environment variables are loaded
  */
 class EmailService {
   constructor() {
-    this.resend = null;
     this.transporter = null;
     this.initialized = false;
   }
@@ -22,24 +22,18 @@ class EmailService {
       return;
     }
 
-    // Initialize Resend if API key is available
-    if (process.env.RESEND_API_KEY) {
-      console.log("✓ Resend configured");
-      this.resend = new Resend(process.env.RESEND_API_KEY);
-    } else {
-      console.log("⚠️  RESEND_API_KEY not set");
-    }
-
     // Initialize Nodemailer if credentials are available
     if (process.env.EMAILUSER && process.env.EMAILPWD) {
-      console.log("✓ Nodemailer (Outlook) configured");
+      console.log("✓ Nodemailer configured");
       this.transporter = nodemailer.createTransport({
-        host: 'outlook.auth-email.com',
+        host: process.env.SMTP_HOST,
         port: 587,
-        secure: false,
         auth: {
           user: process.env.EMAILUSER,
           pass: process.env.EMAILPWD
+        },
+        tls: {
+          ciphers: 'SSLv3'
         }
       });
     } else {
@@ -135,17 +129,8 @@ class EmailService {
     let sendingDomain = null;
     let sendingRootDomain = null;
     
-    // Try RESEND_FROM first
-    const resendFrom = process.env.RESEND_FROM;
-    if (resendFrom) {
-      sendingDomain = this.extractDomainFromEmail(resendFrom);
-      if (sendingDomain) {
-        sendingRootDomain = this.extractRootDomain(sendingDomain);
-      }
-    }
-    
-    // Fallback to EMAILUSER
-    if (!sendingDomain && process.env.EMAILUSER) {
+    // Extract from EMAILUSER
+    if (process.env.EMAILUSER) {
       sendingDomain = this.extractDomainFromEmail(process.env.EMAILUSER);
       if (sendingDomain) {
         sendingRootDomain = this.extractRootDomain(sendingDomain);
@@ -196,7 +181,7 @@ class EmailService {
   }
 
   /**
-   * Send email using available provider (Resend preferred, fallback to Nodemailer)
+   * Send email using Nodemailer
    */
   async sendEmail({ to, subject, html, replyTo, unsubscribeToken, skipUnsubscribeCheck = false }) {
     // Ensure initialization before sending
@@ -212,13 +197,13 @@ class EmailService {
       }
     }
 
-    // Get from address - prefer RESEND_FROM, fallback to EMAILUSER
-    let from = process.env.RESEND_FROM;
-    if (!from && process.env.EMAILUSER) {
-      from = `"Hopladay" <${process.env.EMAILUSER}>`;
-    }
-    if (!from) {
-      throw new Error('RESEND_FROM or EMAILUSER must be set in environment variables');
+    // Get from address - use EMAILUSER with optional sender name
+    let from;
+    if (process.env.EMAILUSER) {
+      const senderName = process.env.EMAIL_SENDER_NAME || 'Hopladay';
+      from = `"${senderName}" <${process.env.EMAILUSER}>`;
+    } else {
+      throw new Error('EMAILUSER must be set in environment variables');
     }
     
     // Generate plain text version for better deliverability
@@ -233,57 +218,11 @@ class EmailService {
     // Generate Message-ID for better deliverability
     const messageId = `<${Date.now()}-${Math.random().toString(36).substring(7)}@${this.extractDomainFromEmail(from) || 'hopladay.com'}>`;
 
-    // Try Resend first (preferred for production)
-    if (this.resend) {
-      try {
-        const emailData = {
-          from,
-          to,
-          subject,
-          html,
-          text, // Plain text version improves deliverability
-          reply_to: replyTo || process.env.EMAILUSER || 'support@hopladay.com',
-        };
-
-        // Add headers for better deliverability
-        emailData.headers = {
-          'Message-ID': messageId,
-          'Date': new Date().toUTCString(),
-          'X-Mailer': 'Hopladay',
-          'X-Priority': '1',
-          'Importance': 'normal',
-        };
-
-        // Add List-Unsubscribe headers if unsubscribe URL is available
-        if (unsubscribeUrl) {
-          emailData.headers['List-Unsubscribe'] = `<${unsubscribeUrl}>`;
-          emailData.headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
-        }
-
-        const { data, error } = await this.resend.emails.send(emailData);
-
-        if (error) {
-          console.error('Resend error:', error);
-          throw error;
-        }
-
-        console.log(`Email sent via Resend`, { to, id: data.id });
-        return { success: true, provider: 'resend', id: data.id };
-      } catch (err) {
-        console.error('Resend failed, trying fallback:', err.message);
-        // Fall through to nodemailer
-      }
-    }
-
-    // Fallback to Nodemailer
+    // Send via Nodemailer
     if (this.transporter) {
       try {
         const headers = {
-          'Message-ID': messageId,
-          'Date': new Date().toUTCString(),
           'X-Mailer': 'Hopladay',
-          'X-Priority': '1',
-          'Importance': 'normal',
         };
 
         // Add List-Unsubscribe headers if unsubscribe URL is available
@@ -292,7 +231,7 @@ class EmailService {
           headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
         }
 
-        await this.transporter.sendMail({
+        const info = await this.transporter.sendMail({
           from,
           to,
           subject,
@@ -301,8 +240,9 @@ class EmailService {
           replyTo: replyTo || process.env.EMAILUSER || 'support@hopladay.com',
           headers,
         });
-        console.log(`Email sent via Outlook to ${to}`);
-        return { success: true, provider: 'nodemailer' };
+
+        console.log(`Email sent via Nodemailer to ${to}`, { messageId: info.messageId });
+        return { success: true, provider: 'nodemailer', messageId: info.messageId };
       } catch (err) {
         console.error('Nodemailer failed:', err.message);
         throw err;
@@ -310,7 +250,7 @@ class EmailService {
     }
 
     // No email provider configured
-    console.warn('No email provider configured (add RESEND_API_KEY or EMAILUSER/EMAILPWD)');
+    console.warn('No email provider configured (add EMAILUSER/EMAILPWD)');
     return { success: false, error: 'No email provider configured' };
   }
 
