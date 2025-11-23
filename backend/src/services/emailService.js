@@ -237,7 +237,7 @@ class EmailService {
           subject,
           html,
           text, // Plain text version improves deliverability
-          replyTo: replyTo || process.env.EMAILUSER || 'support@hopladay.com',
+          replyTo: replyTo || process.env.EMAILUSER || 'hello@hopladay.com',
           headers,
         });
 
@@ -306,7 +306,7 @@ class EmailService {
               </table>
                     <p style="margin: 20px 0 0 0; color: #9ca3af; font-size: 12px;">
                 This email was sent by Hopladay. If you have questions, contact us at 
-                <a href="mailto:support@hopladay.com" style="color: #2563eb; text-decoration: none;">support@hopladay.com</a>
+                <a href="mailto:hello@hopladay.com" style="color: #2563eb; text-decoration: none;">hello@hopladay.com</a>
               </p>
               ${unsubscribeUrl ? `
               <p style="margin: 15px 0 0 0; text-align: center;">
@@ -371,7 +371,7 @@ class EmailService {
                     </p>
                     <p style="margin: 0; color: #6b7280; font-size: 13px; line-height: 1.5;">
                       If you have any questions or need help, just reply to this email or contact us at 
-                      <a href="mailto:support@hopladay.com" style="color: #2563eb; text-decoration: none;">support@hopladay.com</a>.
+                      <a href="mailto:hello@hopladay.com" style="color: #2563eb; text-decoration: none;">hello@hopladay.com</a>.
                     </p>
                     <p style="margin: 20px 0 0 0; color: #9ca3af; font-size: 12px;">
                       Thank you for supporting Hopladay!
@@ -439,7 +439,7 @@ class EmailService {
                     </ul>
                     <p style="margin: 0; color: #6b7280; font-size: 13px; line-height: 1.5;">
                       If you didn't register a passkey, please contact us immediately at 
-                      <a href="mailto:support@hopladay.com" style="color: #2563eb; text-decoration: none;">support@hopladay.com</a>.
+                      <a href="mailto:hello@hopladay.com" style="color: #2563eb; text-decoration: none;">hello@hopladay.com</a>.
                     </p>
                     <p style="margin: 20px 0 0 0; color: #9ca3af; font-size: 12px;">
                       Thank you for using Hopladay!
@@ -510,7 +510,7 @@ class EmailService {
                     </ol>
                     <p style="margin: 0; color: #6b7280; font-size: 13px; line-height: 1.5;">
                       If you have any questions, feel free to reach out to us at 
-                      <a href="mailto:support@hopladay.com" style="color: #2563eb; text-decoration: none;">support@hopladay.com</a>.
+                      <a href="mailto:hello@hopladay.com" style="color: #2563eb; text-decoration: none;">hello@hopladay.com</a>.
                     </p>
                     <p style="margin: 20px 0 0 0; color: #9ca3af; font-size: 12px;">
                       Happy planning!<br>
