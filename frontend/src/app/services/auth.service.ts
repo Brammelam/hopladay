@@ -10,6 +10,7 @@ export interface AuthUser {
   name: string;
   availableDays: number;
   browserId?: string;
+  isPremium?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })

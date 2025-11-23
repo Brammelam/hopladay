@@ -1,16 +1,18 @@
-<div class="min-h-screen flex flex-col items-center py-10 px-4">
+<div class="min-h-screen flex flex-col items-center py-10 px-4" role="main">
   <!-- Sticky Minimal Stats Bar -->
-  <div
+  <nav
     *ngIf="plan && showStickyStats"
     class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-md py-2 md:py-3 px-3 md:px-4 transition-all duration-300"
+    role="navigation"
+    aria-label="Plan statistics and actions"
   >
     <div class="max-w-7xl mx-auto">
       <!-- Mobile Layout -->
       <div class="flex md:hidden items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-gray-900">{{ plan.usedDays }}/{{ plan.availableDays }}</span>
-          <span class="text-blue-600 font-semibold">{{ plan.totalDaysOff }}</span>
-          <span *ngIf="getRemainingDays() > 0" class="text-orange-600 font-semibold">+{{ getRemainingDays() }}</span>
+        <div class="flex items-center gap-2" aria-label="Plan statistics">
+          <span class="font-bold text-gray-900" aria-label="Used days">{{ plan.usedDays }}/{{ plan.availableDays }}</span>
+          <span class="text-blue-600 font-semibold" aria-label="Total days off">{{ plan.totalDaysOff }}</span>
+          <span *ngIf="getRemainingDays() > 0" class="text-orange-600 font-semibold" aria-label="Remaining days">+{{ getRemainingDays() }}</span>
         </div>
         
         <div class="flex items-center gap-2">
@@ -19,7 +21,9 @@
             type="button"
             (click)="toggleEditMode()"
             [disabled]="isLoading"
-            class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+            [attr.aria-label]="'Edit plan'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Edit plan
           </button>
@@ -28,9 +32,11 @@
             type="button"
             (click)="optimizeRemaining()"
             [disabled]="isLoading"
-            class="px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2"
+            [attr.aria-label]="'Optimize ' + getRemainingDays() + ' remaining days'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <span>Optimize {{ getRemainingDays() }}</span>
@@ -40,7 +46,9 @@
             type="button"
             (click)="toggleEditMode()"
             [disabled]="isLoading"
-            class="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50"
+            [attr.aria-label]="'Finish editing plan'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 bg-green-600 text-white text-sm rounded-lg font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Done
           </button>
@@ -49,29 +57,30 @@
 
       <!-- Desktop Layout -->
       <div class="hidden md:flex items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4" aria-label="Plan statistics">
           <div class="flex items-center gap-2">
             <span class="text-sm font-semibold text-gray-900">Hopladay</span>
             <span
               *ngIf="editMode"
               class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded"
+              aria-label="Editing mode active"
             >
               Editing
             </span>
           </div>
-          <div class="h-4 w-px bg-gray-300"></div>
+          <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
           <div class="text-sm">
             <span class="text-gray-600">Days:</span>
-            <span class="font-bold text-gray-900 ml-1">{{ plan.usedDays }}</span>
+            <span class="font-bold text-gray-900 ml-1" aria-label="Used days">{{ plan.usedDays }}</span>
             <span class="text-gray-500">/{{ plan.availableDays }}</span>
           </div>
           <div class="text-sm">
             <span class="text-gray-600">Off:</span>
-            <span class="font-bold text-blue-600 ml-1">{{ plan.totalDaysOff }}</span>
+            <span class="font-bold text-blue-600 ml-1" aria-label="Total days off">{{ plan.totalDaysOff }}</span>
           </div>
           <div *ngIf="getRemainingDays() > 0" class="text-sm">
             <span class="text-gray-600">Remaining:</span>
-            <span class="font-bold text-orange-600 ml-1">{{ getRemainingDays() }}</span>
+            <span class="font-bold text-orange-600 ml-1" aria-label="Remaining days">{{ getRemainingDays() }}</span>
           </div>
         </div>
 
@@ -81,7 +90,9 @@
             type="button"
             (click)="toggleEditMode()"
             [disabled]="isLoading"
-            class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+            [attr.aria-label]="'Edit plan'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Edit plan
           </button>
@@ -90,9 +101,11 @@
             type="button"
             (click)="optimizeRemaining()"
             [disabled]="isLoading"
-            class="px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2"
+            [attr.aria-label]="'Optimize ' + getRemainingDays() + ' remaining days'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <span>Optimize {{ getRemainingDays() }}</span>
@@ -102,27 +115,31 @@
             type="button"
             (click)="toggleEditMode()"
             [disabled]="isLoading"
-            class="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50"
+            [attr.aria-label]="'Finish editing plan'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 bg-green-600 text-white text-sm rounded-lg font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Done
           </button>
         </div>
       </div>
     </div>
-  </div>
+  </nav>
 
   <!-- Header -->
   <header class="mb-8 w-full max-w-5xl text-center">
-    <h1 class="text-4xl font-bold text-primary mb-1">Hopladay</h1>
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">Hopladay</h1>
     <p class="text-gray-600 text-sm md:text-base">Plan your time off like a pro</p>
 
-    <div class="mt-4 flex justify-center">
+    <div class="mt-6 flex justify-center">
       <div *ngIf="isUserClaimed()" class="w-full max-w-md">
         <div
-          class="flex flex-col sm:flex-row sm:items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg"
+          class="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-lg"
+          role="status"
+          aria-live="polite"
         >
           <div class="flex items-center gap-2 min-w-0 flex-1">
-            <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -130,20 +147,20 @@
                 d="M5 13l4 4L19 7"
               />
             </svg>
-            <span class="text-sm font-medium text-green-900 truncate min-w-0">{{
-              getUserEmail()
-            }}</span>
+            <span class="text-sm font-medium text-green-900 truncate min-w-0" aria-label="Signed in as">{{ getUserEmail() }}</span>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <span
               *ngIf="isPremium"
-              class="px-2 py-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded whitespace-nowrap h-7 flex items-center"
+              class="px-2.5 py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded whitespace-nowrap min-h-[44px] flex items-center"
+              aria-label="Premium account"
             >
               PREMIUM
             </span>
             <span
               *ngIf="!isPremium"
-              class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded whitespace-nowrap h-7 flex items-center"
+              class="px-2.5 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded whitespace-nowrap min-h-[44px] flex items-center"
+              aria-label="Free account"
             >
               FREE
             </span>
@@ -151,14 +168,16 @@
               *ngIf="!isPremium"
               type="button"
               (click)="openPremiumModal()"
-              class="px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-md hover:from-yellow-500 hover:to-yellow-600 transition-colors font-bold whitespace-nowrap h-7 flex items-center"
+              [attr.aria-label]="'Upgrade to Premium'"
+              class="min-h-[44px] px-4 py-2 text-sm font-medium text-yellow-900 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-md hover:from-yellow-500 hover:to-yellow-600 focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 transition-colors font-bold whitespace-nowrap flex items-center"
             >
               Upgrade
             </button>
             <button
               type="button"
               (click)="logout()"
-              class="px-3 py-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors whitespace-nowrap h-7 flex items-center"
+              [attr.aria-label]="'Log out'"
+              class="min-h-[44px] px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-md transition-colors whitespace-nowrap flex items-center"
             >
               Logout
             </button>
@@ -169,16 +188,21 @@
   </header>
 
   <!-- Action Bar -->
-  <div
-    class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 py-3"
+  <nav
+    class="w-full max-w-5xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 py-3 mb-6"
+    role="navigation"
+    aria-label="Plan management"
   >
     <div class="flex items-center gap-2 relative">
       <button
         type="button"
         (click)="togglePlansDropdown()"
-        class="flex-1 sm:flex-none px-4 py-2 bg-white text-gray-700 border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
+        [attr.aria-expanded]="showPlansDropdown"
+        [attr.aria-haspopup]="true"
+        [attr.aria-label]="'View saved plans'"
+        class="min-h-[44px] flex-1 sm:flex-none px-4 py-2 bg-white text-gray-700 border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -194,24 +218,29 @@
         *ngIf="showPlansDropdown"
         class="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto"
         (click)="$event.stopPropagation()"
+        role="menu"
+        [attr.aria-label]="'Saved plans menu'"
       >
         <div class="p-3 border-b border-gray-200 bg-gray-50">
           <h3 class="text-sm font-semibold text-gray-900">Your Saved Plans</h3>
         </div>
 
-        <div *ngIf="savedPlans.length === 0" class="p-4 text-center text-sm text-gray-500">
+        <div *ngIf="savedPlans.length === 0" class="p-4 text-center text-sm text-gray-500" role="status">
           No other plans found
         </div>
 
-        <div *ngIf="savedPlans.length > 0" class="py-2">
+        <div *ngIf="savedPlans.length > 0" class="py-2" role="group">
           <button
-            *ngFor="let savedPlan of savedPlans"
+            *ngFor="let savedPlan of savedPlans; trackBy: trackByPlanId"
             type="button"
             (click)="loadPlan(savedPlan)"
+            [attr.aria-label]="'Load plan for ' + getCountryName(savedPlan.countryCode) + ' ' + savedPlan.year"
+            [attr.aria-current]="savedPlan._id === plan?._id ? 'true' : null"
             [class.bg-blue-50]="savedPlan._id === plan?._id"
             [class.border-l-4]="savedPlan._id === plan?._id"
             [class.border-blue-500]="savedPlan._id === plan?._id"
-            class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+            class="w-full min-h-[44px] px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors border-b border-gray-100 last:border-0"
+            role="menuitem"
           >
             <div class="flex items-center justify-between gap-3">
               <div class="flex-1">
@@ -222,13 +251,14 @@
                   <span
                     *ngIf="savedPlan._id === plan?._id"
                     class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded"
+                    aria-label="Current plan"
                   >
                     Current
                   </span>
                 </div>
                 <div class="text-xs text-gray-600 flex items-center gap-2">
                   <span>{{ savedPlan.usedDays }}/{{ savedPlan.availableDays }} days</span>
-                  <span class="text-gray-400">•</span>
+                  <span class="text-gray-400" aria-hidden="true">•</span>
                   <span>{{ savedPlan.totalDaysOff }} days off</span>
                 </div>
               </div>
@@ -237,6 +267,7 @@
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   stroke-linecap="round"
@@ -253,9 +284,10 @@
       <button
         type="button"
         (click)="startNewPlan()"
-        class="flex-1 sm:flex-none px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
+        [attr.aria-label]="'Start a new plan'"
+        class="min-h-[44px] flex-1 sm:flex-none px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -266,73 +298,82 @@
         <span>New Plan</span>
       </button>
     </div>
-  </div>
+  </nav>
 
   <!-- Onboarding Message for First-Time Users -->
-  <div *ngIf="!plan && !isLoading" class="w-full max-w-3xl mb-6 mx-auto">
+  <section *ngIf="!plan && !isLoading" class="w-full max-w-3xl mb-8 mx-auto" aria-labelledby="welcome-heading">
     <div
-      class="relative bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6 shadow-sm text-gray-800"
+      class="relative bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6 md:p-8 shadow-sm"
     >
-      <h2 class="text-xl font-semibold mb-2 text-gray-900">Welcome to Hopladay!</h2>
-      <p class="text-gray-700 leading-relaxed">
+      <h2 id="welcome-heading" class="text-xl font-semibold mb-3 text-gray-900">Welcome to Hopladay!</h2>
+      <p class="text-gray-700 leading-relaxed mb-3">
         Start by filling in your details to generate your personal vacation plan.
-        <br />
+      </p>
+      <p class="text-gray-700 leading-relaxed">
         Already created one on another device?
         <button
           type="button"
           (click)="openAuthModal('signin')"
-          class="inline-flex items-center gap-1 font-medium text-blue-600 hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-400 transition cursor-pointer"
+          [attr.aria-label]="'Sign in to access your saved plans'"
+          class="inline-flex items-center gap-1 font-medium text-blue-600 hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 rounded transition-colors underline"
         >
           Sign in here
         </button>
       </p>
     </div>
-  </div>
+  </section>
 
   <!-- STEP 1: Select Year & Country -->
-  <div *ngIf="!plan && !isLoading" class="w-full max-w-5xl">
-    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+  <section *ngIf="!plan && !isLoading" class="w-full max-w-5xl mb-8" aria-labelledby="step1-heading">
+    <h2 id="step1-heading" class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
       <span
-        class="inline-block bg-blue-100 text-blue-700 rounded-full w-6 h-6 text-center text-sm font-bold"
+        class="inline-flex items-center justify-center bg-blue-100 text-blue-700 rounded-full w-8 h-8 text-sm font-bold"
+        aria-hidden="true"
         >1</span
       >
       Enter details
-    </h3>
+    </h2>
 
     <app-holiday-input *ngIf="!plan && !isLoading"
       [country]="selectedCountry"
       [year]="selectedYear"
       [days]="availableDays"
+      [isPremium]="isPremium"
+      [onUpgradeClick]="openPremiumModal.bind(this)"
       (fetch)="onFetch($event)"
       (settingsChange)="onSettingsChange($event)"
     >
     </app-holiday-input>
-  </div>
+  </section>
 
   <!-- STEP 2: Choose Planning Method -->
-  <div *ngIf="!plan && !isLoading" class="mt-8 w-full max-w-5xl">
-    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+  <section *ngIf="!plan && !isLoading" class="mt-8 w-full max-w-5xl" aria-labelledby="step2-heading">
+    <h2 id="step2-heading" class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
       <span
-        class="inline-block bg-orange-100 text-orange-700 rounded-full w-6 h-6 text-center text-sm font-bold"
+        class="inline-flex items-center justify-center bg-orange-100 text-orange-700 rounded-full w-8 h-8 text-sm font-bold"
+        aria-hidden="true"
         >2</span
       >
       Choose method
-    </h3>
+    </h2>
 
-    <div class="grid md:grid-cols-2 gap-6">
+    <div class="grid md:grid-cols-2 gap-4 md:gap-6">
       <!-- Manual -->
       <button
         (click)="onManualPlan()"
         [disabled]="!selectedCountry || !selectedYear || !availableDays || isLoading"
-        class="bg-white rounded-xl border-1 py-8 px-4 text-left transition-all shadow-sm border-gray-200 hover:border-gray-400 focus-visible:ring-4 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        [attr.aria-label]="'Start manual planning'"
+        [attr.aria-describedby]="'manual-description'"
+        class="min-h-[200px] bg-white rounded-xl border-2 py-6 px-5 text-left transition-all shadow-sm border-gray-200 hover:border-blue-400 hover:shadow-md focus-visible:ring-4 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <div class="flex items-start gap-4">
-          <div class="h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+          <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
             <svg
-              class="h-6 min-w-10 text-blue-600"
+              class="h-6 w-6 text-blue-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -342,14 +383,14 @@
               />
             </svg>
           </div>
-          <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-1">Manual plan first</h3>
-            <p class="text-gray-600 mb-3">
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Manual plan first</h3>
+            <p id="manual-description" class="text-gray-600 mb-4 text-sm leading-relaxed">
               Start with an empty calendar, add your preferred vacation days, and let AI fill in the rest.
             </p>
-            <span class="text-blue-600 font-medium inline-flex items-center">
+            <span class="text-blue-600 font-medium inline-flex items-center text-sm">
               Start planning
-              <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -366,22 +407,26 @@
       <button
         (click)="onPlan()"
         [disabled]="!selectedCountry || !selectedYear || !availableDays || isLoading"
-        class="relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border-2 border-orange-200 py-8 px-4 text-left transition-all hover:border-orange-400 focus-visible:ring-4 focus-visible:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        [attr.aria-label]="'Generate automatic plan'"
+        [attr.aria-describedby]="'ai-description'"
+        class="relative min-h-[200px] bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border-2 border-orange-200 py-6 px-5 text-left transition-all hover:border-orange-400 hover:shadow-md focus-visible:ring-4 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <!-- Recommended badge (top right corner) -->
         <span
-          class="absolute top-3 right-3 bg-orange-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full shadow-sm"
+          class="absolute top-3 right-3 bg-orange-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm"
+          aria-label="Recommended option"
         >
           Recommended
         </span>
 
         <div class="flex items-start gap-4">
-          <div class="h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+          <div class="h-12 w-12 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
             <svg
-              class="h-6 min-w-10 text-white"
+              class="h-6 w-6 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -392,15 +437,15 @@
             </svg>
           </div>
 
-          <div>
-            <h3 class="text-xl font-bold text-gray-900 mb-1">Generate plan</h3>
-            <p class="text-gray-600 mb-3">
-              Let AI automatically maximize your time off and generate your perfect plan.
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Generate plan</h3>
+            <p id="ai-description" class="text-gray-600 mb-4 text-sm leading-relaxed">
+              Let us automatically maximize your time off and generate your perfect plan.
             </p>
 
-            <span class="text-orange-600 font-medium inline-flex items-center">
+            <span class="text-orange-600 font-medium inline-flex items-center text-sm">
               Generate plan
-              <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -415,24 +460,31 @@
     </div>
 
     <!-- Disabled Hint -->
-    <p *ngIf="!selectedCountry || !selectedYear" class="text-sm text-gray-500 mt-3 text-center">
-      ⚠️ Select year and country before creating a plan.
-    </p>
-  </div>
+    <div *ngIf="!selectedCountry || !selectedYear" class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg" role="alert">
+      <p class="text-sm text-yellow-800 text-center flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        Select year and country before creating a plan.
+      </p>
+    </div>
+  </section>
 
   <!-- Plan Loaded -->
-  <div *ngIf="plan" class="mt-8 w-full max-w-5xl space-y-6">
+  <section *ngIf="plan" class="mt-8 w-full max-w-5xl space-y-6" aria-labelledby="plan-heading">
     <!-- Save Plan Banner -->
     <div
       *ngIf="!isUserClaimed()"
-      class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 flex items-start justify-between gap-3"
+      class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 md:p-5 flex flex-col sm:flex-row items-start justify-between gap-4"
+      role="alert"
     >
       <div class="flex items-start gap-3 flex-1">
         <svg
-          class="w-5 h-5 text-blue-600 mt-0.5"
+          class="w-6 h-6 text-blue-600 mt-0.5 flex-shrink-0"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             stroke-linecap="round"
@@ -442,7 +494,7 @@
           />
         </svg>
         <div>
-          <h3 class="font-semibold text-gray-900">Sync your plan</h3>
+          <h3 class="font-semibold text-gray-900 mb-1">Sync your plan</h3>
           <p class="text-sm text-gray-600">
             Access your plans on any device with a passkey or email.
           </p>
@@ -451,7 +503,8 @@
       <button
         type="button"
         (click)="openAuthModal('register')"
-        class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500"
+        [attr.aria-label]="'Sync plan to your account'"
+        class="min-h-[44px] px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors whitespace-nowrap"
       >
         Sync now
       </button>
@@ -460,28 +513,30 @@
     <!-- Free Tier Limitations Notice -->
     <div
       *ngIf="!isPremium && plan?.suggestions && plan.suggestions.length >= 3"
-      class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
+      class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 md:p-5"
+      role="alert"
     >
       <div class="flex items-start gap-3">
-        <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div class="flex-1">
           <div class="text-sm font-semibold text-yellow-900 mb-1">Free Tier: Limited Suggestions</div>
-          <div class="text-xs text-yellow-800 mb-2">
+          <div class="text-xs text-yellow-800 mb-3 leading-relaxed">
             You're seeing the top 3 suggestions. Premium users get unlimited suggestions with advanced strategies and detailed ROI analysis.
           </div>
-          <div class="flex gap-3">
+          <div class="flex flex-wrap gap-3">
             <button
               type="button"
               (click)="openPremiumModal()"
-              class="text-xs font-medium text-yellow-900 underline hover:text-yellow-700"
+              [attr.aria-label]="'Learn more about Premium features'"
+              class="text-xs font-medium text-yellow-900 underline hover:text-yellow-700 focus-visible:ring-2 focus-visible:ring-yellow-500 rounded"
             >
               Upgrade to Premium →
             </button>
             <a
               [routerLink]="['/payment/info']"
-              class="text-xs font-medium text-blue-600 underline hover:text-blue-700"
+              class="text-xs font-medium text-blue-600 underline hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
             >
               Payment info →
             </a>
@@ -491,32 +546,41 @@
     </div>
 
     <!-- Plan Settings & Strategy -->
-    <div class="bg-white rounded-lg border border-gray-200 p-4">
+    <div class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <!-- Plan Info -->
-        <div class="flex items-center gap-4 flex-wrap">
-          <div class="flex items-center gap-2 text-sm text-gray-600">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-            </svg>
-            <span class="font-medium text-gray-900">{{ getCountryName(selectedCountry) }} {{ selectedYear }}</span>
-          </div>
-          <div class="h-4 w-px bg-gray-300"></div>
-          <div class="flex items-center gap-2 text-sm text-gray-600">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>{{ plan.usedDays }}/{{ plan.availableDays }} vacation days</span>
-          </div>
-          <div class="h-4 w-px bg-gray-300"></div>
+        <dl class="flex items-center gap-4 flex-wrap">
           <div class="flex items-center gap-2 text-sm">
-            <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span class="text-gray-600">Strategy:</span>
-            <span class="font-medium text-gray-900 capitalize">{{ getPreferenceLabel(plan.preference || 'balanced') }}</span>
+            <dt class="sr-only">Country and year</dt>
+            <dd class="flex items-center gap-2 text-gray-600">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+              </svg>
+              <span class="font-medium text-gray-900">{{ getCountryName(selectedCountry) }} {{ selectedYear }}</span>
+            </dd>
           </div>
-        </div>
+          <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
+          <div class="flex items-center gap-2 text-sm">
+            <dt class="sr-only">Vacation days used</dt>
+            <dd class="flex items-center gap-2 text-gray-600">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>{{ plan.usedDays }}/{{ plan.availableDays }} vacation days</span>
+            </dd>
+          </div>
+          <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
+          <div class="flex items-center gap-2 text-sm">
+            <dt class="sr-only">Planning strategy</dt>
+            <dd class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span class="text-gray-600">Strategy:</span>
+              <span class="font-medium text-gray-900 capitalize">{{ getPreferenceLabel(plan.preference || 'balanced') }}</span>
+            </dd>
+          </div>
+        </dl>
 
         <!-- Actions -->
         <div class="flex items-center gap-2 flex-wrap">
@@ -527,21 +591,24 @@
               type="button"
               (click)="isPremium ? (showExportMenu = !showExportMenu) : (toast('Export functionality is available for Premium users only. Upgrade to unlock calendar and PDF exports!', 'info'))"
               [disabled]="isLoading"
-              [class.opacity-60]="!isPremium"
-              [class.cursor-not-allowed]="!isPremium"
-              class="px-3 py-2 text-sm font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+              [attr.aria-expanded]="showExportMenu && isPremium"
+              [attr.aria-haspopup]="true"
+              [attr.aria-label]="isPremium ? 'Export options' : 'Export (Premium feature)'"
+              [attr.aria-disabled]="isLoading || !isPremium"
+              class="min-h-[44px] px-3 py-2 text-sm font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap transition-colors"
             >
-              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <span class="hidden sm:inline">Export</span>
               <span
                 *ngIf="!isPremium"
                 class="px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded whitespace-nowrap"
+                aria-label="Premium feature"
               >
                 PREMIUM
               </span>
-              <svg *ngIf="isPremium" class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg *ngIf="isPremium" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -549,31 +616,37 @@
             <!-- Export Dropdown -->
             <div
               *ngIf="showExportMenu && isPremium"
-              class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+              class="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+              role="menu"
+              [attr.aria-label]="'Export options'"
             >
               <button
                 type="button"
                 (click)="exportToICS()"
-                class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                [attr.aria-label]="'Export to calendar file'"
+                class="w-full min-h-[44px] px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center gap-3 transition-colors"
+                role="menuitem"
               >
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <div>
-                  <div class="font-medium">Calendar File (.ics)</div>
+                  <div class="font-medium text-gray-900">Calendar File (.ics)</div>
                   <div class="text-xs text-gray-500">Import into Google Calendar, Outlook, etc.</div>
                 </div>
               </button>
               <button
                 type="button"
                 (click)="exportToPDF()"
-                class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                [attr.aria-label]="'Export to PDF'"
+                class="w-full min-h-[44px] px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 flex items-center gap-3 transition-colors"
+                role="menuitem"
               >
-                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
                 <div>
-                  <div class="font-medium">PDF Report</div>
+                  <div class="font-medium text-gray-900">PDF Report</div>
                   <div class="text-xs text-gray-500">Print-friendly report for planning</div>
                 </div>
               </button>
@@ -619,9 +692,11 @@
             type="button"
             (click)="openRegenerateModal()"
             [disabled]="isLoading"
-            class="px-3 py-2 text-sm font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+            [attr.aria-label]="'Change planning strategy'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 text-sm font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap transition-colors"
           >
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             <span class="hidden sm:inline">Change strategy</span>
@@ -633,9 +708,11 @@
             type="button"
             (click)="toggleEditMode()"
             [disabled]="isLoading"
-            class="px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+            [attr.aria-label]="'Edit plan'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap transition-colors"
           >
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
             <span>Edit</span>
@@ -646,9 +723,11 @@
             type="button"
             (click)="optimizeRemaining()"
             [disabled]="isLoading"
-            class="px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+            [attr.aria-label]="'Optimize ' + getRemainingDays() + ' remaining days'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap transition-colors"
           >
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <span>Optimize {{ getRemainingDays() }}</span>
@@ -659,9 +738,11 @@
             type="button"
             (click)="toggleEditMode()"
             [disabled]="isLoading"
-            class="px-3 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+            [attr.aria-label]="'Finish editing plan'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap transition-colors"
           >
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
             <span>Done</span>
@@ -675,6 +756,8 @@
       [country]="selectedCountry"
       [year]="selectedYear"
       [days]="availableDays"
+      [isPremium]="isPremium"
+      [onUpgradeClick]="openPremiumModal.bind(this)"
       (fetch)="onFetch($event)"
       (settingsChange)="onSettingsChange($event)"
     >
@@ -691,11 +774,11 @@
     </app-holiday-calendar>
 
     <app-holiday-summary [plan]="plan"></app-holiday-summary>
-  </div>
+  </section>
 
   <!-- Loading -->
-  <div *ngIf="isLoading" class="mt-10 flex items-center justify-center gap-3 text-blue-600">
-    <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+  <div *ngIf="isLoading" class="mt-10 flex items-center justify-center gap-3 text-blue-600" role="status" aria-live="polite">
+    <svg class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24" aria-hidden="true">
       <circle
         class="opacity-25"
         cx="12"
@@ -718,15 +801,19 @@
     *ngIf="showPreferenceSelector"
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     (click)="cancelPreferenceSelection()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="preference-modal-title"
+    aria-describedby="preference-modal-description"
   >
     <div
-      class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6"
+      class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8"
       (click)="$event.stopPropagation()"
     >
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-start justify-between mb-6">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">Choose AI Strategy</h2>
-          <p class="text-sm text-gray-600 mt-1">
+          <h2 id="preference-modal-title" class="text-2xl font-bold text-gray-900 mb-2">Choose Strategy</h2>
+          <p id="preference-modal-description" class="text-sm text-gray-600">
             {{
               preferenceSelectionFor === 'ai'
                 ? 'How should AI generate your vacation plan?'
@@ -739,10 +826,10 @@
         <button
           type="button"
           (click)="cancelPreferenceSelection()"
-          class="text-gray-400 hover:text-gray-600 focus:outline-none"
-          aria-label="Close"
+          [attr.aria-label]="'Close strategy selection modal'"
+          class="text-gray-400 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 rounded p-1 transition-colors"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -753,17 +840,21 @@
         </button>
       </div>
 
-      <div class="space-y-3 mb-6">
+      <div class="space-y-3 mb-6" role="radiogroup" [attr.aria-labelledby]="'preference-modal-title'">
         <button
-          *ngFor="let pref of getAvailablePreferences()"
+          *ngFor="let pref of getAvailablePreferences(); trackBy: trackByPreference"
           type="button"
           (click)="selectPreference(pref.value)"
+          [attr.aria-checked]="selectedPreference === pref.value"
+          [attr.aria-disabled]="pref.premium && !isPremium"
+          [attr.aria-label]="pref.label + ': ' + pref.description"
           [class.border-blue-500]="selectedPreference === pref.value"
           [class.bg-blue-50]="selectedPreference === pref.value"
           [class.border-gray-200]="selectedPreference !== pref.value"
           [class.opacity-60]="pref.premium && !isPremium"
           [class.cursor-not-allowed]="pref.premium && !isPremium"
-          class="w-full p-4 border-2 rounded-lg text-left transition-all hover:border-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          class="w-full min-h-[44px] p-4 border-2 rounded-lg text-left transition-all hover:border-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          role="radio"
         >
           <div class="flex items-start justify-between gap-3">
             <div class="flex-1">
@@ -772,6 +863,7 @@
                 <span
                   *ngIf="pref.premium"
                   class="px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded"
+                  aria-label="Premium feature"
                 >
                   PREMIUM
                 </span>
@@ -780,9 +872,10 @@
             </div>
             <div
               *ngIf="selectedPreference === pref.value"
-              class="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+              class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+              aria-hidden="true"
             >
-              <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fill-rule="evenodd"
                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -792,7 +885,8 @@
             </div>
             <div
               *ngIf="selectedPreference !== pref.value"
-              class="w-5 h-5 border-2 border-gray-300 rounded-full flex-shrink-0 mt-0.5"
+              class="w-6 h-6 border-2 border-gray-300 rounded-full flex-shrink-0 mt-0.5"
+              aria-hidden="true"
             ></div>
           </div>
         </button>
@@ -831,18 +925,20 @@
         </div>
       </div>
 
-      <div class="flex gap-3">
+      <div class="flex flex-col sm:flex-row gap-3">
         <button
           type="button"
           (click)="cancelPreferenceSelection()"
-          class="flex-1 px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
+          [attr.aria-label]="'Cancel strategy selection'"
+          class="min-h-[44px] flex-1 px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors"
         >
           Cancel
         </button>
         <button
           type="button"
           (click)="confirmPreferenceSelection()"
-          class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          [attr.aria-label]="preferenceSelectionFor === 'ai' ? 'Generate plan' : preferenceSelectionFor === 'regenerate' ? 'Regenerate plan' : 'Optimize remaining days'"
+          class="min-h-[44px] flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors"
         >
           {{
             preferenceSelectionFor === 'ai' 

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit } from '@angular/core';
 import { DatePipe, CommonModule } from '@angular/common';
 import {
   eachDayOfInterval,
@@ -23,7 +23,7 @@ import { ApiService } from '../services/api';
   templateUrl: './holiday-calendar.html',
   imports: [CommonModule, DatePipe],
 })
-export class HolidayCalendarComponent implements OnChanges {
+export class HolidayCalendarComponent implements OnInit, OnChanges {
   @Input() year: number = new Date().getFullYear();
   @Input() holidays: any[] = [];
   @Input() plan: any = null;
@@ -42,9 +42,21 @@ export class HolidayCalendarComponent implements OnChanges {
     private apiService: ApiService
   ) {}
 
-  ngOnChanges(changes: SimpleChanges): void {
+  ngOnInit(): void {
+    // Initialize months on component init
     this.currentYear = this.year || this.plan?.year || new Date().getFullYear();
     this.generateMonths();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['year'] || changes['plan']) {
+      this.currentYear = this.year || this.plan?.year || new Date().getFullYear();
+      this.generateMonths();
+    }
+    if (changes['holidays']) {
+      // Regenerate months when holidays change to ensure proper rendering
+      this.generateMonths();
+    }
   }
 
   isMobile(): boolean {

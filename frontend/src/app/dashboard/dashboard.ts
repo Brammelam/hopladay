@@ -35,7 +35,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   selectedCountry = 'NO';
   selectedYear = new Date().getFullYear();
-  availableDays = 20;
+  availableDays = 7;
 
   editMode = false;
   isLoading = false;
@@ -796,5 +796,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  trackByPlanId(index: number, plan: any): string {
+    return plan._id || index;
+  }
+
+  trackByPreference(index: number, pref: any): string {
+    return pref.value || index;
   }
 }

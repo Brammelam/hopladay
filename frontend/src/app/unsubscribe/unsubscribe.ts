@@ -31,7 +31,7 @@ export class UnsubscribeComponent implements OnInit {
       if (this.email && this.token) {
         this.verifyUnsubscribe();
       } else {
-        this.error = 'Invalid unsubscribe link. Please contact support@hopladay.com if you need help.';
+        this.error = 'Invalid unsubscribe link. Please contact hello@hopladay.com if you need help.';
         this.loading = false;
       }
     });
@@ -49,7 +49,7 @@ export class UnsubscribeComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err.error?.message || 'An error occurred. Please contact support@hopladay.com for assistance.';
+        this.error = err.error?.message || 'An error occurred. Please contact hello@hopladay.com for assistance.';
       }
     });
   }
@@ -63,12 +63,12 @@ export class UnsubscribeComponent implements OnInit {
           this.success = true;
           this.message = response.message || 'You have been successfully unsubscribed from Hopladay emails.';
         } else {
-          this.error = response.message || 'Failed to unsubscribe. Please contact support@hopladay.com.';
+          this.error = response.message || 'Failed to unsubscribe. Please contact hello@hopladay.com.';
         }
       },
       error: (err) => {
         this.loading = false;
-        this.error = err.error?.message || 'An error occurred. Please contact support@hopladay.com for assistance.';
+        this.error = err.error?.message || 'An error occurred. Please contact hello@hopladay.com for assistance.';
       }
     });
   }

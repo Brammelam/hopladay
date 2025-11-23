@@ -28,7 +28,7 @@ router.get("/", async (req, res) => {
     if (!email || !token) {
       return res.status(400).json({ 
         error: "Email and token are required",
-        message: "Invalid unsubscribe link. Please contact support@hopladay.com if you need help."
+        message: "Invalid unsubscribe link. Please contact hello@hopladay.com if you need help."
       });
     }
 
@@ -36,7 +36,7 @@ router.get("/", async (req, res) => {
     if (!verifyUnsubscribeToken(email, token)) {
       return res.status(400).json({ 
         error: "Invalid token",
-        message: "This unsubscribe link is invalid or has expired. Please contact support@hopladay.com if you need help."
+        message: "This unsubscribe link is invalid or has expired. Please contact hello@hopladay.com if you need help."
       });
     }
 
@@ -59,7 +59,7 @@ router.get("/", async (req, res) => {
     console.error("Error in unsubscribe GET:", err);
     res.status(500).json({ 
       error: "Internal server error",
-      message: "An error occurred. Please contact support@hopladay.com for assistance."
+      message: "An error occurred. Please contact hello@hopladay.com for assistance."
     });
   }
 });
@@ -110,7 +110,7 @@ router.post("/", async (req, res) => {
     console.error("Error processing unsubscribe:", err);
     res.status(500).json({ 
       error: "Failed to process unsubscribe",
-      message: "An error occurred. Please contact support@hopladay.com for assistance."
+      message: "An error occurred. Please contact hello@hopladay.com for assistance."
     });
   }
 });

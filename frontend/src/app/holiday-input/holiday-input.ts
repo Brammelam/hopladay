@@ -12,9 +12,14 @@ export class HolidayInputComponent implements OnInit, OnChanges {
   @Input() country?: string;
   @Input() year?: number;
   @Input() days?: number;
+  @Input() isPremium = false;
+  @Input() onUpgradeClick?: () => void;
   
   @Output() fetch = new EventEmitter<{ country: string; year: number }>();
   @Output() settingsChange = new EventEmitter<{ country: string; year: number; availableDays: number }>();
+  
+  maxDaysForFree = 7;
+  showUpgradePrompt = false;
 
   countries = [
     { code: 'NO', name: 'Norway' },
@@ -85,20 +90,58 @@ export class HolidayInputComponent implements OnInit, OnChanges {
     if (changes['country'] || changes['year'] || changes['days']) {
       this.syncFromInputs();
     }
+    
+    // If premium status changes, re-validate days
+    if (changes['isPremium']) {
+      if (!this.isPremium && this.availableDays > this.maxDaysForFree) {
+        this.availableDays = this.maxDaysForFree;
+        this.showUpgradePrompt = true;
+      } else {
+        this.showUpgradePrompt = false;
+      }
+    }
   }
 
   private syncFromInputs() {
     if (this.country) this.selectedCountry = this.country;
     if (this.year) this.selectedYear = this.year;
-    if (this.days) this.availableDays = this.days;
+    if (this.days) {
+      // Enforce limit for free users
+      if (!this.isPremium && this.days > this.maxDaysForFree) {
+        this.availableDays = this.maxDaysForFree;
+        this.showUpgradePrompt = true;
+      } else {
+        this.availableDays = this.days;
+        this.showUpgradePrompt = false;
+      }
+    }
   }
 
   onInputChange() {
+    // Enforce 7-day limit for free users
+    if (!this.isPremium && this.availableDays > this.maxDaysForFree) {
+      this.showUpgradePrompt = true;
+      this.availableDays = this.maxDaysForFree;
+    } else {
+      this.showUpgradePrompt = false;
+    }
+    
     this.fetch.emit({ country: this.selectedCountry, year: this.selectedYear });
     this.settingsChange.emit({
       country: this.selectedCountry,
       year: this.selectedYear,
       availableDays: this.availableDays
     });
+  }
+  
+  getMaxDays(): number {
+    return this.isPremium ? 365 : this.maxDaysForFree;
+  }
+  
+  handleUpgradeClick() {
+    if (this.onUpgradeClick) {
+      this.onUpgradeClick();
+    }
+    this.showUpgradePrompt = false;
   }
 }

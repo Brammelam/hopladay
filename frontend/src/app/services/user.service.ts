@@ -133,10 +133,11 @@ export class UserService {
 
   /**
    * Check if user has email (is claimed)
+   * Always returns a boolean to avoid change detection issues
    */
   isUserClaimed(): boolean {
     const user = this.getCurrentUser();
-    return !!(user?.email);
+    return Boolean(user?.email);
   }
 
   /**
