@@ -1,0 +1,89 @@
+<div class="min-h-screen flex flex-col items-center justify-center py-10 px-4 bg-gray-50">
+  <div class="w-full max-w-md">
+    <div class="bg-white rounded-lg border border-gray-200 shadow-lg p-8">
+      <div class="text-center mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Unsubscribe from Emails</h1>
+        <p class="text-gray-600 text-sm">Manage your email preferences</p>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="text-center py-8">
+        <svg class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-gray-600">Verifying unsubscribe link...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="!loading && error" class="text-center py-6">
+        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <p class="text-red-600 font-medium mb-2">Unable to Process</p>
+        <p class="text-gray-600 text-sm mb-6">{{ error }}</p>
+        <button
+          type="button"
+          (click)="goToDashboard()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+        >
+          Go to Dashboard
+        </button>
+      </div>
+
+      <!-- Success State -->
+      <div *ngIf="!loading && success" class="text-center py-6">
+        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <p class="text-green-600 font-medium mb-2">Unsubscribed Successfully</p>
+        <p class="text-gray-600 text-sm mb-6">{{ message }}</p>
+        <button
+          type="button"
+          (click)="goToDashboard()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+        >
+          Go to Dashboard
+        </button>
+      </div>
+
+      <!-- Confirmation State -->
+      <div *ngIf="!loading && !error && !success && email" class="py-6">
+        <p class="text-gray-700 mb-4">
+          You are about to unsubscribe <strong>{{ email }}</strong> from Hopladay emails.
+        </p>
+        <p class="text-gray-600 text-sm mb-6">
+          You will no longer receive emails from us, including important account notifications. 
+          You can still access your account and all features.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            (click)="goToDashboard()"
+            class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            (click)="confirmUnsubscribe()"
+            [disabled]="loading"
+            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50"
+          >
+            Unsubscribe
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-xs text-gray-500 mt-6">
+      Need help? Contact us at 
+      <a href="mailto:support@hopladay.com" class="text-blue-600 hover:text-blue-700">support@hopladay.com</a>
+    </p>
+  </div>
+</div>
+

@@ -148,4 +148,18 @@ export class ApiService {
   checkSession(sessionId: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/payment/check-session?session_id=${sessionId}`);
   }
+
+  /**
+   * Check unsubscribe link validity
+   */
+  checkUnsubscribe(email: string, token: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/unsubscribe?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`);
+  }
+
+  /**
+   * Process unsubscribe request
+   */
+  unsubscribe(email: string, token: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/unsubscribe`, { email, token });
+  }
 }

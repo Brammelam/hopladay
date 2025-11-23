@@ -11,9 +11,14 @@ import usersRouter from "./routes/users.js";
 import plansRouter from "./routes/plans.js";
 import authRouter from "./routes/auth.js";
 import paymentRouter, { webhookHandler, validateStripeConfig } from "./routes/payment.js";
+import unsubscribeRouter from "./routes/unsubscribe.js";
+import emailService from "./services/emailService.js";
 
 // Validate Stripe configuration after all imports are done
 validateStripeConfig();
+
+// Initialize email service to check configuration
+emailService.ensureInitialized();
 
 const app = express();
 app.use(cors());
@@ -30,6 +35,7 @@ app.use("/api/users", usersRouter);
 app.use("/api/plans", plansRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/unsubscribe", unsubscribeRouter);
 
 app.get("/", (req, res) => res.send("Holiday Planner API is running"));
 

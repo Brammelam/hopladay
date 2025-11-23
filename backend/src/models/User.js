@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema({
   authenticators: [authenticatorSchema], // User can have multiple passkeys
   currentChallenge: { type: String }, // Temporary challenge for authentication
   
+  // Email preferences
+  emailUnsubscribed: { type: Boolean, default: false },
+  emailUnsubscribedAt: { type: Date },
+  
 }, { timestamps: true });
 
 export default mongoose.model("User", userSchema);

@@ -1,6 +1,7 @@
 import express from "express";
 import Stripe from "stripe";
 import User from "../models/User.js";
+import emailService from "../services/emailService.js";
 
 const router = express.Router();
 
@@ -132,8 +133,12 @@ export const webhookHandler = async (req, res) => {
         
         if (userId) {
           try {
-            await User.findByIdAndUpdate(userId, { isPremium: true });
-            console.log(`User ${userId} upgraded to premium (one-time payment)`);
+            const user = await User.findByIdAndUpdate(userId, { isPremium: true }, { new: true });
+            if (user && user.email) {
+              console.log(`User ${userId} upgraded to premium (one-time payment)`);
+              // Send premium upgrade email
+              emailService.sendPremiumUpgrade(user.email);
+            }
           } catch (err) {
             console.error(`Failed to update user ${userId} to premium:`, err);
           }
@@ -187,6 +192,10 @@ router.get("/check-session", async (req, res) => {
         
         if (user) {
           console.log(`User ${userId} upgraded to premium via check-session (one-time payment)`);
+
+          // Send premium upgrade email
+          await emailService.sendPremiumUpgrade(user.email);
+
           return res.json({ success: true, premium: true, user });
         } else {
           console.error(`User ${userId} not found`);
