@@ -1,0 +1,192 @@
+<div class="min-h-screen flex flex-col items-center py-10 px-4">
+  <button
+    type="button"
+    (click)="goBack()"
+    class="mb-4 md:mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors text-sm cursor-pointer"
+  >
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    Back to dashboard
+  </button>
+  <!-- Header -->
+  <header class="mb-6 md:mb-8 w-full max-w-5xl text-center">
+    
+    <h1 class="text-2xl md:text-4xl font-bold text-primary mb-1">Payment information</h1>
+    <p class="text-gray-600 text-sm md:text-base">
+      How we handle your payment securely
+    </p>
+  </header>
+
+  <!-- Main Content -->
+  <div class="w-full max-w-5xl space-y-4 md:space-y-6">
+    
+    <!-- Payment Processing -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Payment processing</h2>
+      <p class="text-sm md:text-base text-gray-700 mb-3 md:mb-4">
+        Payments are processed by <strong>Stripe</strong>. Your payment information is handled securely by Stripe and is not stored on our servers.
+      </p>
+      <div class="grid md:grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <div>
+            <div class="font-medium text-gray-900">PCI DSS compliant</div>
+            <div class="text-sm text-gray-600">
+              Stripe is certified to the highest level of PCI DSS (Payment Card Industry Data Security Standard).
+            </div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <div>
+            <div class="font-medium text-gray-900">Encrypted connection</div>
+            <div class="text-sm text-gray-600">
+              All data is transmitted over an encrypted SSL/TLS connection.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Payment Methods -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Payment methods</h2>
+      <p class="text-sm md:text-base text-gray-700 mb-3 md:mb-4">
+        We support several payment methods through Stripe. Available options may vary by country and device.
+      </p>
+      <div class="grid md:grid-cols-3 gap-3 md:gap-4">
+        <div class="p-3 md:p-4 border border-gray-200 rounded-lg">
+          <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Credit and debit cards</div>
+          <div class="text-sm md:text-sm text-gray-600">
+            Major card networks such as Visa, Mastercard, and American Express.
+          </div>
+        </div>
+        <div class="p-3 md:p-4 border border-gray-200 rounded-lg">
+          <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Digital wallets</div>
+          <div class="text-sm md:text-sm text-gray-600">
+            Where supported, wallets like Apple Pay, Google Pay, or Link by Stripe.
+          </div>
+        </div>
+        <div class="p-3 md:p-4 border border-gray-200 rounded-lg">
+          <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Local methods</div>
+          <div class="text-sm md:text-sm text-gray-600">
+            In some regions, local payment methods such as bank transfers may be available.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Checkout Process -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Checkout process</h2>
+      <div class="space-y-3 md:space-y-4">
+        <div class="flex gap-3 md:gap-4">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-semibold text-xs md:text-sm">
+            1
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Review your order</div>
+            <div class="text-sm md:text-sm text-gray-600">
+              You see what you are purchasing and the total amount before entering any payment details.
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-3 md:gap-4">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-semibold text-xs md:text-sm">
+            2
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Enter payment details</div>
+            <div class="text-sm md:text-sm text-gray-600">
+              You enter your card or wallet details in a Stripe-powered payment form using a secure connection.
+              <!-- If you really use Stripe Checkout redirect, swap to:
+              "You are redirected to Stripe's secure checkout page to enter your payment information."
+              -->
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-3 md:gap-4">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-semibold text-xs md:text-sm">
+            3
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Confirm payment</div>
+            <div class="text-sm md:text-sm text-gray-600">
+              You review the final amount and confirm the payment. The payment button shows the exact amount that will be charged.
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-3 md:gap-4">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-semibold text-xs md:text-sm">
+            4
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Access activated</div>
+            <div class="text-sm md:text-sm text-gray-600">
+              After successful payment, you are redirected back to Hopladay and your Premium access is activated automatically.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Transparency -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Pricing</h2>
+      <p class="text-sm md:text-base text-gray-700">
+        The price shown when you click “Upgrade” is the exact amount that will be charged. Any applicable taxes are included or clearly displayed before you pay. There are no hidden fees.
+      </p>
+    </section>
+
+    <!-- Support -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Support</h2>
+      <div class="grid md:grid-cols-2 gap-4 md:gap-6">
+        <div>
+          <div class="font-medium text-gray-900 mb-2">Payment questions</div>
+          <p class="text-sm text-gray-600 mb-3">
+            If you encounter an issue during checkout or have questions about a charge, contact us and we will help you resolve it.
+          </p>
+          <a
+            href="mailto:support@hopladay.com"
+            class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Contact support
+          </a>
+        </div>
+        <div>
+          <div class="font-medium text-gray-900 mb-2">Refund policy</div>
+          <p class="text-sm text-gray-600 mb-3">
+            We offer refunds in specific cases, such as technical issues or accidental duplicate charges. Full details are described in our refund policy.
+          </p>
+            <a
+              [routerLink]="['/refunds']"
+              class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              View refund policy
+            </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stripe Branding -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <div class="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3 text-gray-600">
+        <span class="text-xs md:text-sm text-center">Payments processed by</span>
+
+          <!-- Adjust path to match your actual Angular assets setup -->
+          <img src="assets/stripe_logo.svg" alt="Stripe" class="h-6" />
+
+      </div>
+      <p class="text-center text-xs text-gray-500 mt-3 md:mt-4 px-2">
+        Stripe is a registered trademark of Stripe, Inc. Payments are processed through Stripe’s secure infrastructure.
+      </p>
+    </section>
+  </div>
+
+</div>

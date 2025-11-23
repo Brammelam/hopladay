@@ -10,6 +10,7 @@ export interface User {
   email?: string;
   browserId?: string;
   availableDays: number;
+  isPremium?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

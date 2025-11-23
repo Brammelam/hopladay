@@ -130,4 +130,22 @@ export class ApiService {
       map((plan: any) => ({ plan, manualDays }))
     );
   }
+
+  /**
+   * Create Stripe checkout session for premium upgrade
+   */
+  createCheckoutSession(userId: string, successUrl?: string, cancelUrl?: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/payment/create-checkout-session`, {
+      userId,
+      successUrl,
+      cancelUrl
+    });
+  }
+
+  /**
+   * Check if a checkout session was successful
+   */
+  checkSession(sessionId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/payment/check-session?session_id=${sessionId}`);
+  }
 }

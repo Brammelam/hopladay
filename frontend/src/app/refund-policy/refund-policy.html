@@ -1,0 +1,136 @@
+<div class="min-h-screen flex flex-col items-center py-10 px-4">
+  <button
+    type="button"
+    (click)="goBack()"
+    class="mb-4 md:mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors text-sm cursor-pointer"
+  >
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    Back to dashboard
+  </button>
+  
+  <!-- Header -->
+  <header class="mb-6 md:mb-8 w-full max-w-5xl text-center">
+    <h1 class="text-2xl md:text-4xl font-bold text-primary mb-1">Refund Policy</h1>
+    <p class="text-gray-600 text-sm md:text-base">
+      Our simple and customer-friendly refund policy
+    </p>
+  </header>
+
+  <!-- Main Content -->
+  <div class="w-full max-w-5xl space-y-4 md:space-y-6">
+    
+    <!-- 365-Day Guarantee -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <div class="flex items-start gap-4 mb-4">
+        <div class="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-green-100 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 md:w-8 md:h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-3">365-Day Money-Back Guarantee</h2>
+          <p class="text-sm md:text-base text-gray-700 mb-3 md:mb-4">
+            Premium is a one-time purchase that gives you lifetime access to all Premium features. If you're not 
+            completely satisfied with your purchase for any reason, we offer a full refund within 365 days of your 
+            purchase—no questions asked.
+          </p>
+          <p class="text-sm md:text-base text-gray-700">
+            Take your time to explore all Premium features. Simply contact us within 365 days of your purchase, and we'll process a full refund to your original payment method.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">How It Works</h2>
+      <div class="space-y-3 md:space-y-4">
+        <div class="flex gap-3 md:gap-4">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-semibold text-xs md:text-sm">
+            1
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Contact us</div>
+            <div class="text-sm md:text-sm text-gray-600">
+              Send an email to <a href="mailto:support@hopladay.com" class="text-blue-600 hover:text-blue-700 font-medium">support@hopladay.com</a> requesting a refund. Include your account email address.
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-3 md:gap-4">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-semibold text-xs md:text-sm">
+            2
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">We process your refund</div>
+            <div class="text-sm md:text-sm text-gray-600">
+              We'll verify your purchase and process a full refund to your original payment method within 5-7 business days.
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-3 md:gap-4">
+          <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-semibold text-xs md:text-sm">
+            3
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Refund received</div>
+            <div class="text-sm md:text-sm text-gray-600">
+              The refund will appear on your original payment method. It may take additional time for your bank or card issuer to reflect the refund.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Eligibility -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Eligibility</h2>
+      <p class="text-sm md:text-base text-gray-700 mb-3 md:mb-4">
+        To be eligible for a refund:
+      </p>
+      <ul class="list-disc list-inside space-y-2 text-sm md:text-base text-gray-700 ml-2">
+        <li>Your refund request must be made within 365 days of your original purchase date</li>
+        <li>You must provide the email address associated with your account</li>
+        <li>No reason required—we trust your judgment</li>
+      </ul>
+    </section>
+
+    <!-- Processing Time -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Refund Processing Time</h2>
+      <p class="text-sm md:text-base text-gray-700 mb-3 md:mb-4">
+        Once we receive your refund request:
+      </p>
+      <ul class="list-disc list-inside space-y-2 text-sm md:text-base text-gray-700 ml-2">
+        <li>We'll process your refund within 5-7 business days</li>
+        <li>The refund will be issued to your original payment method</li>
+        <li>It may take additional time for your bank or card issuer to reflect the refund in your account</li>
+        <li>You'll receive an email confirmation once the refund has been processed</li>
+      </ul>
+    </section>
+
+    <!-- Contact -->
+    <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Questions?</h2>
+      <p class="text-sm md:text-base text-gray-700 mb-3 md:mb-4">
+        If you have questions about our refund policy or need assistance with a refund request, please contact us:
+      </p>
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <a href="mailto:support@hopladay.com" class="text-blue-600 hover:text-blue-700 font-medium text-sm md:text-base">
+          support@hopladay.com
+        </a>
+      </div>
+    </section>
+
+    <!-- Last Updated -->
+    <section class="bg-gray-50 rounded-lg border border-gray-200 p-4 md:p-6">
+      <p class="text-xs text-gray-500 text-center">
+        Last updated: {{ lastUpdated }}
+      </p>
+    </section>
+  </div>
+</div>

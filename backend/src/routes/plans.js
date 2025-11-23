@@ -297,7 +297,8 @@ router.post('/', async (req, res) => {
     if (generateAI) {
       // Generate AI suggestions
       const holidays = await getHolidaysForYear(year, country);
-      planData = generateHolidayPlan(holidays, vacationDays, year, preference);
+      const isPremium = user.isPremium || false;
+      planData = generateHolidayPlan(holidays, vacationDays, year, preference, { isPremium });
     }
     // Otherwise, create empty plan for manual planning
 
@@ -812,7 +813,8 @@ router.post("/:planId/regenerate", async (req, res) => {
     console.log(`Generating AI suggestions with ${preference} strategy for ${remaining} remaining days`);
 
     // Generate new AI suggestions with new strategy
-    const aiPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference);
+    const isPremium = user.isPremium || false;
+    const aiPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium });
 
     console.log(`Generated ${aiPlan.suggestions.length} new AI suggestions`);
 
@@ -918,7 +920,8 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
     console.log(`Passing ${holidays.length} real holidays + ${blockedDays.length} blocked days to planner`);
 
     // Generate plan for remaining days (planner will avoid blocked days)
-    const optimizedPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference);
+    const isPremium = user.isPremium || false;
+    const optimizedPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium });
 
     console.log(`AI generated ${optimizedPlan.suggestions.length} new suggestions using ${optimizedPlan.usedDays} days`);
 

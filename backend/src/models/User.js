@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, sparse: true, unique: true }, // Optional, unique when provided
   browserId: { type: String, sparse: true, index: true }, // UUID from browser localStorage
   availableDays: { type: Number, default: 25 },
+  isPremium: { type: Boolean, default: false }, // Premium tier flag
   
   // WebAuthn / Passkey fields
   authenticators: [authenticatorSchema], // User can have multiple passkeys

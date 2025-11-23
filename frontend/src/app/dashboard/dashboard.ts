@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { catchError, of, Subscription, switchMap } from 'rxjs';
 import { HolidayInputComponent } from '../holiday-input/holiday-input';
 import { HolidayCalendarComponent } from '../holiday-calendar/holiday-calendar';
@@ -19,6 +20,7 @@ import { ExportService } from '../services/export.service';
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     HolidayInputComponent,
     HolidayCalendarComponent,
     HolidaySummaryComponent,
@@ -45,12 +47,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   preferenceSelectionFor: 'ai' | 'optimize' | 'regenerate' = 'ai';
   selectedPreference = 'balanced';
   preferences = [
-    { value: 'balanced', label: 'Balanced', description: 'Mix of short and long breaks' },
-    { value: 'many_long_weekends', label: 'Long weekends', description: '3-4 day breaks throughout the year' },
-    { value: 'few_long_vacations', label: 'Long vacations', description: 'Extended 7-14 day vacations' },
-    { value: 'summer_vacation', label: 'Summer focus', description: 'Maximize summer time off' },
-    { value: 'spread_out', label: 'Spread out', description: 'Evenly distributed throughout year' },
+    { value: 'balanced', label: 'Balanced', description: 'Mix of short and long breaks', premium: false },
+    { value: 'many_long_weekends', label: 'Long weekends', description: '3-4 day breaks throughout the year', premium: true },
+    { value: 'few_long_vacations', label: 'Long vacations', description: 'Extended 7-14 day vacations', premium: true },
+    { value: 'summer_vacation', label: 'Summer focus', description: 'Maximize summer time off', premium: true },
+    { value: 'spread_out', label: 'Spread out', description: 'Evenly distributed throughout year', premium: true },
   ];
+  
+  getAvailablePreferences() {
+    if (this.isPremium) return this.preferences;
+    return this.preferences.filter(p => !p.premium);
+  }
 
   authMode: 'signin' | 'register' = 'signin';
   authMethod: 'passkey' | 'email' = 'passkey';
@@ -61,6 +68,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showPlansDropdown = false;
   savedPlans: any[] = [];
   showExportMenu = false;
+  isPremium = false;
+  showPremiumModal = false;
+  isProcessingPayment = false;
 
   private scrollHandler: () => void;
   private userSubscription?: Subscription;
@@ -71,7 +81,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
     private toastService: ToastService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.scrollHandler = () => {
       const scrolled = window.scrollY > 400;
@@ -86,6 +98,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.initializeUser();
     this.prefetchHolidays();
     window.addEventListener('scroll', this.scrollHandler);
+    this.checkPaymentStatus();
 
     // Close dropdown when clicking outside
     document.addEventListener('click', (e: MouseEvent) => {
@@ -104,6 +117,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.userSubscription = this.userService.currentUser$.subscribe((user) => {
       if (user) {
         this.userId = user._id;
+        this.isPremium = user.isPremium || false;
         this.isUserReady = true;
         this.cdr.detectChanges();
       }
@@ -129,7 +143,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.loadUserPlans(currentUser._id);
         this.loadSavedPlans();
       }
-
+      
+      this.isPremium = currentUser.isPremium || false;
       this.cdr.detectChanges();
       return;
     }
@@ -144,7 +159,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.loadUserPlans(user._id);
           this.loadSavedPlans();
         }
-
+        
+        this.isPremium = user.isPremium || false;
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Failed to initialize user:', err),
@@ -196,6 +212,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.showPreferenceSelector = true;
     this.cdr.markForCheck();
   }
+  
+  // Check if a preference requires premium
+  isPremiumPreference(value: string): boolean {
+    const pref = this.preferences.find(p => p.value === value);
+    return pref?.premium || false;
+  }
+  
+  // Handle premium preference selection attempt
+  selectPreference(value: string) {
+    if (this.isPremiumPreference(value) && !this.isPremium) {
+      this.toast('This preference is available for Premium users only. Upgrade to unlock advanced planning strategies.', 'info');
+      return;
+    }
+    console.log(`User selected preference: ${value}`);
+    this.selectedPreference = value;
+    this.cdr.markForCheck();
+  }
 
   // Create manual plan directly (no AI preference needed yet)
   onManualPlan() {
@@ -219,12 +252,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Select a preference in the modal
-  selectPreference(value: string) {
-    console.log(`User selected preference: ${value}`);
-    this.selectedPreference = value;
-    this.cdr.markForCheck();
-  }
 
   cancelPreferenceSelection() {
     this.showPreferenceSelector = false;
@@ -447,6 +474,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   exportToICS(): void {
+    if (!this.isPremium) {
+      this.toast('Export functionality is available for Premium users only. Upgrade to unlock calendar exports!', 'info');
+      this.showExportMenu = false;
+      return;
+    }
     if (!this.plan) {
       this.toast('No plan to export');
       return;
@@ -458,6 +490,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   exportToPDF(): void {
+    if (!this.isPremium) {
+      this.toast('Export functionality is available for Premium users only. Upgrade to unlock PDF exports!', 'info');
+      this.showExportMenu = false;
+      return;
+    }
     if (!this.plan) {
       this.toast('No plan to export');
       return;
@@ -661,5 +698,103 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   toast(message: string, type: 'info' | 'success' | 'error' = 'info'): void {
     this.toastService.show(message, type);
-}
+  }
+
+  /** ────────────────────────────────
+   *  PREMIUM / PAYMENT
+   *  ─────────────────────────────── */
+  
+  openPremiumModal(): void {
+    if (!this.isUserReady || !this.userId) {
+      this.toast('Please wait for session to initialize', 'info');
+      return;
+    }
+    this.showPremiumModal = true;
+  }
+
+  closePremiumModal(): void {
+    this.showPremiumModal = false;
+  }
+
+  async upgradeToPremium(): Promise<void> {
+    if (!this.userId) {
+      this.toast('User session not ready. Please try again.', 'error');
+      return;
+    }
+
+    if (this.isPremium) {
+      this.toast('You are already a Premium user!', 'info');
+      this.closePremiumModal();
+      return;
+    }
+
+    this.isProcessingPayment = true;
+
+    try {
+      const baseUrl = window.location.origin;
+      const successUrl = `${baseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${baseUrl}/payment/cancel`;
+
+      this.api.createCheckoutSession(this.userId, successUrl, cancelUrl).subscribe({
+        next: (response: any) => {
+          if (response.url) {
+            // Redirect to Stripe Checkout
+            window.location.href = response.url;
+          } else {
+            this.toast('Failed to create checkout session', 'error');
+            this.isProcessingPayment = false;
+          }
+        },
+        error: (err) => {
+          console.error('Error creating checkout session:', err);
+          this.toast('Failed to start payment process. Please try again.', 'error');
+          this.isProcessingPayment = false;
+        }
+      });
+    } catch (err) {
+      console.error('Payment error:', err);
+      this.toast('An error occurred. Please try again.', 'error');
+      this.isProcessingPayment = false;
+    }
+  }
+
+  checkPaymentStatus(): void {
+    this.route.queryParams.subscribe(params => {
+      const sessionId = params['session_id'];
+      if (sessionId) {
+        console.log('Checking payment status for session:', sessionId);
+        // Check if payment was successful
+        this.api.checkSession(sessionId).subscribe({
+          next: (response: any) => {
+            console.log('Payment check response:', response);
+            if (response.success && response.premium) {
+              // Update user premium status
+              if (response.user) {
+                this.userService.setCurrentUser(response.user);
+                this.isPremium = true;
+                this.toast('Welcome to Premium! Your account has been upgraded.', 'success');
+                // Clear query params
+                this.router.navigate([], { queryParams: {} });
+                this.cdr.detectChanges();
+              } else {
+                console.warn('Payment successful but no user data returned');
+                this.toast('Payment successful! Refreshing your account...', 'info');
+                // Reload user data
+                this.initializeUser();
+              }
+            } else {
+              console.log('Payment not completed yet:', response);
+              if (response.payment_status === 'unpaid') {
+                this.toast('Payment is still processing. Please wait...', 'info');
+              }
+            }
+          },
+          error: (err) => {
+            console.error('Error checking payment status:', err);
+            this.toast('Error verifying payment. Please contact support if payment was completed.', 'error');
+          }
+        });
+      }
+    });
+  }
 }

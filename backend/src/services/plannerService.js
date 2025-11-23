@@ -542,20 +542,35 @@ function getPhaseCandidates(offBlocks, holidaySet, phase, remainingDays) {
 
 /** ---------- main API ---------- */
 
-export function generateHolidayPlan(
-  holidays,
-  availableDays,
-  year,
-  preference = "balanced"
-) {
-  const { blocks: offBlocks, holidaySet } = buildOffBlocks(year, holidays);
-  const picked = [];
-  let remaining = availableDays;
+/**
+ * Apply free tier limitations to preference and available days
+ */
+function applyFreeTierLimits(preference, availableDays, isPremium) {
+  if (isPremium) {
+    return { effectivePreference: preference, effectiveAvailableDays: availableDays };
+  }
   
-  // phase plan per preference
-  let phases;
+  // Free tier: force "balanced" preference and cap days to 7
+  return {
+    effectivePreference: "balanced",
+    effectiveAvailableDays: Math.min(availableDays, 7)
+  };
+}
+
+/**
+ * Get phase plan based on preference and premium status
+ */
+function getPhasePlan(preference, remaining, isPremium) {
+  // Free tier: only simple 1-day bridges
+  if (!isPremium) {
+    return [
+      { type: "gap", k: 1 }
+    ];
+  }
+  
+  // Premium: full phase plan per preference
   if (preference === "few_long_vacations") {
-    phases = [
+    return [
       { type: "ext", maxK: Math.min(10, remaining), minK: 3, minDaysOff: 7 },
       { type: "gap", k: 3, minDaysOff: 7 },
       { type: "ext", maxK: Math.min(5, remaining), minK: 2 },
@@ -564,14 +579,14 @@ export function generateHolidayPlan(
       { type: "ext", maxK: Math.min(remaining, 2) },
     ];
   } else if (preference === "many_long_weekends") {
-    phases = [
+    return [
       { type: "gap", k: 1, minDaysOff: 3 },
       { type: "gap", k: 2, minDaysOff: 4 },
       { type: "gap", k: 3 },
       { type: "ext", maxK: Math.min(remaining, 2), minDaysOff: 3 },
     ];
   } else if (preference === "summer_vacation") {
-    phases = [
+    return [
       { type: "gap", k: 1 },
       { type: "gap", k: 2 },
       { type: "ext", maxK: Math.min(remaining, 10), minK: 3, summerOnly: true },
@@ -579,20 +594,40 @@ export function generateHolidayPlan(
       { type: "ext", maxK: Math.min(remaining, 5) },
     ];
   } else if (preference === "spread_out") {
-    phases = [
+    return [
       { type: "gap", k: 1 },
       { type: "gap", k: 2 },
       { type: "gap", k: 3 },
       { type: "ext", maxK: Math.min(remaining, 3) },
     ];
   } else {
-    phases = [
+    return [
       { type: "gap", k: 1 },
       { type: "gap", k: 2 },
       { type: "gap", k: 3 },
       { type: "ext", maxK: Math.min(remaining, 5) },
     ];
   }
+}
+
+export function generateHolidayPlan(
+  holidays,
+  availableDays,
+  year,
+  preference = "balanced",
+  options = {}
+) {
+  const { isPremium = false } = options;
+  
+  // Apply free tier limitations
+  const { effectivePreference, effectiveAvailableDays } = applyFreeTierLimits(preference, availableDays, isPremium);
+  
+  const { blocks: offBlocks, holidaySet } = buildOffBlocks(year, holidays);
+  const picked = [];
+  let remaining = effectiveAvailableDays;
+  
+  // Get phase plan based on preference and premium status
+  const phases = getPhasePlan(effectivePreference, remaining, isPremium);
 
   // run phases
   for (const phase of phases) {
@@ -600,8 +635,8 @@ export function generateHolidayPlan(
     const cands = getPhaseCandidates(offBlocks, holidaySet, phase, remaining);
     if (!cands.length) continue;
 
-    const chosen = pickGreedy(cands, remaining, preference, picked, phase.type === "ext", { 
-      totalAvailableDays: availableDays
+    const chosen = pickGreedy(cands, remaining, effectivePreference, picked, phase.type === "ext", { 
+      totalAvailableDays: effectiveAvailableDays
     });
     if (chosen.length) {
       // Preserve meta for description generation
@@ -615,8 +650,8 @@ export function generateHolidayPlan(
   let usedDays = merged.reduce((s, c) => s + c.vacationDaysUsed, 0);
   let totalDaysOff = merged.reduce((s, c) => s + c.totalDaysOff, 0);
 
-  // final fallback: spend any leftover days on high-ROI bridge opportunities
-  if (remaining > 0) {
+  // final fallback: spend any leftover days on high-ROI bridge opportunities (PREMIUM ONLY)
+  if (remaining > 0 && isPremium) {
     const start = new Date(year, 0, 1);
     const end = new Date(year, 11, 31);
 
@@ -678,7 +713,7 @@ export function generateHolidayPlan(
     });
 
     // Apply preference-based sorting to fillerCandidates before extracting dates
-    if (preference === "summer_vacation") {
+    if (effectivePreference === "summer_vacation") {
       // Further prioritize summer months within same ROI tier
       fillerCandidates.sort((a, b) => {
         const aSummer = isSummerMonth(a.date) ? 1 : 0;
@@ -694,7 +729,7 @@ export function generateHolidayPlan(
     const fillerMonthCounts = new Map();
     
     // Pre-populate with existing selections for many_long_weekends
-    if (preference === "many_long_weekends") {
+    if (effectivePreference === "many_long_weekends") {
       merged.forEach(m => {
         const month = m.startDate.getMonth();
         fillerMonthCounts.set(month, (fillerMonthCounts.get(month) || 0) + 1);
@@ -705,7 +740,7 @@ export function generateHolidayPlan(
       if (remaining <= 0) break;
       
       // For many_long_weekends, enforce monthly cap even in filler
-      if (preference === "many_long_weekends") {
+      if (effectivePreference === "many_long_weekends") {
         const month = d.getMonth();
         const countInMonth = fillerMonthCounts.get(month) || 0;
         if (countInMonth >= 2) {
@@ -732,22 +767,52 @@ export function generateHolidayPlan(
     totalDaysOff = merged.reduce((s, c) => s + c.totalDaysOff, 0);
   }
 
+  // Sort suggestions by ROI/score (highest first) before limiting
+  merged.sort((a, b) => {
+    const aRoi = a.totalDaysOff / a.vacationDaysUsed;
+    const bRoi = b.totalDaysOff / b.vacationDaysUsed;
+    if (bRoi !== aRoi) return bRoi - aRoi;
+    if (b.totalDaysOff !== a.totalDaysOff) return b.totalDaysOff - a.totalDaysOff;
+    return a.startDate - b.startDate;
+  });
+
+  // Limit suggestions for free tier
+  const maxSuggestions = isPremium ? merged.length : 3;
+  const limited = merged.slice(0, maxSuggestions);
+
+  // Recalculate totals from limited suggestions
+  const finalUsedDays = limited.reduce((s, c) => s + c.vacationDaysUsed, 0);
+  const finalTotalDaysOff = limited.reduce((s, c) => s + c.totalDaysOff, 0);
+
   // Generate intelligent descriptions for all selections
-  const suggestionsWithDescriptions = merged.map((c) => {
-    const desc = generateDescription(c, holidays, holidaySet, preference);
-    return {
-      ...c,
-      description: desc.title,
-      reason: desc.reason,
-      roi: desc.roi,
-      efficiency: desc.efficiency,
-    };
+  const suggestionsWithDescriptions = limited.map((c) => {
+    const desc = generateDescription(c, holidays, holidaySet, effectivePreference);
+    
+    if (isPremium) {
+      // Premium: full rich descriptions
+      return {
+        ...c,
+        description: desc.title,
+        reason: desc.reason,
+        roi: desc.roi,
+        efficiency: desc.efficiency,
+      };
+    } else {
+      // Free tier: simplified descriptions
+      return {
+        ...c,
+        description: `${c.vacationDaysUsed} day(s) off → ${c.totalDaysOff} days off`,
+        reason: undefined,
+        roi: undefined,
+        efficiency: undefined,
+      };
+    }
   });
 
   return {
     year,
-    usedDays,
-    totalDaysOff,
+    usedDays: finalUsedDays,
+    totalDaysOff: finalTotalDaysOff,
     suggestions: normalizeSuggestionDates(suggestionsWithDescriptions),
   };
 }

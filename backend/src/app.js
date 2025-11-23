@@ -1,17 +1,27 @@
+// Load environment variables FIRST, before any imports that might use them
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import dotenv from "dotenv";
 
 import holidaysRouter from "./routes/holidays.js";
 import usersRouter from "./routes/users.js";
 import plansRouter from "./routes/plans.js";
 import authRouter from "./routes/auth.js";
+import paymentRouter, { webhookHandler, validateStripeConfig } from "./routes/payment.js";
 
-dotenv.config();
+// Validate Stripe configuration after all imports are done
+validateStripeConfig();
 
 const app = express();
 app.use(cors());
+
+// Stripe webhook needs raw body, so register it before json middleware
+app.post("/api/payment/webhook", express.raw({ type: "application/json" }), webhookHandler);
+
+// JSON middleware for all other routes
 app.use(express.json());
 
 // Routes
@@ -19,6 +29,7 @@ app.use("/api/holidays", holidaysRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/plans", plansRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/payment", paymentRouter);
 
 app.get("/", (req, res) => res.send("Holiday Planner API is running"));
 

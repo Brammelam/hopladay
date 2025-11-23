@@ -117,28 +117,52 @@
     <p class="text-gray-600 text-sm md:text-base">Plan your time off like a pro</p>
 
     <div class="mt-4 flex justify-center">
-      <div *ngIf="isUserClaimed()">
+      <div *ngIf="isUserClaimed()" class="w-full max-w-md">
         <div
-          class="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg"
+          class="flex flex-col sm:flex-row sm:items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg"
         >
-          <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          <span class="text-sm font-medium text-green-900 truncate max-w-[200px]">{{
-            getUserEmail()
-          }}</span>
-          <button
-            type="button"
-            (click)="logout()"
-            class="px-3 py-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors"
-          >
-            Logout
-          </button>
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span class="text-sm font-medium text-green-900 truncate min-w-0">{{
+              getUserEmail()
+            }}</span>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span
+              *ngIf="isPremium"
+              class="px-2 py-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded whitespace-nowrap h-7 flex items-center"
+            >
+              PREMIUM
+            </span>
+            <span
+              *ngIf="!isPremium"
+              class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded whitespace-nowrap h-7 flex items-center"
+            >
+              FREE
+            </span>
+            <button
+              *ngIf="!isPremium"
+              type="button"
+              (click)="openPremiumModal()"
+              class="px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-md hover:from-yellow-500 hover:to-yellow-600 transition-colors font-bold whitespace-nowrap h-7 flex items-center"
+            >
+              Upgrade
+            </button>
+            <button
+              type="button"
+              (click)="logout()"
+              class="px-3 py-1.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors whitespace-nowrap h-7 flex items-center"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -433,6 +457,39 @@
       </button>
     </div>
 
+    <!-- Free Tier Limitations Notice -->
+    <div
+      *ngIf="!isPremium && plan?.suggestions && plan.suggestions.length >= 3"
+      class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
+    >
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div class="flex-1">
+          <div class="text-sm font-semibold text-yellow-900 mb-1">Free Tier: Limited Suggestions</div>
+          <div class="text-xs text-yellow-800 mb-2">
+            You're seeing the top 3 suggestions. Premium users get unlimited suggestions with advanced strategies and detailed ROI analysis.
+          </div>
+          <div class="flex gap-3">
+            <button
+              type="button"
+              (click)="openPremiumModal()"
+              class="text-xs font-medium text-yellow-900 underline hover:text-yellow-700"
+            >
+              Upgrade to Premium →
+            </button>
+            <a
+              [routerLink]="['/payment/info']"
+              class="text-xs font-medium text-blue-600 underline hover:text-blue-700"
+            >
+              Payment info →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Plan Settings & Strategy -->
     <div class="bg-white rounded-lg border border-gray-200 p-4">
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -462,28 +519,36 @@
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <!-- Export Menu -->
           <div class="relative">
             <button
               *ngIf="!editMode"
               type="button"
-              (click)="showExportMenu = !showExportMenu"
+              (click)="isPremium ? (showExportMenu = !showExportMenu) : (toast('Export functionality is available for Premium users only. Upgrade to unlock calendar and PDF exports!', 'info'))"
               [disabled]="isLoading"
-              class="px-3 py-2 text-sm font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50 flex items-center gap-2"
+              [class.opacity-60]="!isPremium"
+              [class.cursor-not-allowed]="!isPremium"
+              class="px-3 py-2 text-sm font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span>Export</span>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span class="hidden sm:inline">Export</span>
+              <span
+                *ngIf="!isPremium"
+                class="px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded whitespace-nowrap"
+              >
+                PREMIUM
+              </span>
+              <svg *ngIf="isPremium" class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             
             <!-- Export Dropdown -->
             <div
-              *ngIf="showExportMenu"
+              *ngIf="showExportMenu && isPremium"
               class="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
             >
               <button
@@ -513,6 +578,40 @@
                 </div>
               </button>
             </div>
+            
+            <!-- Free Tier Export Upgrade Prompt -->
+            <div
+              *ngIf="showExportMenu && !isPremium"
+              class="absolute left-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-yellow-200 py-3 px-4 z-50"
+            >
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="flex-1">
+                  <div class="text-sm font-semibold text-yellow-900 mb-1">Export is a Premium Feature</div>
+                  <div class="text-xs text-yellow-800 mb-3">
+                    Upgrade to Premium to export your plans as calendar files (.ics) or PDF reports.
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      (click)="openPremiumModal(); showExportMenu = false"
+                      class="text-xs font-medium text-yellow-900 underline hover:text-yellow-700 text-left"
+                    >
+                      Learn more about Premium →
+                    </button>
+                    <a
+                      [routerLink]="['/payment/info']"
+                      (click)="showExportMenu = false"
+                      class="text-xs font-medium text-blue-600 underline hover:text-blue-700"
+                    >
+                      Payment security information →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <button
@@ -520,12 +619,13 @@
             type="button"
             (click)="openRegenerateModal()"
             [disabled]="isLoading"
-            class="px-3 py-2 text-sm font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2"
+            class="px-3 py-2 text-sm font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <span>Change strategy</span>
+            <span class="hidden sm:inline">Change strategy</span>
+            <span class="sm:hidden">Strategy</span>
           </button>
           
           <button
@@ -533,9 +633,9 @@
             type="button"
             (click)="toggleEditMode()"
             [disabled]="isLoading"
-            class="px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
+            class="px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
             <span>Edit</span>
@@ -546,9 +646,9 @@
             type="button"
             (click)="optimizeRemaining()"
             [disabled]="isLoading"
-            class="px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2"
+            class="px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <span>Optimize {{ getRemainingDays() }}</span>
@@ -559,9 +659,9 @@
             type="button"
             (click)="toggleEditMode()"
             [disabled]="isLoading"
-            class="px-3 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50 flex items-center gap-2"
+            class="px-3 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
             <span>Done</span>
@@ -655,17 +755,27 @@
 
       <div class="space-y-3 mb-6">
         <button
-          *ngFor="let pref of preferences"
+          *ngFor="let pref of getAvailablePreferences()"
           type="button"
           (click)="selectPreference(pref.value)"
           [class.border-blue-500]="selectedPreference === pref.value"
           [class.bg-blue-50]="selectedPreference === pref.value"
           [class.border-gray-200]="selectedPreference !== pref.value"
+          [class.opacity-60]="pref.premium && !isPremium"
+          [class.cursor-not-allowed]="pref.premium && !isPremium"
           class="w-full p-4 border-2 rounded-lg text-left transition-all hover:border-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
           <div class="flex items-start justify-between gap-3">
             <div class="flex-1">
-              <div class="font-semibold text-gray-900 mb-1">{{ pref.label }}</div>
+              <div class="flex items-center gap-2 mb-1">
+                <div class="font-semibold text-gray-900">{{ pref.label }}</div>
+                <span
+                  *ngIf="pref.premium"
+                  class="px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded"
+                >
+                  PREMIUM
+                </span>
+              </div>
               <div class="text-sm text-gray-600">{{ pref.description }}</div>
             </div>
             <div
@@ -686,6 +796,39 @@
             ></div>
           </div>
         </button>
+      </div>
+      
+      <!-- Free tier limitations notice -->
+      <div *ngIf="!isPremium" class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="flex-1">
+            <div class="text-sm font-semibold text-yellow-900 mb-1">Free Tier Limitations</div>
+            <ul class="text-xs text-yellow-800 space-y-1 list-disc list-inside">
+              <li>Only "Balanced" preference available</li>
+              <li>Maximum 7 vacation days used for planning</li>
+              <li>Up to 3 suggestions shown</li>
+              <li>Simplified descriptions (no ROI details)</li>
+            </ul>
+            <div class="flex flex-col gap-2 mt-2">
+              <button
+                type="button"
+                class="text-xs font-medium text-yellow-900 underline hover:text-yellow-700 text-left"
+                (click)="openPremiumModal()"
+              >
+                Upgrade to Premium →
+              </button>
+              <a
+                [routerLink]="['/payment/info']"
+                class="text-xs font-medium text-blue-600 underline hover:text-blue-700"
+              >
+                Learn about secure payments →
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="flex gap-3">
@@ -728,4 +871,154 @@
     (switchMethod)="switchAuthMethod($event)"
     (reset)="magicLinkSent = false; authEmail = ''"
   ></app-auth-modal>
+
+  <!-- Premium Upgrade Modal -->
+  <div
+    *ngIf="showPremiumModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+    (click)="closePremiumModal()"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+        <h2 class="text-2xl font-bold text-gray-900">Upgrade to Premium</h2>
+        <button
+          type="button"
+          (click)="closePremiumModal()"
+          class="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6">
+        <!-- Pricing -->
+        <div class="text-center mb-8">
+          <div class="inline-block bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 px-4 py-2 rounded-full font-bold text-lg mb-4">
+            kr 49
+          </div>
+          <p class="text-gray-600">Unlock all Premium features. Forever.</p>
+        </div>
+
+        <!-- Features -->
+        <div class="space-y-4 mb-8">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Premium Features:</h3>
+          
+          <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
+            <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <div>
+              <div class="font-semibold text-gray-900">Advanced Planning Strategies</div>
+              <div class="text-sm text-gray-600">Long weekends, summer focus, spread out, and more</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 p-4 bg-green-50 rounded-lg">
+            <svg class="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <div>
+              <div class="font-semibold text-gray-900">Unlimited Suggestions</div>
+              <div class="text-sm text-gray-600">Get all optimized vacation suggestions, not just 3</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 p-4 bg-purple-50 rounded-lg">
+            <svg class="w-6 h-6 text-purple-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <div>
+              <div class="font-semibold text-gray-900">Full Vacation Day Planning</div>
+              <div class="text-sm text-gray-600">Plan with all your available days, not limited to 7</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 p-4 bg-orange-50 rounded-lg">
+            <svg class="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <div>
+              <div class="font-semibold text-gray-900">Intelligent Descriptions</div>
+              <div class="text-sm text-gray-600">Detailed ROI analysis and efficiency ratings</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3 p-4 bg-red-50 rounded-lg">
+            <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <div>
+              <div class="font-semibold text-gray-900">Export to Calendar & PDF</div>
+              <div class="text-sm text-gray-600">Download your plan as .ics or PDF files</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            (click)="closePremiumModal()"
+            class="flex-1 px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
+          >
+            Maybe Later
+          </button>
+          <button
+            type="button"
+            (click)="upgradeToPremium()"
+            [disabled]="isProcessingPayment"
+            class="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            <span *ngIf="!isProcessingPayment">Upgrade Now - kr 49,-</span>
+            <span *ngIf="isProcessingPayment" class="flex items-center gap-2">
+              <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Processing...
+            </span>
+          </button>
+        </div>
+
+        <p class="text-xs text-gray-500 text-center mt-4">
+          Secure payment powered by Stripe. Cancel anytime.
+        </p>
+        <div class="text-center mt-4">
+          <a
+            [routerLink]="['/payment/info']"
+            (click)="closePremiumModal()"
+            class="text-sm text-blue-600 hover:text-blue-700 underline"
+          >
+            Learn more about secure payments →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Footer with Payment Info Link -->
+<footer class="mt-12 py-6 border-t border-gray-200 text-center">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="flex flex-col md:flex-row items-center justify-center text-gray-600">
+        <span class="text-xs md:text-sm text-center">Payments processed by</span>
+
+          <!-- Adjust path to match your actual Angular assets setup -->
+          <img src="assets/stripe_logo.svg" alt="Stripe" class="h-6" />
+
+      </div>
+    <p class="text-xs text-gray-500">
+      <a
+        [routerLink]="['/payment/info']"
+        class="text-gray-500 hover:text-gray-700 underline"
+      >
+        Learn more about payment security
+      </a>
+    </p>
+  </div>
+</footer>
