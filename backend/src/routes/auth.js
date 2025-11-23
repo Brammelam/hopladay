@@ -11,24 +11,23 @@ import User from "../models/User.js";
 import MagicLink from "../models/MagicLink.js";
 import { findOrCreateUserByEmail } from "../services/userService.js";
 import emailService from "../services/emailService.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const router = express.Router();
 
 // Configuration
 const rpName = "Hopladay";
 const rpID = process.env.RP_ID || "localhost";
-// Get origin from email service to ensure URLs match sending domain
-const getOriginFromEmailDomain = () => {
-  return emailService.getBaseUrlFromSendingDomain();
-};
 
-const origin = process.env.ORIGIN || getOriginFromEmailDomain() || `http://localhost:4200`;
+const origin = process.env.FRONTEND_URL;
 
 console.log('Auth module initialized:', {
   rpID,
   origin,
   hasEmailUser: !!process.env.EMAILUSER,
   hasEmailPwd: !!process.env.EMAILPWD,
+  hasFrontendUrl: !!process.env.FRONTEND_URL
 });
 
 /**

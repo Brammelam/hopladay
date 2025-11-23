@@ -230,6 +230,9 @@ class EmailService {
       unsubscribeUrl = this.getUnsubscribeUrl(to, unsubscribeToken);
     }
 
+    // Generate Message-ID for better deliverability
+    const messageId = `<${Date.now()}-${Math.random().toString(36).substring(7)}@${this.extractDomainFromEmail(from) || 'hopladay.com'}>`;
+
     // Try Resend first (preferred for production)
     if (this.resend) {
       try {
@@ -242,12 +245,19 @@ class EmailService {
           reply_to: replyTo || process.env.EMAILUSER || 'support@hopladay.com',
         };
 
+        // Add headers for better deliverability
+        emailData.headers = {
+          'Message-ID': messageId,
+          'Date': new Date().toUTCString(),
+          'X-Mailer': 'Hopladay',
+          'X-Priority': '1',
+          'Importance': 'normal',
+        };
+
         // Add List-Unsubscribe headers if unsubscribe URL is available
         if (unsubscribeUrl) {
-          emailData.headers = {
-            'List-Unsubscribe': `<${unsubscribeUrl}>`,
-            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-          };
+          emailData.headers['List-Unsubscribe'] = `<${unsubscribeUrl}>`;
+          emailData.headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
         }
 
         const { data, error } = await this.resend.emails.send(emailData);
@@ -262,6 +272,40 @@ class EmailService {
       } catch (err) {
         console.error('Resend failed, trying fallback:', err.message);
         // Fall through to nodemailer
+      }
+    }
+
+    // Fallback to Nodemailer
+    if (this.transporter) {
+      try {
+        const headers = {
+          'Message-ID': messageId,
+          'Date': new Date().toUTCString(),
+          'X-Mailer': 'Hopladay',
+          'X-Priority': '1',
+          'Importance': 'normal',
+        };
+
+        // Add List-Unsubscribe headers if unsubscribe URL is available
+        if (unsubscribeUrl) {
+          headers['List-Unsubscribe'] = `<${unsubscribeUrl}>`;
+          headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+        }
+
+        await this.transporter.sendMail({
+          from,
+          to,
+          subject,
+          html,
+          text, // Plain text version improves deliverability
+          replyTo: replyTo || process.env.EMAILUSER || 'support@hopladay.com',
+          headers,
+        });
+        console.log(`Email sent via Outlook to ${to}`);
+        return { success: true, provider: 'nodemailer' };
+      } catch (err) {
+        console.error('Nodemailer failed:', err.message);
+        throw err;
       }
     }
 
@@ -315,7 +359,7 @@ class EmailService {
                       This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.
                     </p>
                     <p style="margin: 20px 0 0 0; color: #9ca3af; font-size: 12px; word-break: break-all;">
-                      Or copy this link: ${magicUrl}
+                      Or copy this link: <span style="color: #6b7280;">${magicUrl}</span>
                     </p>
                   </td>
                 </tr>
@@ -557,7 +601,7 @@ class EmailService {
     const unsubscribeUrl = this.getUnsubscribeUrl(email, unsubscribeToken);
     const html = this.getMagicLinkEmail(magicUrl, unsubscribeUrl);
     return this.sendEmailAsync({
-      to: "test-629205@test.mailgenius.com",
+      to: email,
       subject: 'Sign in to Hopladay',
       html,
       unsubscribeToken,
