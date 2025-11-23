@@ -72,18 +72,15 @@ router.post("/create-checkout-session", async (req, res) => {
             currency: "nok",
             product_data: {
               name: "Hopladay Premium",
-              description: "Unlock advanced planning strategies, unlimited suggestions, and export features",
+              description: "Lifetime access to advanced planning strategies, unlimited suggestions, and export features",
               images: [], // Add product image URL if available
             },
-            unit_amount: 4900, // $9.99 in cents
-            recurring: {
-              interval: "year", // Annual subscription
-            },
+            unit_amount: 4900, // 49.00 NOK in cents (one-time payment)
           },
           quantity: 1,
         },
       ],
-      mode: "subscription",
+      mode: "payment", // One-time payment, not subscription
       success_url: successUrl || defaultSuccessUrl,
       cancel_url: cancelUrl || defaultCancelUrl,
       client_reference_id: userId,
@@ -129,26 +126,19 @@ export const webhookHandler = async (req, res) => {
     case "checkout.session.completed":
       const session = event.data.object;
       
-      // Verify this is a subscription
-      if (session.mode === "subscription") {
+      // Verify this is a one-time payment (not subscription)
+      if (session.mode === "payment" && session.payment_status === "paid") {
         const userId = session.client_reference_id || session.metadata?.userId;
         
         if (userId) {
           try {
             await User.findByIdAndUpdate(userId, { isPremium: true });
-            console.log(`User ${userId} upgraded to premium`);
+            console.log(`User ${userId} upgraded to premium (one-time payment)`);
           } catch (err) {
             console.error(`Failed to update user ${userId} to premium:`, err);
           }
         }
       }
-      break;
-
-    case "customer.subscription.updated":
-    case "customer.subscription.deleted":
-      const subscription = event.data.object;
-      // Handle subscription updates/cancellations if needed
-      // For now, we'll keep premium status active until manually changed
       break;
 
     default:
@@ -184,7 +174,7 @@ router.get("/check-session", async (req, res) => {
       metadata: session.metadata
     });
 
-    if (session.payment_status === "paid" && session.mode === "subscription") {
+    if (session.payment_status === "paid" && session.mode === "payment") {
       const userId = session.client_reference_id || session.metadata?.userId;
       
       if (userId) {
@@ -196,7 +186,7 @@ router.get("/check-session", async (req, res) => {
         );
         
         if (user) {
-          console.log(`User ${userId} upgraded to premium via check-session`);
+          console.log(`User ${userId} upgraded to premium via check-session (one-time payment)`);
           return res.json({ success: true, premium: true, user });
         } else {
           console.error(`User ${userId} not found`);
@@ -208,7 +198,7 @@ router.get("/check-session", async (req, res) => {
       }
     }
 
-    // Payment not completed yet or not a subscription
+    // Payment not completed yet or not a one-time payment
     res.json({ 
       success: false, 
       premium: false,
