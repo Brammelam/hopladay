@@ -20,6 +20,8 @@ export class HolidaySummaryComponent implements OnChanges {
    * }
    */
   @Input() plan: any = null;
+  @Input() isPremium = false;
+  @Input() onUpgradeClick?: () => void;
 
   totalSuggestions = 0;
   longestBreak: number | null = null;

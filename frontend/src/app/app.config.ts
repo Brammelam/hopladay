@@ -1,11 +1,31 @@
 import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
-  provideZonelessChangeDetection
+  provideZonelessChangeDetection,
+  importProvidersFrom
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import {
+  LucideAngularModule,
+  Check,
+  Folder,
+  ChevronRight,
+  ChevronDown,
+  Globe,
+  Calendar,
+  Zap,
+  Pencil,
+  Download,
+  FileText,
+  Info,
+  Clipboard,
+  X,
+  Loader,
+  AlertTriangle,
+  Sparkles
+} from 'lucide-angular';
 
 import { routes } from './app.routes';
 
@@ -15,6 +35,26 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes),
-    provideAnimations() //  enable animations for standalone apps
+    provideAnimations(), //  enable animations for standalone apps
+    importProvidersFrom(
+      LucideAngularModule.pick({
+        Check,
+        Folder,
+        ChevronRight,
+        ChevronDown,
+        Globe,
+        Calendar,
+        Zap,
+        Pencil,
+        Download,
+        FileText,
+        Info,
+        Clipboard,
+        X,
+        Loader,
+        AlertTriangle,
+        Sparkles
+      })
+    )
   ]
 };

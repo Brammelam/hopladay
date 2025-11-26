@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary-50:  #E8F5FB;
+  --color-primary-100: #D1EBF7;
+  --color-primary-300: #7EC2E0;
+  --color-primary-500: #3A8FBF;
+  --color-primary-600: #2F769D;
+  --color-primary-700: #245B79;
+
+  --color-secondary-50:  #FFF8EE;
+  --color-secondary-100: #FCEFD9;
+  --color-secondary-200: #F6E3C2;
+
+  --color-accent-50:  #FFEDE8;
+  --color-accent-100: #FFD1C4;
+  --color-accent-400: #FF8A64;
+  --color-accent-500: #FF6B4A;
+  --color-accent-600: #E45537;
+}
+
 @keyframes slideUp {
   from {
     transform: translate(-50%, 40px);

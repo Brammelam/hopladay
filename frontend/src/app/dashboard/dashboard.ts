@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { catchError, of, Subscription, switchMap } from 'rxjs';
+import { catchError, finalize, of, Subscription, switchMap } from 'rxjs';
+import { LucideAngularModule } from 'lucide-angular';
 import { HolidayInputComponent } from '../holiday-input/holiday-input';
 import { HolidayCalendarComponent } from '../holiday-calendar/holiday-calendar';
 import { HolidaySummaryComponent } from '../holiday-summary/holiday-summary';
@@ -25,7 +26,8 @@ import { ExportService } from '../services/export.service';
     HolidayCalendarComponent,
     HolidaySummaryComponent,
     AuthModalComponent,
-  ],
+    LucideAngularModule,
+  ]
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   holidays: any[] = [];
@@ -71,6 +73,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isPremium = false;
   showPremiumModal = false;
   isProcessingPayment = false;
+  
+  // Tab state for plan view
+  activeTab: 'calendar' | 'suggestions' = 'calendar';
+  
+  switchTab(tab: 'calendar' | 'suggestions'): void {
+    this.activeTab = tab;
+    // Scroll to top of plan section when switching tabs
+    const planSection = document.querySelector('[aria-labelledby="plan-heading"]');
+    if (planSection) {
+      planSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 
   private scrollHandler: () => void;
   private userSubscription?: Subscription;
@@ -271,24 +285,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!this.plan?._id) return;
 
     this.isLoading = true;
+    this.cdr.markForCheck();
 
     console.log(`Regenerating with strategy: ${this.selectedPreference}`);
 
     // Use regenerate endpoint which keeps manual days and regenerates AI suggestions
-    this.api.regeneratePlanWithStrategy(this.plan._id, this.selectedPreference).subscribe({
-      next: (updatedPlan) => {
-        console.log(`Plan regenerated from API, preference: ${updatedPlan.preference}`);
-        this.plan = { ...updatedPlan };
-        this.isLoading = false;
-        this.toast(`Plan regenerated with ${this.getPreferenceLabel(updatedPlan.preference)} strategy!`);
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Failed to regenerate plan:', err);
-        this.isLoading = false;
-        this.toast('Failed to regenerate plan. Please try again.');
-      },
-    });
+    this.api.regeneratePlanWithStrategy(this.plan._id, this.selectedPreference)
+      .pipe(
+        finalize(() => {
+          // Ensure isLoading is always reset, even if observable doesn't complete normally
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: (updatedPlan) => {
+          console.log(`Plan regenerated from API, preference: ${updatedPlan.preference}`);
+          this.plan = { ...updatedPlan };
+          this.toast(`Plan regenerated with ${this.getPreferenceLabel(updatedPlan.preference)} strategy!`);
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Failed to regenerate plan:', err);
+          this.toast('Failed to regenerate plan. Please try again.');
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   // Get human-readable preference label

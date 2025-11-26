@@ -2,303 +2,173 @@
   <!-- Sticky Minimal Stats Bar -->
   <nav
     *ngIf="plan && showStickyStats"
-    class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-md py-2 md:py-3 px-3 md:px-4 transition-all duration-300"
+    class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm py-2 px-4 transition-all duration-300"
     role="navigation"
-    aria-label="Plan statistics and actions"
+    aria-label="Plan statistics"
   >
-    <div class="max-w-7xl mx-auto">
-      <!-- Mobile Layout -->
-      <div class="flex md:hidden items-center justify-between gap-3">
-        <div class="flex items-center gap-2" aria-label="Plan statistics">
-          <span class="font-bold text-gray-900" aria-label="Used days">{{ plan.usedDays }}/{{ plan.availableDays }}</span>
-          <span class="text-blue-600 font-semibold" aria-label="Total days off">{{ plan.totalDaysOff }}</span>
-          <span *ngIf="getRemainingDays() > 0" class="text-orange-600 font-semibold" aria-label="Remaining days">+{{ getRemainingDays() }}</span>
-        </div>
-        
-        <div class="flex items-center gap-2">
-          <button
-            *ngIf="!editMode"
-            type="button"
-            (click)="toggleEditMode()"
-            [disabled]="isLoading"
-            [attr.aria-label]="'Edit plan'"
-            [attr.aria-disabled]="isLoading"
-            class="min-h-[44px] px-3 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Edit plan
-          </button>
-          <button
-            *ngIf="editMode && getRemainingDays() > 0"
-            type="button"
-            (click)="optimizeRemaining()"
-            [disabled]="isLoading"
-            [attr.aria-label]="'Optimize ' + getRemainingDays() + ' remaining days'"
-            [attr.aria-disabled]="isLoading"
-            class="min-h-[44px] px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>Optimize {{ getRemainingDays() }}</span>
-          </button>
-          <button
-            *ngIf="editMode"
-            type="button"
-            (click)="toggleEditMode()"
-            [disabled]="isLoading"
-            [attr.aria-label]="'Finish editing plan'"
-            [attr.aria-disabled]="isLoading"
-            class="min-h-[44px] px-3 py-2 bg-green-600 text-white text-sm rounded-lg font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Done
-          </button>
-        </div>
-      </div>
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-4 text-md">
+      <!-- Stats -->
+      <div class="flex items-center gap-3" aria-label="Plan statistics">
+        <span class="font-bold text-gray-900">{{ plan.usedDays }}/{{ plan.availableDays }}</span>
+        <span class="text-blue-600 font-semibold">{{ plan.totalDaysOff }} off</span>
+        <span *ngIf="getRemainingDays() > 0" class="text-gray-500">+{{ getRemainingDays() }} remaining</span>
 
-      <!-- Desktop Layout -->
-      <div class="hidden md:flex items-center justify-between gap-4">
-        <div class="flex items-center gap-4" aria-label="Plan statistics">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold text-gray-900">Hopladay</span>
-            <span
-              *ngIf="editMode"
-              class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded"
-              aria-label="Editing mode active"
-            >
-              Editing
-            </span>
-          </div>
-          <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
-          <div class="text-sm">
-            <span class="text-gray-600">Days:</span>
-            <span class="font-bold text-gray-900 ml-1" aria-label="Used days">{{ plan.usedDays }}</span>
-            <span class="text-gray-500">/{{ plan.availableDays }}</span>
-          </div>
-          <div class="text-sm">
-            <span class="text-gray-600">Off:</span>
-            <span class="font-bold text-blue-600 ml-1" aria-label="Total days off">{{ plan.totalDaysOff }}</span>
-          </div>
-          <div *ngIf="getRemainingDays() > 0" class="text-sm">
-            <span class="text-gray-600">Remaining:</span>
-            <span class="font-bold text-orange-600 ml-1" aria-label="Remaining days">{{ getRemainingDays() }}</span>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button
-            *ngIf="!editMode"
-            type="button"
-            (click)="toggleEditMode()"
-            [disabled]="isLoading"
-            [attr.aria-label]="'Edit plan'"
-            [attr.aria-disabled]="isLoading"
-            class="min-h-[44px] px-3 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Edit plan
-          </button>
-          <button
-            *ngIf="editMode && getRemainingDays() > 0"
-            type="button"
-            (click)="optimizeRemaining()"
-            [disabled]="isLoading"
-            [attr.aria-label]="'Optimize ' + getRemainingDays() + ' remaining days'"
-            [attr.aria-disabled]="isLoading"
-            class="min-h-[44px] px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>Optimize {{ getRemainingDays() }}</span>
-          </button>
-          <button
-            *ngIf="editMode"
-            type="button"
-            (click)="toggleEditMode()"
-            [disabled]="isLoading"
-            [attr.aria-label]="'Finish editing plan'"
-            [attr.aria-disabled]="isLoading"
-            class="min-h-[44px] px-3 py-2 bg-green-600 text-white text-sm rounded-lg font-medium hover:bg-green-700 focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Done
-          </button>
-        </div>
       </div>
+      
+      <!-- Compact Edit Chip -->
+      <button
+        *ngIf="!editMode"
+        type="button"
+        (click)="toggleEditMode()"
+        [disabled]="isLoading"
+        [attr.aria-label]="'Edit plan'"
+        class="px-3 py-1 cursor-pointer font-medium text-white bg-primary-500 rounded-lg hover:bg-primary-600 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 transition-colors"
+      >
+        Edit
+      </button>
+              <span
+          *ngIf="editMode"
+          class="px-2 py-0.5 bg-blue-100 text-blue-700 font-medium rounded"
+          aria-label="Editing mode active"
+        >
+          Editing
+        </span>
     </div>
   </nav>
 
-  <!-- Header -->
-  <header class="mb-8 w-full max-w-5xl text-center">
-    <h1 class="text-4xl font-bold text-gray-900 mb-2">Hopladay</h1>
-    <p class="text-gray-600 text-sm md:text-base">Plan your time off like a pro</p>
+  <!-- Top App Header -->
+  <header class="mb-8 w-full max-w-5xl">
+    <div class="flex flex-col md:items-center md:justify-between gap-4 mb-6">
+      <!-- Branding -->
+      <div class="text-center md:text-left">
+        <h1 class="text-4xl font-bold text-gray-900 mb-1">Hopladay</h1>
+        <p class="text-gray-600 text-sm">Plan your time off like a pro</p>
+      </div>
 
-    <div class="mt-6 flex justify-center">
-      <div *ngIf="isUserClaimed()" class="w-full max-w-md">
-        <div
-          class="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-lg"
-          role="status"
-          aria-live="polite"
-        >
-          <div class="flex items-center gap-2 min-w-0 flex-1">
-            <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span class="text-sm font-medium text-green-900 truncate min-w-0" aria-label="Signed in as">{{ getUserEmail() }}</span>
-          </div>
-          <div class="flex items-center gap-2 flex-shrink-0">
-            <span
-              *ngIf="isPremium"
-              class="px-2.5 py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded whitespace-nowrap min-h-[44px] flex items-center"
-              aria-label="Premium account"
-            >
-              PREMIUM
-            </span>
-            <span
-              *ngIf="!isPremium"
-              class="px-2.5 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded whitespace-nowrap min-h-[44px] flex items-center"
-              aria-label="Free account"
-            >
-              FREE
-            </span>
-            <button
-              *ngIf="!isPremium"
-              type="button"
-              (click)="openPremiumModal()"
-              [attr.aria-label]="'Upgrade to Premium'"
-              class="min-h-[44px] px-4 py-2 text-sm font-medium text-yellow-900 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-md hover:from-yellow-500 hover:to-yellow-600 focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 transition-colors font-bold whitespace-nowrap flex items-center"
-            >
-              Upgrade
-            </button>
+      <!-- Account & Actions -->
+      <div class="flex flex-col items-center gap-3">
+        <!-- Account Pill -->
+        <div *ngIf="isUserClaimed()" class="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+          <lucide-angular name="check" class="w-4 h-4 text-green-600 flex-shrink-0" aria-hidden="true"></lucide-angular>
+          <span class="text-sm font-medium text-gray-900 truncate max-w-[200px]" aria-label="Signed in as">{{ getUserEmail() }}</span>
+          <span
+            *ngIf="isPremium"
+            class="px-2 py-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded"
+            aria-label="Premium account"
+          >
+            PREMIUM
+          </span>
+          <span
+            *ngIf="!isPremium"
+            class="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs font-medium rounded"
+            aria-label="Free account"
+          >
+            FREE
+          </span>
+        </div>
+
+        <!-- Plan Management -->
+        <div class="flex flex-nowrap justify-center items-center gap-2">
+          <div class="relative">
             <button
               type="button"
-              (click)="logout()"
-              [attr.aria-label]="'Log out'"
-              class="min-h-[44px] px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-md transition-colors whitespace-nowrap flex items-center"
+              (click)="togglePlansDropdown()"
+              [attr.aria-expanded]="showPlansDropdown"
+              [attr.aria-haspopup]="true"
+              [attr.aria-label]="'View saved plans'"
+              class="min-h-[44px] px-4 py-2 bg-white text-gray-700 text-nowrap border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors flex items-center gap-2"
             >
-              Logout
+              <lucide-angular name="folder" class="w-5 h-5" aria-hidden="true"></lucide-angular>
+              <span class="hidden sm:inline">My Plans</span>
+              <span class="sm:hidden">Plans</span>
             </button>
+
+            <!-- Plans Dropdown -->
+            <div
+              *ngIf="showPlansDropdown"
+              class="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto"
+              (click)="$event.stopPropagation()"
+              role="menu"
+              [attr.aria-label]="'Saved plans menu'"
+            >
+              <div class="p-3 border-b border-gray-200 bg-gray-50">
+                <h3 class="text-sm font-semibold text-gray-900">Your Saved Plans</h3>
+              </div>
+
+              <div *ngIf="savedPlans.length === 0" class="p-4 text-center text-sm text-gray-500" role="status">
+                No other plans found
+              </div>
+
+              <div *ngIf="savedPlans.length > 0" class="py-2" role="group">
+                <button
+                  *ngFor="let savedPlan of savedPlans; trackBy: trackByPlanId"
+                  type="button"
+                  (click)="loadPlan(savedPlan)"
+                  [attr.aria-label]="'Load plan for ' + getCountryName(savedPlan.countryCode) + ' ' + savedPlan.year"
+                  [attr.aria-current]="savedPlan._id === plan?._id ? 'true' : null"
+                  [class.bg-blue-50]="savedPlan._id === plan?._id"
+                  [class.border-l-4]="savedPlan._id === plan?._id"
+                  [class.border-blue-500]="savedPlan._id === plan?._id"
+                  class="w-full min-h-[44px] px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors border-b border-gray-100 last:border-0"
+                  role="menuitem"
+                >
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="font-semibold text-gray-900">{{ getCountryName(savedPlan.countryCode) }} {{ savedPlan.year }}</span>
+                        <span
+                          *ngIf="savedPlan._id === plan?._id"
+                          class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded"
+                          aria-label="Current plan"
+                        >
+                          Current
+                        </span>
+                      </div>
+                      <div class="text-xs text-gray-600 flex items-center gap-2">
+                        <span>{{ savedPlan.usedDays }}/{{ savedPlan.availableDays }} days</span>
+                        <span class="text-gray-400" aria-hidden="true">•</span>
+                        <span>{{ savedPlan.totalDaysOff }} days off</span>
+                      </div>
+                    </div>
+                    <lucide-angular name="chevron-right" class="w-5 h-5 text-gray-400 flex-shrink-0" aria-hidden="true"></lucide-angular>
+                  </div>
+                </button>
+              </div>
+            </div>
           </div>
+
+          <button
+            type="button"
+            (click)="startNewPlan()"
+            [attr.aria-label]="'Start a new plan'"
+            class="min-h-[44px] px-4 py-2 bg-primary-600 text-white text-sm font-medium text-nowrap rounded-lg hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors flex items-center gap-2"
+          >
+            <span>+ New Plan</span>
+          </button>
+
+          <button
+            *ngIf="!isPremium && isUserClaimed()"
+            type="button"
+            (click)="openPremiumModal()"
+            [attr.aria-label]="'Upgrade to Premium'"
+            class="min-h-[44px] px-4 py-2 text-sm font-medium text-yellow-900 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg hover:from-yellow-500 hover:to-yellow-600 focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 transition-colors font-bold"
+          >
+            Upgrade
+          </button>
+
+          <button
+            *ngIf="isUserClaimed()"
+            type="button"
+            (click)="logout()"
+            [attr.aria-label]="'Log out'"
+            class="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </div>
   </header>
-
-  <!-- Action Bar -->
-  <nav
-    class="w-full max-w-5xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 py-3 mb-6"
-    role="navigation"
-    aria-label="Plan management"
-  >
-    <div class="flex items-center gap-2 relative">
-      <button
-        type="button"
-        (click)="togglePlansDropdown()"
-        [attr.aria-expanded]="showPlansDropdown"
-        [attr.aria-haspopup]="true"
-        [attr.aria-label]="'View saved plans'"
-        class="min-h-[44px] flex-1 sm:flex-none px-4 py-2 bg-white text-gray-700 border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
-          />
-        </svg>
-        <span>My Plans</span>
-      </button>
-
-      <!-- Plans Dropdown -->
-      <div
-        *ngIf="showPlansDropdown"
-        class="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto"
-        (click)="$event.stopPropagation()"
-        role="menu"
-        [attr.aria-label]="'Saved plans menu'"
-      >
-        <div class="p-3 border-b border-gray-200 bg-gray-50">
-          <h3 class="text-sm font-semibold text-gray-900">Your Saved Plans</h3>
-        </div>
-
-        <div *ngIf="savedPlans.length === 0" class="p-4 text-center text-sm text-gray-500" role="status">
-          No other plans found
-        </div>
-
-        <div *ngIf="savedPlans.length > 0" class="py-2" role="group">
-          <button
-            *ngFor="let savedPlan of savedPlans; trackBy: trackByPlanId"
-            type="button"
-            (click)="loadPlan(savedPlan)"
-            [attr.aria-label]="'Load plan for ' + getCountryName(savedPlan.countryCode) + ' ' + savedPlan.year"
-            [attr.aria-current]="savedPlan._id === plan?._id ? 'true' : null"
-            [class.bg-blue-50]="savedPlan._id === plan?._id"
-            [class.border-l-4]="savedPlan._id === plan?._id"
-            [class.border-blue-500]="savedPlan._id === plan?._id"
-            class="w-full min-h-[44px] px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors border-b border-gray-100 last:border-0"
-            role="menuitem"
-          >
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="font-semibold text-gray-900"
-                    >{{ getCountryName(savedPlan.countryCode) }} {{ savedPlan.year }}</span
-                  >
-                  <span
-                    *ngIf="savedPlan._id === plan?._id"
-                    class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded"
-                    aria-label="Current plan"
-                  >
-                    Current
-                  </span>
-                </div>
-                <div class="text-xs text-gray-600 flex items-center gap-2">
-                  <span>{{ savedPlan.usedDays }}/{{ savedPlan.availableDays }} days</span>
-                  <span class="text-gray-400" aria-hidden="true">•</span>
-                  <span>{{ savedPlan.totalDaysOff }} days off</span>
-                </div>
-              </div>
-              <svg
-                class="w-5 h-5 text-gray-400 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        (click)="startNewPlan()"
-        [attr.aria-label]="'Start a new plan'"
-        class="min-h-[44px] flex-1 sm:flex-none px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        <span>New Plan</span>
-      </button>
-    </div>
-  </nav>
 
   <!-- Onboarding Message for First-Time Users -->
   <section *ngIf="!plan && !isLoading" class="w-full max-w-3xl mb-8 mx-auto" aria-labelledby="welcome-heading">
@@ -390,14 +260,7 @@
             </p>
             <span class="text-blue-600 font-medium inline-flex items-center text-sm">
               Start planning
-              <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              <lucide-angular name="chevron-right" class="w-5 h-5 ml-1" aria-hidden="true"></lucide-angular>
             </span>
           </div>
         </div>
@@ -421,20 +284,7 @@
 
         <div class="flex items-start gap-4">
           <div class="h-12 w-12 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg
-              class="h-6 w-6 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
+            <lucide-angular name="zap" class="h-6 w-6 text-white" aria-hidden="true"></lucide-angular>
           </div>
 
           <div class="flex-1">
@@ -445,14 +295,7 @@
 
             <span class="text-orange-600 font-medium inline-flex items-center text-sm">
               Generate plan
-              <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              <lucide-angular name="chevron-right" class="w-5 h-5 ml-1" aria-hidden="true"></lucide-angular>
             </span>
           </div>
         </div>
@@ -462,9 +305,7 @@
     <!-- Disabled Hint -->
     <div *ngIf="!selectedCountry || !selectedYear" class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg" role="alert">
       <p class="text-sm text-yellow-800 text-center flex items-center justify-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
+        <lucide-angular name="alert-triangle" class="w-4 h-4" aria-hidden="true"></lucide-angular>
         Select year and country before creating a plan.
       </p>
     </div>
@@ -504,113 +345,117 @@
         type="button"
         (click)="openAuthModal('register')"
         [attr.aria-label]="'Sync plan to your account'"
-        class="min-h-[44px] px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors whitespace-nowrap"
+        class="min-h-[44px] px-4 py-2 text-gray-700 bg-white border border-gray-300 text-sm rounded-lg font-medium hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors whitespace-nowrap"
       >
         Sync now
       </button>
     </div>
 
-    <!-- Free Tier Limitations Notice -->
-    <div
-      *ngIf="!isPremium && plan?.suggestions && plan.suggestions.length >= 3"
-      class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 md:p-5"
-      role="alert"
-    >
-      <div class="flex items-start gap-3">
-        <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div class="flex-1">
-          <div class="text-sm font-semibold text-yellow-900 mb-1">Free Tier: Limited Suggestions</div>
-          <div class="text-xs text-yellow-800 mb-3 leading-relaxed">
-            You're seeing the top 3 suggestions. Premium users get unlimited suggestions with advanced strategies and detailed ROI analysis.
-          </div>
-          <div class="flex flex-wrap gap-3">
-            <button
-              type="button"
-              (click)="openPremiumModal()"
-              [attr.aria-label]="'Learn more about Premium features'"
-              class="text-xs font-medium text-yellow-900 underline hover:text-yellow-700 focus-visible:ring-2 focus-visible:ring-yellow-500 rounded"
-            >
-              Upgrade to Premium →
-            </button>
-            <a
-              [routerLink]="['/payment/info']"
-              class="text-xs font-medium text-blue-600 underline hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
-            >
-              Payment info →
-            </a>
-          </div>
+    <!-- Plan Toolbar -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4 md:p-6 mb-6">
+      <!-- Plan Info -->
+      <div class="flex items-center gap-4 flex-wrap mb-4 pb-4 border-b border-gray-200">
+        <div class="flex items-center gap-2 text-sm">
+          <dt class="sr-only">Country and year</dt>
+          <dd class="flex items-center gap-2 text-gray-600">
+            <lucide-angular name="globe" class="w-5 h-5 text-gray-400" aria-hidden="true"></lucide-angular>
+            <span class="font-medium text-gray-900">{{ getCountryName(selectedCountry) }} {{ selectedYear }}</span>
+          </dd>
         </div>
+        <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
+        <div class="flex items-center gap-2 text-sm">
+          <dt class="sr-only">Vacation days used</dt>
+          <dd class="flex items-center gap-2 text-gray-600">
+            <lucide-angular name="calendar" class="w-5 h-5 text-gray-400" aria-hidden="true"></lucide-angular>
+            <span>{{ plan.usedDays }}/{{ plan.availableDays }} vacation days</span>
+          </dd>
+        </div>
+        <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
+        <button
+          type="button"
+          (click)="openRegenerateModal()"
+          [disabled]="isLoading || editMode"
+          [attr.aria-label]="'Change planning strategy, currently ' + getPreferenceLabel(plan.preference || 'balanced')"
+          [attr.aria-disabled]="isLoading || editMode"
+          class="flex cursor-pointer items-center gap-2 text-sm px-2 py-1 rounded-md hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <lucide-angular name="zap" class="w-5 h-5 text-gray-400" aria-hidden="true"></lucide-angular>
+          <span class="text-gray-600">Strategy:</span>
+          <span class="font-medium text-gray-900 capitalize">{{ getPreferenceLabel(plan.preference || 'balanced') }}</span>
+          <lucide-angular name="chevron-right" class="w-4 h-4 text-gray-400" aria-hidden="true"></lucide-angular>
+        </button>
+
       </div>
-    </div>
 
-    <!-- Plan Settings & Strategy -->
-    <div class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <!-- Plan Info -->
-        <dl class="flex items-center gap-4 flex-wrap">
-          <div class="flex items-center gap-2 text-sm">
-            <dt class="sr-only">Country and year</dt>
-            <dd class="flex items-center gap-2 text-gray-600">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-              </svg>
-              <span class="font-medium text-gray-900">{{ getCountryName(selectedCountry) }} {{ selectedYear }}</span>
-            </dd>
-          </div>
-          <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
-          <div class="flex items-center gap-2 text-sm">
-            <dt class="sr-only">Vacation days used</dt>
-            <dd class="flex items-center gap-2 text-gray-600">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>{{ plan.usedDays }}/{{ plan.availableDays }} vacation days</span>
-            </dd>
-          </div>
-          <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
-          <div class="flex items-center gap-2 text-sm">
-            <dt class="sr-only">Planning strategy</dt>
-            <dd class="flex items-center gap-2">
-              <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span class="text-gray-600">Strategy:</span>
-              <span class="font-medium text-gray-900 capitalize">{{ getPreferenceLabel(plan.preference || 'balanced') }}</span>
-            </dd>
-          </div>
-        </dl>
+      <!-- Actions Toolbar -->
+      <div class="flex flex-nowrap items-center gap-2">
+          <!-- Edit / Done -->
+          <button
+            *ngIf="!editMode"
+            type="button"
+            (click)="toggleEditMode()"
+            [disabled]="isLoading"
+            [attr.aria-label]="'Edit plan'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-4 py-2 text-sm font-medium bg-primary-600 text-white text-nowrap rounded-lg hover:bg-primary-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <lucide-angular name="pencil" class="w-5 h-5 flex-shrink-0" aria-hidden="true"></lucide-angular>
+            <span>Edit plan</span>
+          </button>
 
-        <!-- Actions -->
-        <div class="flex items-center gap-2 flex-wrap">
+          <button
+            *ngIf="editMode"
+            type="button"
+            (click)="toggleEditMode()"
+            [disabled]="isLoading"
+            [attr.aria-label]="'Finish editing plan'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-4 py-2 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <lucide-angular name="check" class="w-5 h-5 flex-shrink-0" aria-hidden="true"></lucide-angular>
+            <span>Done</span>
+          </button>
+
+          <!-- Optimize remaining: secondary/ghost -->
+          <button
+            *ngIf="editMode && getRemainingDays() > 0"
+            type="button"
+            (click)="optimizeRemaining()"
+            [disabled]="isLoading"
+            [attr.aria-label]="'Optimize ' + getRemainingDays() + ' remaining days'"
+            [attr.aria-disabled]="isLoading"
+            class="min-h-[44px] px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <lucide-angular name="sparkles" class="w-5 h-5 flex-shrink-0" aria-hidden="true"></lucide-angular>
+            <span>Optimize {{ getRemainingDays() }}</span>
+          </button>
+        
+          <!-- Change strategy -->
+          
+
           <!-- Export Menu -->
           <div class="relative">
             <button
               *ngIf="!editMode"
               type="button"
-              (click)="isPremium ? (showExportMenu = !showExportMenu) : (toast('Export functionality is available for Premium users only. Upgrade to unlock calendar and PDF exports!', 'info'))"
+              (click)="isPremium ? (showExportMenu = !showExportMenu) : openPremiumModal()"
               [disabled]="isLoading"
               [attr.aria-expanded]="showExportMenu && isPremium"
               [attr.aria-haspopup]="true"
               [attr.aria-label]="isPremium ? 'Export options' : 'Export (Premium feature)'"
-              [attr.aria-disabled]="isLoading || !isPremium"
-              class="min-h-[44px] px-3 py-2 text-sm font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap transition-colors"
+              [attr.aria-disabled]="isLoading"
+              class="min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span class="hidden sm:inline">Export</span>
+              <lucide-angular name="download" class="w-5 h-5 flex-shrink-0" aria-hidden="true"></lucide-angular>
+              <span>Export</span>
               <span
                 *ngIf="!isPremium"
-                class="px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded whitespace-nowrap"
+                class="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded"
                 aria-label="Premium feature"
               >
                 PREMIUM
               </span>
-              <svg *ngIf="isPremium" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
+              <lucide-angular *ngIf="isPremium" name="chevron-down" class="w-4 h-4 flex-shrink-0" aria-hidden="true"></lucide-angular>
             </button>
             
             <!-- Export Dropdown -->
@@ -627,9 +472,7 @@
                 class="w-full min-h-[44px] px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center gap-3 transition-colors"
                 role="menuitem"
               >
-                <svg class="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+                <lucide-angular name="calendar" class="w-6 h-6 text-blue-600 flex-shrink-0" aria-hidden="true"></lucide-angular>
                 <div>
                   <div class="font-medium text-gray-900">Calendar File (.ics)</div>
                   <div class="text-xs text-gray-500">Import into Google Calendar, Outlook, etc.</div>
@@ -642,9 +485,7 @@
                 class="w-full min-h-[44px] px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 flex items-center gap-3 transition-colors"
                 role="menuitem"
               >
-                <svg class="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
+                <lucide-angular name="file-text" class="w-6 h-6 text-red-600 flex-shrink-0" aria-hidden="true"></lucide-angular>
                 <div>
                   <div class="font-medium text-gray-900">PDF Report</div>
                   <div class="text-xs text-gray-500">Print-friendly report for planning</div>
@@ -658,9 +499,7 @@
               class="absolute left-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-yellow-200 py-3 px-4 z-50"
             >
               <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <lucide-angular name="info" class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5"></lucide-angular>
                 <div class="flex-1">
                   <div class="text-sm font-semibold text-yellow-900 mb-1">Export is a Premium Feature</div>
                   <div class="text-xs text-yellow-800 mb-3">
@@ -684,115 +523,99 @@
                   </div>
                 </div>
               </div>
-            </div>
           </div>
-
-          <button
-            *ngIf="!editMode"
-            type="button"
-            (click)="openRegenerateModal()"
-            [disabled]="isLoading"
-            [attr.aria-label]="'Change planning strategy'"
-            [attr.aria-disabled]="isLoading"
-            class="min-h-[44px] px-3 py-2 text-sm font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap transition-colors"
-          >
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span class="hidden sm:inline">Change strategy</span>
-            <span class="sm:hidden">Strategy</span>
-          </button>
-          
-          <button
-            *ngIf="!editMode"
-            type="button"
-            (click)="toggleEditMode()"
-            [disabled]="isLoading"
-            [attr.aria-label]="'Edit plan'"
-            [attr.aria-disabled]="isLoading"
-            class="min-h-[44px] px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap transition-colors"
-          >
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            <span>Edit</span>
-          </button>
-
-          <button
-            *ngIf="editMode && getRemainingDays() > 0"
-            type="button"
-            (click)="optimizeRemaining()"
-            [disabled]="isLoading"
-            [attr.aria-label]="'Optimize ' + getRemainingDays() + ' remaining days'"
-            [attr.aria-disabled]="isLoading"
-            class="min-h-[44px] px-3 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap transition-colors"
-          >
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>Optimize {{ getRemainingDays() }}</span>
-          </button>
-
-          <button
-            *ngIf="editMode"
-            type="button"
-            (click)="toggleEditMode()"
-            [disabled]="isLoading"
-            [attr.aria-label]="'Finish editing plan'"
-            [attr.aria-disabled]="isLoading"
-            class="min-h-[44px] px-3 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap transition-colors"
-          >
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span>Done</span>
-          </button>
         </div>
       </div>
     </div>
 
-    <!-- Existing plan summary & calendar -->
-    <app-holiday-input *ngIf="!plan && !isLoading"
-      [country]="selectedCountry"
-      [year]="selectedYear"
-      [days]="availableDays"
-      [isPremium]="isPremium"
-      [onUpgradeClick]="openPremiumModal.bind(this)"
-      (fetch)="onFetch($event)"
-      (settingsChange)="onSettingsChange($event)"
-    >
-    </app-holiday-input>
+    <!-- Tab Navigation -->
+    <div class="sticky top-0 md:relative z-40 mb-6 bg-white border-b border-gray-200 -mx-4 px-4 md:mx-0 md:px-0" role="tablist" aria-label="Plan view tabs">
+      <div class="flex gap-1">
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeTab === 'calendar'"
+          [attr.aria-controls]="'calendar-panel'"
+          [id]="'calendar-tab'"
+          (click)="switchTab('calendar')"
+          [class.bg-blue-50]="activeTab === 'calendar'"
+          [class.text-blue-700]="activeTab === 'calendar'"
+          [class.border-blue-500]="activeTab === 'calendar'"
+          [class.bg-white]="activeTab !== 'calendar'"
+          [class.text-gray-600]="activeTab !== 'calendar'"
+          [class.border-transparent]="activeTab !== 'calendar'"
+          class="min-h-[44px] min-w-[50%] px-4 py-2 text-sm text-center font-medium border-b-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-t-lg flex items-center gap-2"
+        >
+          <lucide-angular name="calendar" class="w-5 h-5" aria-hidden="true"></lucide-angular>
+          <span>Calendar</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeTab === 'suggestions'"
+          [attr.aria-controls]="'suggestions-panel'"
+          [id]="'suggestions-tab'"
+          (click)="switchTab('suggestions')"
+          [class.bg-blue-50]="activeTab === 'suggestions'"
+          [class.text-blue-700]="activeTab === 'suggestions'"
+          [class.border-blue-500]="activeTab === 'suggestions'"
+          [class.bg-white]="activeTab !== 'suggestions'"
+          [class.text-gray-600]="activeTab !== 'suggestions'"
+          [class.border-transparent]="activeTab !== 'suggestions'"
+          class="min-h-[44px] w-[100%] px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-t-lg flex items-center gap-2"
+        >
+          <lucide-angular name="clipboard" class="w-5 h-5" aria-hidden="true"></lucide-angular>
+          <span>Suggestions</span>
+          <span
+            *ngIf="plan?.suggestions?.length"
+            class="ml-1 px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-700"
+            aria-label="Number of suggestions"
+          >
+            {{ plan.suggestions.length }}
+          </span>
+        </button>
+      </div>
+    </div>
 
-    <app-holiday-calendar
-      [holidays]="holidays"
-      [plan]="plan"
-      [year]="selectedYear"
-      [editable]="editMode"
-      [availableDays]="availableDays"
-      (planUpdated)="onPlanUpdated($event)"
-    >
-    </app-holiday-calendar>
+    <!-- Tab Panels -->
+    <div class="space-y-6">
+      <!-- Calendar Panel -->
+      <div
+        *ngIf="activeTab === 'calendar'"
+        role="tabpanel"
+        [id]="'calendar-panel'"
+        [attr.aria-labelledby]="'calendar-tab'"
+      >
+        <app-holiday-calendar
+          [holidays]="holidays"
+          [plan]="plan"
+          [year]="selectedYear"
+          [editable]="editMode"
+          [availableDays]="availableDays"
+          (planUpdated)="onPlanUpdated($event)"
+        >
+        </app-holiday-calendar>
+      </div>
 
-    <app-holiday-summary [plan]="plan"></app-holiday-summary>
+      <!-- Suggestions Panel -->
+      <div
+        *ngIf="activeTab === 'suggestions'"
+        role="tabpanel"
+        [id]="'suggestions-panel'"
+        [attr.aria-labelledby]="'suggestions-tab'"
+      >
+        <app-holiday-summary 
+          [plan]="plan"
+          [isPremium]="isPremium"
+          [onUpgradeClick]="openPremiumModal.bind(this)"
+        ></app-holiday-summary>
+      </div>
+    </div>
   </section>
 
   <!-- Loading -->
   <div *ngIf="isLoading" class="mt-10 flex items-center justify-center gap-3 text-blue-600" role="status" aria-live="polite">
-    <svg class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-      <circle
-        class="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        stroke-width="4"
-      ></circle>
-      <path
-        class="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      ></path>
-    </svg>
+    <lucide-angular name="loader" class="animate-spin h-6 w-6" aria-hidden="true"></lucide-angular>
     <span class="font-medium">Generating plan...</span>
   </div>
 
@@ -829,14 +652,7 @@
           [attr.aria-label]="'Close strategy selection modal'"
           class="text-gray-400 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 rounded p-1 transition-colors"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <lucide-angular name="x" class="w-6 h-6" aria-hidden="true"></lucide-angular>
         </button>
       </div>
 
@@ -875,13 +691,7 @@
               class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
               aria-hidden="true"
             >
-              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
+              <lucide-angular name="check" class="w-4 h-4 text-white" aria-hidden="true"></lucide-angular>
             </div>
             <div
               *ngIf="selectedPreference !== pref.value"
@@ -895,9 +705,7 @@
       <!-- Free tier limitations notice -->
       <div *ngIf="!isPremium" class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
         <div class="flex items-start gap-3">
-          <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <lucide-angular name="info" class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5"></lucide-angular>
           <div class="flex-1">
             <div class="text-sm font-semibold text-yellow-900 mb-1">Free Tier Limitations</div>
             <ul class="text-xs text-yellow-800 space-y-1 list-disc list-inside">
@@ -985,9 +793,7 @@
           (click)="closePremiumModal()"
           class="text-gray-400 hover:text-gray-600 transition-colors"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <lucide-angular name="x" class="w-6 h-6"></lucide-angular>
         </button>
       </div>
 
@@ -995,7 +801,7 @@
         <!-- Pricing -->
         <div class="text-center mb-8">
           <div class="inline-block bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 px-4 py-2 rounded-full font-bold text-lg mb-4">
-            kr 49
+            $5
           </div>
           <p class="text-gray-600">Unlock all Premium features. Forever.</p>
         </div>
@@ -1005,9 +811,7 @@
           <h3 class="text-lg font-semibold text-gray-900 mb-4">Premium Features:</h3>
           
           <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
-            <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+            <lucide-angular name="check" class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5"></lucide-angular>
             <div>
               <div class="font-semibold text-gray-900">Advanced Planning Strategies</div>
               <div class="text-sm text-gray-600">Long weekends, summer focus, spread out, and more</div>
@@ -1015,9 +819,7 @@
           </div>
 
           <div class="flex items-start gap-3 p-4 bg-green-50 rounded-lg">
-            <svg class="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+            <lucide-angular name="check" class="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5"></lucide-angular>
             <div>
               <div class="font-semibold text-gray-900">Unlimited Suggestions</div>
               <div class="text-sm text-gray-600">Get all optimized vacation suggestions, not just 3</div>
@@ -1025,9 +827,7 @@
           </div>
 
           <div class="flex items-start gap-3 p-4 bg-purple-50 rounded-lg">
-            <svg class="w-6 h-6 text-purple-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+            <lucide-angular name="check" class="w-6 h-6 text-purple-600 flex-shrink-0 mt-0.5"></lucide-angular>
             <div>
               <div class="font-semibold text-gray-900">Full Vacation Day Planning</div>
               <div class="text-sm text-gray-600">Plan with all your available days, not limited to 7</div>
@@ -1035,9 +835,7 @@
           </div>
 
           <div class="flex items-start gap-3 p-4 bg-orange-50 rounded-lg">
-            <svg class="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+            <lucide-angular name="check" class="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5"></lucide-angular>
             <div>
               <div class="font-semibold text-gray-900">Intelligent Descriptions</div>
               <div class="text-sm text-gray-600">Detailed ROI analysis and efficiency ratings</div>
@@ -1045,9 +843,7 @@
           </div>
 
           <div class="flex items-start gap-3 p-4 bg-red-50 rounded-lg">
-            <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
+            <lucide-angular name="check" class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5"></lucide-angular>
             <div>
               <div class="font-semibold text-gray-900">Export to Calendar & PDF</div>
               <div class="text-sm text-gray-600">Download your plan as .ics or PDF files</div>
@@ -1070,12 +866,9 @@
             [disabled]="isProcessingPayment"
             class="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <span *ngIf="!isProcessingPayment">Upgrade Now - kr 49,-</span>
+            <span *ngIf="!isProcessingPayment">Upgrade Now - $5</span>
             <span *ngIf="isProcessingPayment" class="flex items-center gap-2">
-              <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+              <lucide-angular name="loader" class="animate-spin h-5 w-5"></lucide-angular>
               Processing...
             </span>
           </button>
