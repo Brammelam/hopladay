@@ -801,7 +801,7 @@ export function generateHolidayPlan(
       // Free tier: simplified descriptions
       return {
         ...c,
-        description: `${c.vacationDaysUsed} day(s) off → ${c.totalDaysOff} days off`,
+        description: `${c.vacationDaysUsed} vacation day${c.vacationDaysUsed > 1 ? 's' : ''} → ${c.totalDaysOff} days off`,
         reason: undefined,
         roi: undefined,
         efficiency: undefined,
