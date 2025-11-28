@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /auth/
+Disallow: /payment/success
+Disallow: /payment/cancel
+Disallow: /unsubscribe
+
+Sitemap: https://hopladay.com/sitemap.xml
+

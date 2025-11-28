@@ -13,6 +13,7 @@ import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal';
 import { ExportService } from '../services/export.service';
+import { SEOService } from '../services/seo.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -98,7 +99,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private exportService: ExportService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private seoService: SEOService
   ) {
     this.scrollHandler = () => {
       const scrolled = window.scrollY > 400;
@@ -110,6 +112,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.seoService.updateSEO({
+      title: 'Hopladay - Plan Your Perfect Year',
+      description: 'Create the perfect vacation plan with Hopladay. Maximize your days off with our smart algorithms. Optimize for long weekends, summer vacations, or extended breaks. Free holiday planner and vacation app.',
+      keywords: 'holiday planner, vacation app, vacation planner, maximize vacation days, optimize holidays, vacation scheduler, holiday calendar, time off planner, vacation planning tool, holiday optimizer, vacation days calculator, AI vacation planner',
+      url: 'https://hopladay.com/'
+    });
     this.initializeUser();
     this.prefetchHolidays();
     window.addEventListener('scroll', this.scrollHandler);
