@@ -662,10 +662,9 @@
           type="button"
           (click)="selectPreference(pref.value)"
           [attr.aria-checked]="selectedPreference === pref.value"
-          [attr.aria-disabled]="pref.premium && !isPremium"
-          [attr.aria-label]="pref.label + ': ' + pref.description"
-          [class.border-blue-500]="selectedPreference === pref.value"
-          [class.bg-blue-50]="selectedPreference === pref.value"
+          [attr.aria-label]="pref.label + ': ' + pref.description + (pref.premium && !isPremium ? ' (Premium feature)' : '')"
+          [class.border-blue-500]="selectedPreference === pref.value && (!pref.premium || isPremium)"
+          [class.bg-blue-50]="selectedPreference === pref.value && (!pref.premium || isPremium)"
           [class.border-gray-200]="selectedPreference !== pref.value"
           [class.opacity-60]="pref.premium && !isPremium"
           [class.cursor-not-allowed]="pref.premium && !isPremium"
@@ -687,50 +686,19 @@
               <div class="text-sm text-gray-600">{{ pref.description }}</div>
             </div>
             <div
-              *ngIf="selectedPreference === pref.value"
+              *ngIf="selectedPreference === pref.value && (!pref.premium || isPremium)"
               class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
               aria-hidden="true"
             >
               <lucide-angular name="check" class="w-4 h-4 text-white" aria-hidden="true"></lucide-angular>
             </div>
             <div
-              *ngIf="selectedPreference !== pref.value"
+              *ngIf="selectedPreference !== pref.value || (pref.premium && !isPremium)"
               class="w-6 h-6 border-2 border-gray-300 rounded-full flex-shrink-0 mt-0.5"
               aria-hidden="true"
             ></div>
           </div>
         </button>
-      </div>
-      
-      <!-- Free tier limitations notice -->
-      <div *ngIf="!isPremium" class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <div class="flex items-start gap-3">
-          <lucide-angular name="info" class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5"></lucide-angular>
-          <div class="flex-1">
-            <div class="text-sm font-semibold text-yellow-900 mb-1">Free Tier Limitations</div>
-            <ul class="text-xs text-yellow-800 space-y-1 list-disc list-inside">
-              <li>Only "Balanced" preference available</li>
-              <li>Maximum 7 vacation days used for planning</li>
-              <li>Up to 3 suggestions shown</li>
-              <li>Simplified descriptions (no ROI details)</li>
-            </ul>
-            <div class="flex flex-col gap-2 mt-2">
-              <button
-                type="button"
-                class="text-xs font-medium text-yellow-900 underline hover:text-yellow-700 text-left"
-                (click)="openPremiumModal()"
-              >
-                Upgrade to Premium →
-              </button>
-              <a
-                [routerLink]="['/payment/info']"
-                class="text-xs font-medium text-blue-600 underline hover:text-blue-700"
-              >
-                Learn about secure payments →
-              </a>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-3">
@@ -829,16 +797,8 @@
           <div class="flex items-start gap-3 p-4 bg-purple-50 rounded-lg">
             <lucide-angular name="check" class="w-6 h-6 text-purple-600 flex-shrink-0 mt-0.5"></lucide-angular>
             <div>
-              <div class="font-semibold text-gray-900">Full Vacation Day Planning</div>
-              <div class="text-sm text-gray-600">Plan with all your available days, not limited to 7</div>
-            </div>
-          </div>
-
-          <div class="flex items-start gap-3 p-4 bg-orange-50 rounded-lg">
-            <lucide-angular name="check" class="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5"></lucide-angular>
-            <div>
-              <div class="font-semibold text-gray-900">Intelligent Descriptions</div>
-              <div class="text-sm text-gray-600">Detailed ROI analysis and efficiency ratings</div>
+              <div class="font-semibold text-gray-900">Rich Insights & Analysis</div>
+              <div class="text-sm text-gray-600">Detailed ROI analysis, efficiency ratings, and intelligent descriptions</div>
             </div>
           </div>
 

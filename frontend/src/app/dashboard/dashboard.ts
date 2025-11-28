@@ -37,7 +37,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   selectedCountry = 'NO';
   selectedYear = new Date().getFullYear();
-  availableDays = 7;
+  availableDays = 20;
 
   editMode = false;
   isLoading = false;
@@ -55,10 +55,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { value: 'summer_vacation', label: 'Summer focus', description: 'Maximize summer time off', premium: true },
     { value: 'spread_out', label: 'Spread out', description: 'Evenly distributed throughout year', premium: true },
   ];
-  
+
   getAvailablePreferences() {
-    if (this.isPremium) return this.preferences;
-    return this.preferences.filter(p => !p.premium);
+    // Always show all preferences, premium ones will be tagged and require upgrade
+    return this.preferences;
   }
 
   authMode: 'signin' | 'register' = 'signin';
@@ -73,6 +73,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isPremium = false;
   showPremiumModal = false;
   isProcessingPayment = false;
+  premiumModalOpenedFromStrategySelector = false;
   
   // Tab state for plan view
   activeTab: 'calendar' | 'suggestions' = 'calendar';
@@ -236,7 +237,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Handle premium preference selection attempt
   selectPreference(value: string) {
     if (this.isPremiumPreference(value) && !this.isPremium) {
-      this.toast('This preference is available for Premium users only. Upgrade to unlock advanced planning strategies.', 'info');
+      // Close preference selector and open premium modal
+      // Track that we came from strategy selector so we can return to it
+      this.premiumModalOpenedFromStrategySelector = true;
+      this.showPreferenceSelector = false;
+      this.openPremiumModal();
       return;
     }
     console.log(`User selected preference: ${value}`);
@@ -253,6 +258,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Execute plan generation with selected preference
   confirmPreferenceSelection() {
+    // Prevent free users from confirming premium strategies
+    if (this.isPremiumPreference(this.selectedPreference) && !this.isPremium) {
+      // Track that we came from strategy selector so we can return to it
+      this.premiumModalOpenedFromStrategySelector = true;
+      this.showPreferenceSelector = false;
+      this.openPremiumModal();
+      return;
+    }
+    
     console.log(`Confirming preference selection: ${this.selectedPreference} for ${this.preferenceSelectionFor}`);
     this.showPreferenceSelector = false;
     this.cdr.markForCheck();
@@ -731,11 +745,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.toast('Please wait for session to initialize', 'info');
       return;
     }
+    // Only set flag if not already set (preserves state when called from strategy selector)
+    // If called from elsewhere, don't set the flag
     this.showPremiumModal = true;
   }
 
   closePremiumModal(): void {
+    const shouldReturnToStrategySelector = this.premiumModalOpenedFromStrategySelector;
+    
     this.showPremiumModal = false;
+    this.premiumModalOpenedFromStrategySelector = false;
+    
+    // If we came from the strategy selector, reopen it
+    if (shouldReturnToStrategySelector) {
+      this.showPreferenceSelector = true;
+      this.cdr.markForCheck();
+    }
   }
 
   async upgradeToPremium(): Promise<void> {

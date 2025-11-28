@@ -748,6 +748,16 @@ router.post("/:planId/regenerate", async (req, res) => {
     const user = await User.findById(plan.userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
+    const isPremium = user.isPremium || false;
+    
+    // Validate strategy: free users can only use "balanced"
+    if (!isPremium && preference !== 'balanced') {
+      return res.status(403).json({ 
+        error: 'Premium feature', 
+        message: 'This strategy is only available for premium users. Free users can use the "balanced" strategy.' 
+      });
+    }
+
     const holidays = await getHolidaysForYear(plan.year, plan.countryCode);
     const availableDays = plan.availableDays || user.availableDays;
 
@@ -813,7 +823,6 @@ router.post("/:planId/regenerate", async (req, res) => {
     console.log(`Generating AI suggestions with ${preference} strategy for ${remaining} remaining days`);
 
     // Generate new AI suggestions with new strategy
-    const isPremium = user.isPremium || false;
     const aiPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium });
 
     console.log(`Generated ${aiPlan.suggestions.length} new AI suggestions`);

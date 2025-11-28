@@ -18,7 +18,6 @@ export class HolidayInputComponent implements OnInit, OnChanges {
   @Output() fetch = new EventEmitter<{ country: string; year: number }>();
   @Output() settingsChange = new EventEmitter<{ country: string; year: number; availableDays: number }>();
   
-  maxDaysForFree = 7;
   showUpgradePrompt = false;
 
   countries = [
@@ -91,14 +90,9 @@ export class HolidayInputComponent implements OnInit, OnChanges {
       this.syncFromInputs();
     }
     
-    // If premium status changes, re-validate days
+    // Premium status changes - no longer need to limit days
     if (changes['isPremium']) {
-      if (!this.isPremium && this.availableDays > this.maxDaysForFree) {
-        this.availableDays = this.maxDaysForFree;
-        this.showUpgradePrompt = true;
-      } else {
-        this.showUpgradePrompt = false;
-      }
+      this.showUpgradePrompt = false;
     }
   }
 
@@ -106,25 +100,13 @@ export class HolidayInputComponent implements OnInit, OnChanges {
     if (this.country) this.selectedCountry = this.country;
     if (this.year) this.selectedYear = this.year;
     if (this.days) {
-      // Enforce limit for free users
-      if (!this.isPremium && this.days > this.maxDaysForFree) {
-        this.availableDays = this.maxDaysForFree;
-        this.showUpgradePrompt = true;
-      } else {
-        this.availableDays = this.days;
-        this.showUpgradePrompt = false;
-      }
+      this.availableDays = this.days;
+      this.showUpgradePrompt = false;
     }
   }
 
   onInputChange() {
-    // Enforce 7-day limit for free users
-    if (!this.isPremium && this.availableDays > this.maxDaysForFree) {
-      this.showUpgradePrompt = true;
-      this.availableDays = this.maxDaysForFree;
-    } else {
-      this.showUpgradePrompt = false;
-    }
+    this.showUpgradePrompt = false;
     
     this.fetch.emit({ country: this.selectedCountry, year: this.selectedYear });
     this.settingsChange.emit({
@@ -135,7 +117,7 @@ export class HolidayInputComponent implements OnInit, OnChanges {
   }
   
   getMaxDays(): number {
-    return this.isPremium ? 365 : this.maxDaysForFree;
+    return 365; // No limit for any user
   }
   
   handleUpgradeClick() {

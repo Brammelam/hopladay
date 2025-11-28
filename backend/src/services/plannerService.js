@@ -550,10 +550,10 @@ function applyFreeTierLimits(preference, availableDays, isPremium) {
     return { effectivePreference: preference, effectiveAvailableDays: availableDays };
   }
   
-  // Free tier: force "balanced" preference and cap days to 7
+  // Free tier: force "balanced" preference, but allow all available days
   return {
     effectivePreference: "balanced",
-    effectiveAvailableDays: Math.min(availableDays, 7)
+    effectiveAvailableDays: availableDays
   };
 }
 
