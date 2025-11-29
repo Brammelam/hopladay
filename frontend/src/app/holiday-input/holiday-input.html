@@ -6,8 +6,8 @@
         for="country-select" 
         class="text-sm font-medium text-gray-700 mb-2"
       >
-        Country
-        <span class="text-red-500" aria-label="required">*</span>
+        {{ 'input.country' | translate }}
+        <span class="text-red-500" [attr.aria-label]="'input.required' | translate">*</span>
       </label>
       <select
         id="country-select"
@@ -20,7 +20,7 @@
         <option *ngFor="let c of countries" [value]="c.code">{{ c.name }}</option>
       </select>
       <p id="country-description" class="text-xs text-gray-500 mt-1">
-        Select your country to see public holidays
+        {{ 'input.selectCountry' | translate }}
       </p>
     </div>
 
@@ -30,8 +30,8 @@
         for="year-select" 
         class="text-sm font-medium text-gray-700 mb-2"
       >
-        Year
-        <span class="text-red-500" aria-label="required">*</span>
+        {{ 'input.year' | translate }}
+        <span class="text-red-500" [attr.aria-label]="'input.required' | translate">*</span>
       </label>
       <select
         id="year-select"
@@ -44,7 +44,7 @@
         <option *ngFor="let y of years" [value]="y">{{ y }}</option>
       </select>
       <p id="year-description" class="text-xs text-gray-500 mt-1">
-        The year to plan for
+        {{ 'input.yearToPlan' | translate }}
       </p>
     </div>
 
@@ -54,8 +54,8 @@
         for="vacation-days-input" 
         class="text-sm font-medium text-gray-700 mb-2"
       >
-        Vacation Days Available
-        <span class="text-red-500" aria-label="required">*</span>
+        {{ 'input.vacationDaysAvailable' | translate }}
+        <span class="text-red-500" [attr.aria-label]="'input.required' | translate">*</span>
       </label>
       <input
         id="vacation-days-input"
@@ -68,10 +68,10 @@
         class="border border-gray-300 rounded-lg px-4 py-3 w-full text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
         aria-required="true"
         aria-describedby="vacation-days-description"
-        aria-label="Number of vacation days available"
+        [attr.aria-label]="'input.vacationDaysAvailable' | translate"
       />
       <p id="vacation-days-description" class="text-xs text-gray-500 mt-1">
-        How many vacation days do you have?
+        {{ 'input.howManyDays' | translate }}
       </p>
     </div>
   </div>

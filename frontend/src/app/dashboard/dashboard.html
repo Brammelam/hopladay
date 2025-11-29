@@ -1,4 +1,8 @@
 <div class="min-h-screen flex flex-col items-center py-10 px-4" role="main">
+  <!-- Language Switcher - Fixed Top Right -->
+  <div class="fixed top-4 right-4 z-40">
+    <app-language-switcher></app-language-switcher>
+  </div>
   <!-- Sticky Minimal Stats Bar -->
   <nav
     *ngIf="plan && showStickyStats"
@@ -10,8 +14,8 @@
       <!-- Stats -->
       <div class="flex items-center gap-3" aria-label="Plan statistics">
         <span class="font-bold text-gray-900">{{ plan.usedDays }}/{{ plan.availableDays }}</span>
-        <span class="text-blue-600 font-semibold">{{ plan.totalDaysOff }} off</span>
-        <span *ngIf="getRemainingDays() > 0" class="text-gray-500">+{{ getRemainingDays() }} remaining</span>
+        <span class="text-blue-600 font-semibold">{{ plan.totalDaysOff }} {{ 'common.off' | translate }}</span>
+        <span *ngIf="getRemainingDays() > 0" class="text-gray-500">+{{ getRemainingDays() }} {{ 'common.remaining' | translate }}</span>
 
       </div>
       
@@ -24,14 +28,14 @@
         [attr.aria-label]="'Edit plan'"
         class="px-3 py-1 cursor-pointer font-medium text-white bg-primary-500 rounded-lg hover:bg-primary-600 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 transition-colors"
       >
-        Edit
+        {{ 'common.edit' | translate }}
       </button>
               <span
           *ngIf="editMode"
           class="px-2 py-0.5 bg-blue-100 text-blue-700 font-medium rounded"
-          aria-label="Editing mode active"
+          [attr.aria-label]="'dashboard.editingModeActive' | translate"
         >
-          Editing
+          {{ 'dashboard.editing' | translate }}
         </span>
     </div>
   </nav>
@@ -40,12 +44,12 @@
   <header class="mb-8 w-full max-w-5xl">
     <div class="flex flex-col md:items-center md:justify-between gap-4 mb-6">
       <!-- Branding -->
-      <div class="text-center md:text-left">
+      <div class="text-center">
         <span class="flex flex-row gap-2">
         <img src="assets/favicon.png" alt="Hopladay icon" class="h-8" />
         <h1 class="text-4xl font-bold text-gray-900 mb-1">Hopladay</h1>
         </span>
-        <p class="text-gray-600 text-sm">Plan your time off like a pro</p>
+        <p class="text-gray-600 text-sm">{{ 'app.tagline' | translate }}</p>
       </div>
 
       <!-- Account & Actions -->
@@ -53,20 +57,20 @@
         <!-- Account Pill -->
         <div *ngIf="isUserClaimed()" class="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
           <lucide-angular name="check" class="w-4 h-4 text-green-600 flex-shrink-0" aria-hidden="true"></lucide-angular>
-          <span class="text-sm font-medium text-gray-900 truncate max-w-[200px]" aria-label="Signed in as">{{ getUserEmail() }}</span>
+          <span class="text-sm font-medium text-gray-900 truncate max-w-[200px]" [attr.aria-label]="'dashboard.signedInAs' | translate">{{ getUserEmail() }}</span>
           <span
             *ngIf="isPremium"
             class="px-2 py-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded"
-            aria-label="Premium account"
+            [attr.aria-label]="'dashboard.premiumAccount' | translate"
           >
-            PREMIUM
+            {{ 'common.premium' | translate }}
           </span>
           <span
             *ngIf="!isPremium"
             class="px-2 py-0.5 bg-gray-200 text-gray-700 text-xs font-medium rounded"
-            aria-label="Free account"
+            [attr.aria-label]="'dashboard.freeAccount' | translate"
           >
-            FREE
+            {{ 'common.free' | translate }}
           </span>
         </div>
 
@@ -82,8 +86,8 @@
               class="min-h-[44px] px-4 py-2 bg-white text-gray-700 text-nowrap border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors flex items-center gap-2"
             >
               <lucide-angular name="folder" class="w-5 h-5" aria-hidden="true"></lucide-angular>
-              <span class="hidden sm:inline">My Plans</span>
-              <span class="sm:hidden">Plans</span>
+              <span class="hidden sm:inline">{{ 'dashboard.myPlans' | translate }}</span>
+              <span class="sm:hidden">{{ 'dashboard.plans' | translate }}</span>
             </button>
 
             <!-- Plans Dropdown -->
@@ -95,11 +99,11 @@
               [attr.aria-label]="'Saved plans menu'"
             >
               <div class="p-3 border-b border-gray-200 bg-gray-50">
-                <h3 class="text-sm font-semibold text-gray-900">Your Saved Plans</h3>
+                <h3 class="text-sm font-semibold text-gray-900">{{ 'dashboard.yourSavedPlans' | translate }}</h3>
               </div>
 
               <div *ngIf="savedPlans.length === 0" class="p-4 text-center text-sm text-gray-500" role="status">
-                No other plans found
+                {{ 'dashboard.noOtherPlans' | translate }}
               </div>
 
               <div *ngIf="savedPlans.length > 0" class="py-2" role="group">
@@ -146,27 +150,27 @@
             [attr.aria-label]="'Start a new plan'"
             class="min-h-[44px] px-4 py-2 bg-primary-600 text-white text-sm font-medium text-nowrap rounded-lg hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors flex items-center gap-2"
           >
-            <span>+ New Plan</span>
+            <span>{{ 'dashboard.newPlan' | translate }}</span>
           </button>
 
           <button
             *ngIf="!isPremium && isUserClaimed()"
             type="button"
             (click)="openPremiumModal()"
-            [attr.aria-label]="'Upgrade to Premium'"
+            [attr.aria-label]="'dashboard.upgradeToPremium' | translate"
             class="min-h-[44px] px-4 py-2 text-sm font-medium text-yellow-900 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg hover:from-yellow-500 hover:to-yellow-600 focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2 transition-colors font-bold"
           >
-            Upgrade
+            {{ 'dashboard.upgrade' | translate }}
           </button>
 
           <button
             *ngIf="isUserClaimed()"
             type="button"
             (click)="logout()"
-            [attr.aria-label]="'Log out'"
+            [attr.aria-label]="'dashboard.logout' | translate"
             class="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors"
           >
-            Logout
+            {{ 'dashboard.logout' | translate }}
           </button>
         </div>
       </div>
@@ -178,19 +182,19 @@
     <div
       class="relative bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6 md:p-8 shadow-sm"
     >
-      <h2 id="welcome-heading" class="text-xl font-semibold mb-3 text-gray-900">Welcome to Hopladay!</h2>
+      <h2 id="welcome-heading" class="text-xl font-semibold mb-3 text-gray-900">{{ 'app.welcome' | translate }}</h2>
       <p class="text-gray-700 leading-relaxed mb-3">
-        Start by filling in your details to generate your personal vacation plan.
+        {{ 'app.welcomeDescription' | translate }}
       </p>
       <p class="text-gray-700 leading-relaxed">
-        Already created one on another device?
+        {{ 'app.alreadyCreated' | translate }}
         <button
           type="button"
           (click)="openAuthModal('signin')"
-          [attr.aria-label]="'Sign in to access your saved plans'"
+          [attr.aria-label]="'auth.signInToAccess' | translate"
           class="inline-flex items-center gap-1 font-medium text-blue-600 hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 rounded transition-colors underline"
         >
-          Sign in here
+          {{ 'app.signIn' | translate }}
         </button>
       </p>
     </div>
@@ -204,7 +208,7 @@
         aria-hidden="true"
         >1</span
       >
-      Enter details
+      {{ 'steps.step1' | translate }}
     </h2>
 
     <app-holiday-input *ngIf="!plan && !isLoading"
@@ -227,7 +231,7 @@
         aria-hidden="true"
         >2</span
       >
-      Choose method
+      {{ 'steps.step2' | translate }}
     </h2>
 
     <div class="grid md:grid-cols-2 gap-4 md:gap-6">
@@ -257,12 +261,12 @@
             </svg>
           </div>
           <div class="flex-1">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Manual plan first</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ 'planning.manualPlan' | translate }}</h3>
             <p id="manual-description" class="text-gray-600 mb-4 text-sm leading-relaxed">
-              Start with an empty calendar, add your preferred vacation days, and let AI fill in the rest.
+              {{ 'planning.manualDescription' | translate }}
             </p>
             <span class="text-blue-600 font-medium inline-flex items-center text-sm">
-              Start planning
+              {{ 'planning.startPlanning' | translate }}
               <lucide-angular name="chevron-right" class="w-5 h-5 ml-1" aria-hidden="true"></lucide-angular>
             </span>
           </div>
@@ -282,7 +286,7 @@
           class="absolute top-3 right-3 bg-orange-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm"
           aria-label="Recommended option"
         >
-          Recommended
+          {{ 'planning.recommended' | translate }}
         </span>
 
         <div class="flex items-start gap-4">
@@ -291,13 +295,13 @@
           </div>
 
           <div class="flex-1">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Generate plan</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ 'planning.generatePlan' | translate }}</h3>
             <p id="ai-description" class="text-gray-600 mb-4 text-sm leading-relaxed">
-              Let us automatically maximize your time off and generate your perfect plan.
+              {{ 'planning.generateDescription' | translate }}
             </p>
 
             <span class="text-orange-600 font-medium inline-flex items-center text-sm">
-              Generate plan
+              {{ 'planning.generatePlan' | translate }}
               <lucide-angular name="chevron-right" class="w-5 h-5 ml-1" aria-hidden="true"></lucide-angular>
             </span>
           </div>
@@ -309,7 +313,7 @@
     <div *ngIf="!selectedCountry || !selectedYear" class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg" role="alert">
       <p class="text-sm text-yellow-800 text-center flex items-center justify-center gap-2">
         <lucide-angular name="alert-triangle" class="w-4 h-4" aria-hidden="true"></lucide-angular>
-        Select year and country before creating a plan.
+        {{ 'steps.selectYearCountry' | translate }}
       </p>
     </div>
   </section>
@@ -338,19 +342,19 @@
           />
         </svg>
         <div>
-          <h3 class="font-semibold text-gray-900 mb-1">Sync your plan</h3>
+          <h3 class="font-semibold text-gray-900 mb-1">{{ 'plan.syncPlan' | translate }}</h3>
           <p class="text-sm text-gray-600">
-            Access your plans on any device with a passkey or email.
+            {{ 'plan.syncDescription' | translate }}
           </p>
         </div>
       </div>
       <button
         type="button"
         (click)="openAuthModal('register')"
-        [attr.aria-label]="'Sync plan to your account'"
+        [attr.aria-label]="'plan.syncToAccount' | translate"
         class="min-h-[44px] px-4 py-2 text-gray-700 bg-white border border-gray-300 text-sm rounded-lg font-medium hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors whitespace-nowrap"
       >
-        Sync now
+        {{ 'plan.syncNow' | translate }}
       </button>
     </div>
 
@@ -370,7 +374,7 @@
           <dt class="sr-only">Vacation days used</dt>
           <dd class="flex items-center gap-2 text-gray-600">
             <lucide-angular name="calendar" class="w-5 h-5 text-gray-400" aria-hidden="true"></lucide-angular>
-            <span>{{ plan.usedDays }}/{{ plan.availableDays }} vacation days</span>
+            <span>{{ plan.usedDays }}/{{ plan.availableDays }} {{ 'planning.vacationDaysUsed' | translate }}</span>
           </dd>
         </div>
         <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
@@ -383,7 +387,7 @@
           class="flex cursor-pointer items-center gap-2 text-sm px-2 py-1 rounded-md hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <lucide-angular name="zap" class="w-5 h-5 text-gray-400" aria-hidden="true"></lucide-angular>
-          <span class="text-gray-600">Strategy:</span>
+          <span class="text-gray-600">{{ 'planning.strategy' | translate }}</span>
           <span class="font-medium text-gray-900 capitalize">{{ getPreferenceLabel(plan.preference || 'balanced') }}</span>
           <lucide-angular name="chevron-right" class="w-4 h-4 text-gray-400" aria-hidden="true"></lucide-angular>
         </button>
@@ -403,7 +407,7 @@
             class="min-h-[44px] px-4 py-2 text-sm font-medium bg-primary-600 text-white text-nowrap rounded-lg hover:bg-primary-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <lucide-angular name="pencil" class="w-5 h-5 flex-shrink-0" aria-hidden="true"></lucide-angular>
-            <span>Edit plan</span>
+            <span>{{ 'dashboard.editPlan' | translate }}</span>
           </button>
 
           <button
@@ -411,12 +415,12 @@
             type="button"
             (click)="toggleEditMode()"
             [disabled]="isLoading"
-            [attr.aria-label]="'Finish editing plan'"
+            [attr.aria-label]="'dashboard.editPlan' | translate"
             [attr.aria-disabled]="isLoading"
             class="min-h-[44px] px-4 py-2 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <lucide-angular name="check" class="w-5 h-5 flex-shrink-0" aria-hidden="true"></lucide-angular>
-            <span>Done</span>
+            <span>{{ 'common.done' | translate }}</span>
           </button>
 
           <!-- Optimize remaining: secondary/ghost -->
@@ -425,12 +429,12 @@
             type="button"
             (click)="optimizeRemaining()"
             [disabled]="isLoading"
-            [attr.aria-label]="'Optimize ' + getRemainingDays() + ' remaining days'"
+            [attr.aria-label]="translationService.translate('planning.optimizeRemainingDays', { count: getRemainingDays() })"
             [attr.aria-disabled]="isLoading"
             class="min-h-[44px] px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <lucide-angular name="sparkles" class="w-5 h-5 flex-shrink-0" aria-hidden="true"></lucide-angular>
-            <span>Optimize {{ getRemainingDays() }}</span>
+            <span>{{ 'planning.optimizeRemaining' | translate: { count: getRemainingDays() } }}</span>
           </button>
         
           <!-- Change strategy -->
@@ -450,7 +454,7 @@
               class="min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <lucide-angular name="download" class="w-5 h-5 flex-shrink-0" aria-hidden="true"></lucide-angular>
-              <span>Export</span>
+              <span>{{ 'export.export' | translate }}</span>
               <span
                 *ngIf="!isPremium"
                 class="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded"
@@ -550,7 +554,7 @@
           class="min-h-[44px] min-w-[50%] px-4 py-2 text-sm text-center font-medium border-b-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-t-lg flex items-center gap-2"
         >
           <lucide-angular name="calendar" class="w-5 h-5" aria-hidden="true"></lucide-angular>
-          <span>Calendar</span>
+          <span>{{ 'calendar.calendar' | translate }}</span>
         </button>
         <button
           type="button"
@@ -568,7 +572,7 @@
           class="min-h-[44px] w-[100%] px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-t-lg flex items-center gap-2"
         >
           <lucide-angular name="clipboard" class="w-5 h-5" aria-hidden="true"></lucide-angular>
-          <span>Suggestions</span>
+          <span>{{ 'calendar.suggestions' | translate }}</span>
           <span
             *ngIf="plan?.suggestions?.length"
             class="ml-1 px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-700"
@@ -619,7 +623,7 @@
   <!-- Loading -->
   <div *ngIf="isLoading" class="mt-10 flex items-center justify-center gap-3 text-blue-600" role="status" aria-live="polite">
     <lucide-angular name="loader" class="animate-spin h-6 w-6" aria-hidden="true"></lucide-angular>
-    <span class="font-medium">Generating plan...</span>
+    <span class="font-medium">{{ 'planning.generatingPlan' | translate }}</span>
   </div>
 
   <!-- Preference Selector Modal -->
@@ -638,14 +642,14 @@
     >
       <div class="flex items-start justify-between mb-6">
         <div>
-          <h2 id="preference-modal-title" class="text-2xl font-bold text-gray-900 mb-2">Choose Strategy</h2>
+          <h2 id="preference-modal-title" class="text-2xl font-bold text-gray-900 mb-2">{{ 'strategy.chooseStrategy' | translate }}</h2>
           <p id="preference-modal-description" class="text-sm text-gray-600">
             {{
               preferenceSelectionFor === 'ai'
-                ? 'How should AI generate your vacation plan?'
+                ? ('strategy.howShouldAI' | translate)
                 : preferenceSelectionFor === 'regenerate'
-                ? 'Try a different strategy and regenerate your plan'
-                : 'How should AI optimize your remaining vacation days?'
+                ? ('strategy.regenerateStrategy' | translate)
+                : ('strategy.optimizeStrategy' | translate)
             }}
           </p>
         </div>
@@ -665,7 +669,7 @@
           type="button"
           (click)="selectPreference(pref.value)"
           [attr.aria-checked]="selectedPreference === pref.value"
-          [attr.aria-label]="pref.label + ': ' + pref.description + (pref.premium && !isPremium ? ' (Premium feature)' : '')"
+          [attr.aria-label]="(pref.labelKey | translate) + ': ' + (pref.descriptionKey | translate) + (pref.premium && !isPremium ? (' (' + ('common.premium' | translate) + ')') : '')"
           [class.border-blue-500]="selectedPreference === pref.value && (!pref.premium || isPremium)"
           [class.bg-blue-50]="selectedPreference === pref.value && (!pref.premium || isPremium)"
           [class.border-gray-200]="selectedPreference !== pref.value"
@@ -677,16 +681,16 @@
           <div class="flex items-start justify-between gap-3">
             <div class="flex-1">
               <div class="flex items-center gap-2 mb-1">
-                <div class="font-semibold text-gray-900">{{ pref.label }}</div>
+                <div class="font-semibold text-gray-900">{{ pref.labelKey | translate }}</div>
                 <span
                   *ngIf="pref.premium"
                   class="px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold rounded"
-                  aria-label="Premium feature"
+                  [attr.aria-label]="'common.premium' | translate"
                 >
-                  PREMIUM
+                  {{ 'common.premium' | translate }}
                 </span>
               </div>
-              <div class="text-sm text-gray-600">{{ pref.description }}</div>
+              <div class="text-sm text-gray-600">{{ pref.descriptionKey | translate }}</div>
             </div>
             <div
               *ngIf="selectedPreference === pref.value && (!pref.premium || isPremium)"
@@ -711,7 +715,7 @@
           [attr.aria-label]="'Cancel strategy selection'"
           class="min-h-[44px] flex-1 px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors"
         >
-          Cancel
+          {{ 'common.cancel' | translate }}
         </button>
         <button
           type="button"
@@ -721,10 +725,10 @@
         >
           {{
             preferenceSelectionFor === 'ai' 
-              ? 'Generate Plan' 
+              ? ('strategy.generatePlan' | translate)
               : preferenceSelectionFor === 'regenerate'
-              ? 'Regenerate Plan'
-              : 'Optimize Remaining'
+              ? ('strategy.regeneratePlan' | translate)
+              : ('strategy.optimizeRemaining' | translate)
           }}
         </button>
       </div>
@@ -758,7 +762,7 @@
       (click)="$event.stopPropagation()"
     >
       <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-        <h2 class="text-2xl font-bold text-gray-900">Upgrade to Premium</h2>
+        <h2 class="text-2xl font-bold text-gray-900">{{ 'premium.upgradeToPremium' | translate }}</h2>
         <button
           type="button"
           (click)="closePremiumModal()"
@@ -772,44 +776,44 @@
         <!-- Pricing -->
         <div class="text-center mb-8">
           <div class="inline-block bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 px-4 py-2 rounded-full font-bold text-lg mb-4">
-            $5
+            {{ 'premium.price' | translate }}
           </div>
-          <p class="text-gray-600">Unlock all Premium features. Forever.</p>
+          <p class="text-gray-600">{{ 'premium.priceDescription' | translate }}</p>
         </div>
 
         <!-- Features -->
         <div class="space-y-4 mb-8">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Premium Features:</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ 'premium.premiumFeatures' | translate }}</h3>
           
           <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
             <lucide-angular name="check" class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5"></lucide-angular>
             <div>
-              <div class="font-semibold text-gray-900">Advanced Planning Strategies</div>
-              <div class="text-sm text-gray-600">Long weekends, summer focus, spread out, and more</div>
+              <div class="font-semibold text-gray-900">{{ 'premium.advancedStrategies' | translate }}</div>
+              <div class="text-sm text-gray-600">{{ 'premium.advancedStrategiesDesc' | translate }}</div>
             </div>
           </div>
 
           <div class="flex items-start gap-3 p-4 bg-green-50 rounded-lg">
             <lucide-angular name="check" class="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5"></lucide-angular>
             <div>
-              <div class="font-semibold text-gray-900">Unlimited Suggestions</div>
-              <div class="text-sm text-gray-600">Get all optimized vacation suggestions, not just 3</div>
+              <div class="font-semibold text-gray-900">{{ 'premium.unlimitedSuggestions' | translate }}</div>
+              <div class="text-sm text-gray-600">{{ 'premium.unlimitedSuggestionsDesc' | translate }}</div>
             </div>
           </div>
 
           <div class="flex items-start gap-3 p-4 bg-purple-50 rounded-lg">
             <lucide-angular name="check" class="w-6 h-6 text-purple-600 flex-shrink-0 mt-0.5"></lucide-angular>
             <div>
-              <div class="font-semibold text-gray-900">Rich Insights & Analysis</div>
-              <div class="text-sm text-gray-600">Detailed ROI analysis, efficiency ratings, and intelligent descriptions</div>
+              <div class="font-semibold text-gray-900">{{ 'premium.richInsights' | translate }}</div>
+              <div class="text-sm text-gray-600">{{ 'premium.richInsightsDesc' | translate }}</div>
             </div>
           </div>
 
           <div class="flex items-start gap-3 p-4 bg-red-50 rounded-lg">
             <lucide-angular name="check" class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5"></lucide-angular>
             <div>
-              <div class="font-semibold text-gray-900">Export to Calendar & PDF</div>
-              <div class="text-sm text-gray-600">Download your plan as .ics or PDF files</div>
+              <div class="font-semibold text-gray-900">{{ 'premium.exportCalendar' | translate }}</div>
+              <div class="text-sm text-gray-600">{{ 'premium.exportCalendarDesc' | translate }}</div>
             </div>
           </div>
         </div>
@@ -821,7 +825,7 @@
             (click)="closePremiumModal()"
             class="flex-1 px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
           >
-            Maybe Later
+            {{ 'premium.maybeLater' | translate }}
           </button>
           <button
             type="button"
@@ -829,16 +833,16 @@
             [disabled]="isProcessingPayment"
             class="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <span *ngIf="!isProcessingPayment">Upgrade Now - $5</span>
+            <span *ngIf="!isProcessingPayment">{{ 'premium.upgradeNow' | translate }}</span>
             <span *ngIf="isProcessingPayment" class="flex items-center gap-2">
               <lucide-angular name="loader" class="animate-spin h-5 w-5"></lucide-angular>
-              Processing...
+              {{ 'premium.processing' | translate }}
             </span>
           </button>
         </div>
 
         <p class="text-xs text-gray-500 text-center mt-4">
-          Secure payment powered by Stripe. Cancel anytime.
+          {{ 'premium.securePayment' | translate }}
         </p>
         <div class="text-center mt-4">
           <a
@@ -846,7 +850,7 @@
             (click)="closePremiumModal()"
             class="text-sm text-blue-600 hover:text-blue-700 underline"
           >
-            Learn more about secure payments →
+            {{ 'premium.learnMorePayments' | translate }}
           </a>
         </div>
       </div>
@@ -857,19 +861,17 @@
 <!-- Footer with Payment Info Link -->
 <footer class="mt-12 py-6 border-t border-gray-200 text-center">
   <div class="max-w-5xl mx-auto px-4">
-    <div class="flex flex-col md:flex-row items-center justify-center text-gray-600">
-        <span class="text-xs md:text-sm text-center">Payments processed by</span>
-
-          <!-- Adjust path to match your actual Angular assets setup -->
-          <img src="assets/stripe_logo.svg" alt="Stripe" class="h-6" />
-
-      </div>
+    <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-gray-600 mb-4">
+      <span class="text-xs md:text-sm text-center">Payments processed by</span>
+      <!-- Adjust path to match your actual Angular assets setup -->
+      <img src="assets/stripe_logo.svg" alt="Stripe" class="h-6" />
+    </div>
     <p class="text-xs text-gray-500">
       <a
         [routerLink]="['/payment/info']"
         class="text-gray-500 hover:text-gray-700 underline"
       >
-        Learn more about payment security
+        {{ 'footer.learnMoreSecurity' | translate }}
       </a>
     </p>
   </div>

@@ -14,6 +14,9 @@ import { ToastService } from '../services/toast.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal';
 import { ExportService } from '../services/export.service';
 import { SEOService } from '../services/seo.service';
+import { TranslationService } from '../services/translation.service';
+import { TranslatePipe } from '../shared/translate.pipe';
+import { LanguageSwitcherComponent } from '../shared/language-switcher';
 
 @Component({
   selector: 'app-dashboard',
@@ -28,6 +31,8 @@ import { SEOService } from '../services/seo.service';
     HolidaySummaryComponent,
     AuthModalComponent,
     LucideAngularModule,
+    TranslatePipe,
+    LanguageSwitcherComponent,
   ]
 })
 export class DashboardComponent implements OnInit, OnDestroy {
@@ -50,11 +55,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   preferenceSelectionFor: 'ai' | 'optimize' | 'regenerate' = 'ai';
   selectedPreference = 'balanced';
   preferences = [
-    { value: 'balanced', label: 'Balanced', description: 'Mix of short and long breaks', premium: false },
-    { value: 'many_long_weekends', label: 'Long weekends', description: '3-4 day breaks throughout the year', premium: true },
-    { value: 'few_long_vacations', label: 'Long vacations', description: 'Extended 7-14 day vacations', premium: true },
-    { value: 'summer_vacation', label: 'Summer focus', description: 'Maximize summer time off', premium: true },
-    { value: 'spread_out', label: 'Spread out', description: 'Evenly distributed throughout year', premium: true },
+    { value: 'balanced', labelKey: 'strategy.balanced', descriptionKey: 'strategy.balancedDesc', premium: false },
+    { value: 'many_long_weekends', labelKey: 'strategy.longWeekends', descriptionKey: 'strategy.longWeekendsDesc', premium: true },
+    { value: 'few_long_vacations', labelKey: 'strategy.longVacations', descriptionKey: 'strategy.longVacationsDesc', premium: true },
+    { value: 'summer_vacation', labelKey: 'strategy.summerFocus', descriptionKey: 'strategy.summerFocusDesc', premium: true },
+    { value: 'spread_out', labelKey: 'strategy.spreadOut', descriptionKey: 'strategy.spreadOutDesc', premium: true },
   ];
 
   getAvailablePreferences() {
@@ -100,7 +105,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private exportService: ExportService,
     private router: Router,
     private route: ActivatedRoute,
-    private seoService: SEOService
+    private seoService: SEOService,
+    public translationService: TranslationService
   ) {
     this.scrollHandler = () => {
       const scrolled = window.scrollY > 400;
@@ -229,7 +235,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Show preference selector for AI plan
   onPlan() {
     if (!this.validateInputs()) return;
-    // Reset to default preference for new AI plan
     this.selectedPreference = 'balanced';
     this.preferenceSelectionFor = 'ai';
     this.showPreferenceSelector = true;
@@ -324,7 +329,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         next: (updatedPlan) => {
           console.log(`Plan regenerated from API, preference: ${updatedPlan.preference}`);
           this.plan = { ...updatedPlan };
-          this.toast(`Plan regenerated with ${this.getPreferenceLabel(updatedPlan.preference)} strategy!`);
+          this.toast(this.translationService.translate('toast.planRegenerated', { strategy: this.getPreferenceLabel(updatedPlan.preference) }));
           this.cdr.detectChanges();
         },
         error: (err) => {
@@ -337,17 +342,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Get human-readable preference label
   getPreferenceLabel(value: string): string {
-    const pref = this.preferences.find(p => p.value === value);
-    return pref ? pref.label : value.replace(/_/g, ' ');
+    const keyMap: Record<string, string> = {
+      'balanced': 'strategy.balanced',
+      'many_long_weekends': 'strategy.longWeekends',
+      'few_long_vacations': 'strategy.longVacations',
+      'summer_vacation': 'strategy.summerFocus',
+      'spread_out': 'strategy.spreadOut'
+    };
+    const key = keyMap[value];
+    return key ? this.translationService.translate(key) : value.replace(/_/g, ' ');
   }
 
   private validateInputs(): boolean {
     if (!this.isUserReady) {
-      this.toast('Initializing session, please wait...');
+      this.toast(this.translationService.translate('toast.initializing'));
       return false;
     }
     if (!this.selectedCountry || !this.selectedYear || !this.availableDays) {
-      this.toast('Please select year, country, and available days first.');
+      this.toast(this.translationService.translate('toast.selectDetails'));
       return false;
     }
     return true;
@@ -394,7 +406,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       if (this.isUserClaimed()) this.loadSavedPlans();
 
-      this.toast(`Plan generated with ${this.getPreferenceLabel(plan.preference)} strategy!`, 'success');
+      this.toast(this.translationService.translate('toast.planGenerated', { strategy: this.getPreferenceLabel(plan.preference) }), 'success');
       this.cdr.detectChanges();
     });
 }
@@ -410,7 +422,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const remaining = this.getRemainingDays();
     if (remaining <= 0) {
-      this.toast('No remaining vacation days to optimize.');
+      this.toast(this.translationService.translate('planning.noRemainingDays'));
       return;
     }
 
@@ -436,7 +448,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.plan = { ...updatedPlan };
         this.isLoading = false;
         this.editMode = false;
-        this.toast(`Optimized with ${this.getPreferenceLabel(updatedPlan.preference)} strategy!`);
+        this.toast(this.translationService.translate('toast.optimized', { strategy: this.getPreferenceLabel(updatedPlan.preference) }));
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -519,7 +531,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   exportToICS(): void {
     if (!this.isPremium) {
-      this.toast('Export functionality is available for Premium users only. Upgrade to unlock calendar exports!', 'info');
+      this.toast(this.translationService.translate('toast.exportPremiumOnly'), 'info');
       this.showExportMenu = false;
       return;
     }
@@ -529,13 +541,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     const countryName = this.getCountryName(this.selectedCountry);
     this.exportService.exportToICS(this.plan, countryName);
-    this.toast('Calendar file downloaded! Import it into Google Calendar, Outlook, or Apple Calendar.');
+      this.toast(this.translationService.translate('export.exportDownloaded'));
     this.showExportMenu = false;
   }
 
   exportToPDF(): void {
     if (!this.isPremium) {
-      this.toast('Export functionality is available for Premium users only. Upgrade to unlock PDF exports!', 'info');
+      this.toast(this.translationService.translate('toast.exportPremiumPDF'), 'info');
       this.showExportMenu = false;
       return;
     }
@@ -711,7 +723,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   this.authMethod = 'passkey';
 
   // Let the user know
-  this.toast('You have been logged out.');
+      this.toast(this.translationService.translate('toast.loggedOut'));
 
   // Trigger UI refresh
   this.cdr.detectChanges();
@@ -827,7 +839,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
               if (response.user) {
                 this.userService.setCurrentUser(response.user);
                 this.isPremium = true;
-                this.toast('Welcome to Premium! Your account has been upgraded.', 'success');
+                this.toast(this.translationService.translate('premium.welcomePremium'), 'success');
                 // Clear query params
                 this.router.navigate([], { queryParams: {} });
                 this.cdr.detectChanges();

@@ -1,12 +1,13 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '../shared/translate.pipe';
 
 @Component({
   selector: 'app-holiday-input',
   standalone: true,
   templateUrl: './holiday-input.html',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
 })
 export class HolidayInputComponent implements OnInit, OnChanges {
   @Input() country?: string;
