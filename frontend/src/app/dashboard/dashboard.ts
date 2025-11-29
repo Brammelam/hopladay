@@ -119,8 +119,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.seoService.updateSEO({
-      title: 'Hopladay - Plan Your Perfect Year',
-      description: 'Create the perfect vacation plan with Hopladay. Maximize your days off with our smart algorithms. Optimize for long weekends, summer vacations, or extended breaks. Free holiday planner and vacation app.',
+      title: 'Hopladay - Maximize your days off',
+      description: 'Hopladay finds the most efficient way to book time off by combining national holidays and weekends. Turn 3 vacation days into 8–10 days off. Free vacation optimizer, multi-country support',
       keywords: 'holiday planner, vacation app, vacation planner, maximize vacation days, optimize holidays, vacation scheduler, holiday calendar, time off planner, vacation planning tool, holiday optimizer, vacation days calculator, AI vacation planner',
       url: 'https://hopladay.com/'
     });
@@ -317,7 +317,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     console.log(`Regenerating with strategy: ${this.selectedPreference}`);
 
     // Use regenerate endpoint which keeps manual days and regenerates AI suggestions
-    this.api.regeneratePlanWithStrategy(this.plan._id, this.selectedPreference)
+    this.api.regeneratePlanWithStrategy(this.plan._id, this.selectedPreference, this.translationService.currentLang())
       .pipe(
         finalize(() => {
           // Ensure isLoading is always reset, even if observable doesn't complete normally
@@ -382,7 +382,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       switchMap((holidayData) => {
         this.holidays = [...holidayData];
         console.log(`Calling API createPlan with preference: ${preference}`);
-        return this.api.createPlan(userId, year, country, availableDays, preference, generateAI);
+        return this.api.createPlan(userId, year, country, availableDays, preference, generateAI, this.translationService.currentLang());
       }),
       catchError((err) => {
         console.error('Failed during plan generation pipeline:', err);
@@ -442,7 +442,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     console.log(`Optimizing with preference: ${this.selectedPreference}`);
 
-    this.api.optimizeRemainingDays(this.plan._id, this.selectedPreference).subscribe({
+    this.api.optimizeRemainingDays(this.plan._id, this.selectedPreference, this.translationService.currentLang()).subscribe({
       next: (updatedPlan) => {
         console.log(`Plan updated from API, preference: ${updatedPlan.preference}`);
         this.plan = { ...updatedPlan };
@@ -871,5 +871,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   trackByPreference(index: number, pref: any): string {
     return pref.value || index;
+  }
+
+  getLocalizedRoute(route: string): string[] {
+    const currentLang = this.translationService.currentLang();
+    return [`/${currentLang}${route}`];
   }
 }

@@ -28,7 +28,9 @@ export class TranslationService {
   setLanguage(lang: Language): void {
     this.currentLanguage.set(lang);
     this.updateHtmlLang(lang);
-    localStorage.setItem('hopladay_lang', lang);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('hopladay_lang', lang);
+    }
   }
 
   loadTranslations(lang: Language, translations: Translations): void {
@@ -74,14 +76,18 @@ export class TranslationService {
       return;
     }
 
-    const stored = localStorage.getItem('hopladay_lang') as Language;
+    const stored = typeof window !== 'undefined' && window.localStorage 
+      ? localStorage.getItem('hopladay_lang') as Language 
+      : null;
     if (stored && (stored === 'en' || stored === 'no' || stored === 'nl')) {
       this.setLanguage(stored);
       this.redirectToLanguage(stored);
       return;
     }
 
-    const browserLang = navigator.language.split('-')[0];
+    const browserLang = typeof navigator !== 'undefined' 
+      ? navigator.language.split('-')[0] 
+      : 'en';
     if (browserLang === 'no' || browserLang === 'nb' || browserLang === 'nn') {
       this.setLanguage('no');
       this.redirectToLanguage('no');

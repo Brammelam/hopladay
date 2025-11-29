@@ -14,9 +14,9 @@ export interface SEOData {
   providedIn: 'root'
 })
 export class SEOService {
-  private defaultTitle = 'Hopladay - Smart Holiday Planner & Vacation App | Maximize Your Days Off';
+  private defaultTitle = 'Hopladay - Maximize your days off';
   private defaultDescription = 'Hopladay is the ultimate holiday planner and vacation app. Plan your holidays, maximize vacation days, and optimize your time off with AI-powered scheduling.';
-  private defaultImage = 'https://hopladay.com/assets/og-image.png';
+  private defaultImage = 'https://hopladay.com/assets/favicon.png';
   private baseUrl = 'https://hopladay.com';
 
   constructor(
@@ -26,7 +26,7 @@ export class SEOService {
 
   updateSEO(data: SEOData): void {
     const title = data.title 
-      ? `${data.title} | Hopladay - Holiday Planner & Vacation App`
+      ? `${data.title}`
       : this.defaultTitle;
     
     const description = data.description || this.defaultDescription;
@@ -49,14 +49,16 @@ export class SEOService {
     this.meta.updateTag({ name: 'twitter:image', content: image });
     this.meta.updateTag({ rel: 'canonical', href: url });
 
-    const link = document.querySelector('link[rel="canonical"]');
-    if (link) {
-      link.setAttribute('href', url);
-    } else {
-      const canonicalLink = document.createElement('link');
-      canonicalLink.setAttribute('rel', 'canonical');
-      canonicalLink.setAttribute('href', url);
-      document.head.appendChild(canonicalLink);
+    if (typeof document !== 'undefined') {
+      const link = document.querySelector('link[rel="canonical"]');
+      if (link) {
+        link.setAttribute('href', url);
+      } else {
+        const canonicalLink = document.createElement('link');
+        canonicalLink.setAttribute('rel', 'canonical');
+        canonicalLink.setAttribute('href', url);
+        document.head.appendChild(canonicalLink);
+      }
     }
   }
 

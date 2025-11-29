@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../services/api';
+import { TranslationService } from '../services/translation.service';
 
 @Component({
   selector: 'app-unsubscribe',
@@ -16,6 +17,7 @@ export class UnsubscribeComponent implements OnInit {
   success: boolean = false;
   error: string = '';
   message: string = '';
+  private translationService = inject(TranslationService);
 
   constructor(
     private route: ActivatedRoute,
@@ -74,7 +76,8 @@ export class UnsubscribeComponent implements OnInit {
   }
 
   goToDashboard() {
-    this.router.navigate(['/']);
+    const currentLang = this.translationService.currentLang();
+    this.router.navigate([`/${currentLang}`]);
   }
 }
 

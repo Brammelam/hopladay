@@ -42,9 +42,10 @@ export class ApiService {
     country: string,
     availableDays: number,
     preference: string,
-    generateAI: boolean = true
+    generateAI: boolean = true,
+    lang: string = 'en'
   ): Observable<any> {
-    return this.http.post(`${this.baseUrl}/plans`, { userId, year, country, availableDays, preference, generateAI });
+    return this.http.post(`${this.baseUrl}/plans`, { userId, year, country, availableDays, preference, generateAI, lang });
   }
 
   /**
@@ -102,12 +103,12 @@ export class ApiService {
   /**
    * Optimize remaining vacation days (keeps existing suggestions, fills gaps)
    */
-  optimizeRemainingDays(planId: string, preference: string = 'balanced'): Observable<any> {
-    return this.http.post(`${this.baseUrl}/plans/${planId}/optimize-remaining`, { preference });
+  optimizeRemainingDays(planId: string, preference: string = 'balanced', lang: string = 'en'): Observable<any> {
+    return this.http.post(`${this.baseUrl}/plans/${planId}/optimize-remaining`, { preference, lang });
   }
 
-  regeneratePlanWithStrategy(planId: string, preference: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/plans/${planId}/regenerate`, { preference });
+  regeneratePlanWithStrategy(planId: string, preference: string, lang: string = 'en'): Observable<any> {
+    return this.http.post(`${this.baseUrl}/plans/${planId}/regenerate`, { preference, lang });
   }
 
   /**

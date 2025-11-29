@@ -5,6 +5,7 @@ import {
   parseISODate,
   normalizeSuggestionDates,
 } from "../utils/dateUtils.js";
+import { getTranslations } from "./translations.js";
 
 /** ---------- small helpers ---------- */
 
@@ -216,7 +217,12 @@ function findHolidaysInRange(startDate, endDate, holidays, holidaySet) {
   for (const h of holidays) {
     const hDate = parseISODate(h.date);
     if (hDate >= expandedStart && hDate <= expandedEnd) {
-      result.push({ ...h, parsedDate: hDate });
+      // Preserve all holiday data including localName for native language support
+      result.push({ 
+        ...h, 
+        parsedDate: hDate,
+        localName: h.localName || h.name, // Ensure localName is always available
+      });
     }
   }
   
@@ -225,8 +231,13 @@ function findHolidaysInRange(startDate, endDate, holidays, holidaySet) {
 
 /**
  * Generate intelligent description for a vacation selection
+ * @param {object} selection - The vacation selection
+ * @param {array} holidays - Array of holiday objects with localName
+ * @param {Set} holidaySet - Set of holiday date strings
+ * @param {string} preference - Planning preference
+ * @param {string} lang - Language code ('en', 'no', 'nl')
  */
-function generateDescription(selection, holidays, holidaySet, preference) {
+function generateDescription(selection, holidays, holidaySet, preference, lang = 'en') {
   const { startDate, endDate, vacationDaysUsed, totalDaysOff, meta } = selection;
   const roi = totalDaysOff / vacationDaysUsed;
   
@@ -236,80 +247,104 @@ function generateDescription(selection, holidays, holidaySet, preference) {
     h => h.parsedDate >= startDate && h.parsedDate <= endDate
   );
   
-  // Build holiday names string
+  // Get translations for the specified language
+  const t = getTranslations(lang);
+  
+  // Build holiday names string using localName for native language support
+  // localName is already in the correct language from the API, no translation needed
   const getHolidayNames = (hols) => {
     if (hols.length === 0) return "";
-    if (hols.length === 1) return hols[0].name || hols[0].localName;
-    if (hols.length === 2) return `${hols[0].name || hols[0].localName} and ${hols[1].name || hols[1].localName}`;
-    return `${hols[0].name || hols[0].localName} and ${hols.length - 1} other holiday${hols.length > 2 ? 's' : ''}`;
+    // Always prefer localName as it's in the native language of the country
+    const holidayName = (h) => h.localName || h.name;
+    if (hols.length === 1) return holidayName(hols[0]);
+    if (hols.length === 2) {
+      return `${holidayName(hols[0])} ${t.and} ${holidayName(hols[1])}`;
+    }
+    return `${holidayName(hols[0])} ${t.and} ${hols.length - 1} ${t.otherHoliday(hols.length - 1)}`;
   };
   
-  // Determine strategy type
-  let strategy = "Bridge";
+  // Determine strategy type (translated)
+  let strategy = t.strategyBridge;
   let reason = "";
   
   if (meta?.kind === "gap") {
-    strategy = "Bridge";
+    strategy = t.strategyBridge;
     if (holidaysInRange.length >= 2) {
-      reason = `Connects ${getHolidayNames(holidaysInRange)} into one continuous break`;
+      reason = t.connects(getHolidayNames(holidaysInRange));
     } else if (nearbyHolidays.length >= 2) {
       const before = nearbyHolidays.filter(h => h.parsedDate < startDate);
       const after = nearbyHolidays.filter(h => h.parsedDate > endDate);
       if (before.length && after.length) {
-        reason = `Bridges ${getHolidayNames([before[before.length - 1]])} to ${getHolidayNames([after[0]])}`;
+        reason = t.bridges(
+          getHolidayNames([before[before.length - 1]]),
+          getHolidayNames([after[0]])
+        );
       } else {
-        reason = `Creates a ${totalDaysOff}-day break`;
+        reason = t.createsBreak(totalDaysOff);
       }
     } else {
-      reason = `Turns a weekend into ${totalDaysOff} days off`;
+      reason = t.turnsWeekend(totalDaysOff);
     }
   } else if (meta?.kind === "extend-before") {
-    strategy = "Extend";
+    strategy = t.strategyExtend;
     if (holidaysInRange.length > 0) {
-      reason = `Adds days before ${getHolidayNames([holidaysInRange[0]])} for a longer break`;
+      reason = t.addsDaysBefore(getHolidayNames([holidaysInRange[0]]));
     } else {
-      reason = `Extends a holiday weekend into ${totalDaysOff} days off`;
+      reason = t.extendsHolidayWeekend(totalDaysOff);
     }
   } else if (meta?.kind === "extend-after") {
-    strategy = "Extend";
+    strategy = t.strategyExtend;
     if (holidaysInRange.length > 0) {
-      reason = `Adds days after ${getHolidayNames([holidaysInRange[holidaysInRange.length - 1]])} for a longer break`;
+      reason = t.addsDaysAfter(getHolidayNames([holidaysInRange[holidaysInRange.length - 1]]));
     } else {
-      reason = `Extends a holiday weekend into ${totalDaysOff} days off`;
+      reason = t.extendsHolidayWeekend(totalDaysOff);
+    }
+  } else if (meta?.kind === "filler") {
+    strategy = t.strategyOptimize;
+    // Get day name in the requested language
+    const dayNameMap = {
+      en: { weekday: "long", locale: "en-US" },
+      no: { weekday: "long", locale: "nb-NO" },
+      nl: { weekday: "long", locale: "nl-NL" },
+    };
+    const options = dayNameMap[lang] || dayNameMap.en;
+    const dayName = startDate.toLocaleDateString(options.locale, { weekday: "long" });
+    if (roi >= 3) {
+      reason = t.highlyEfficient(dayName, totalDaysOff);
+    } else {
+      reason = t.addsDayOff(dayName, totalDaysOff);
     }
   } else {
-    // Filler day
-    strategy = "Optimize";
-    const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][startDate.getDay()];
-    if (roi >= 4) {
-      reason = `Highly efficient: Taking ${dayName} off gives you ${totalDaysOff} consecutive days`;
-    } else {
-      reason = `Adds a ${dayName} off for a ${totalDaysOff}-day break`;
-    }
+    strategy = t.strategyVacation;
+    reason = t.createsBreak(totalDaysOff);
   }
   
-  // Add ROI context
+  // Add ROI context (translated)
   let efficiency = "";
   if (roi >= 5) {
-    efficiency = " (Exceptional efficiency)";
+    efficiency = t.exceptionalEfficiency;
   } else if (roi >= 4) {
-    efficiency = " (Great value)";
+    efficiency = t.greatValue;
   } else if (roi >= 3) {
-    efficiency = " (Good value)";
+    efficiency = t.goodValue;
   }
   
-  // Add preference-specific context
+  // Add preference-specific context (translated)
   let prefContext = "";
   if (preference === "summer_vacation" && isSummerMonth(startDate)) {
-      prefContext = " Summer period";
+      prefContext = t.summerPeriod;
   } else if (preference === "few_long_vacations" && totalDaysOff >= 10) {
-      prefContext = " Extended vacation";
+      prefContext = t.extendedVacation;
   } else if (preference === "many_long_weekends" && vacationDaysUsed <= 2 && totalDaysOff >= 3) {
-      prefContext = " Long weekend";
+      prefContext = t.longWeekend;
   }
   
+  // Build title with translated strings
+  const dayWord = vacationDaysUsed === 1 ? t.day : t.days;
+  const daysOffWord = t.daysOff;
+  
   return {
-    title: `${strategy}: ${vacationDaysUsed} day${vacationDaysUsed > 1 ? 's' : ''} → ${totalDaysOff} days off${efficiency}`,
+    title: `${strategy}: ${vacationDaysUsed} ${dayWord} → ${totalDaysOff} ${daysOffWord}${efficiency}`,
     reason: reason + prefContext,
     roi: roi.toFixed(1),
     efficiency: roi >= 4 ? "high" : roi >= 3 ? "good" : "normal"
@@ -617,7 +652,7 @@ export function generateHolidayPlan(
   preference = "balanced",
   options = {}
 ) {
-  const { isPremium = false } = options;
+  const { isPremium = false, lang = 'en' } = options;
   
   // Apply free tier limitations
   const { effectivePreference, effectiveAvailableDays } = applyFreeTierLimits(preference, availableDays, isPremium);
@@ -786,7 +821,7 @@ export function generateHolidayPlan(
 
   // Generate intelligent descriptions for all selections
   const suggestionsWithDescriptions = limited.map((c) => {
-    const desc = generateDescription(c, holidays, holidaySet, effectivePreference);
+    const desc = generateDescription(c, holidays, holidaySet, effectivePreference, lang);
     
     if (isPremium) {
       // Premium: full rich descriptions

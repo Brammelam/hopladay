@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/server",
+    "types": ["node"],
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "files": [
+    "src/main.server.ts",
+    "src/server.ts",
+    "src/prerender.ts"
+  ],
+  "include": [
+    "src/**/*.server.ts",
+    "src/**/*.server.tsx"
+  ]
+}
+

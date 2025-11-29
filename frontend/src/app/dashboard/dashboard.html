@@ -8,11 +8,11 @@
     *ngIf="plan && showStickyStats"
     class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm py-2 px-4 transition-all duration-300"
     role="navigation"
-    aria-label="Plan statistics"
+    [attr.aria-label]="'dashboard.planStatistics' | translate"
   >
     <div class="max-w-5xl mx-auto flex items-center justify-between gap-4 text-md">
       <!-- Stats -->
-      <div class="flex items-center gap-3" aria-label="Plan statistics">
+      <div class="flex items-center gap-3" [attr.aria-label]="'dashboard.planStatistics' | translate">
         <span class="font-bold text-gray-900">{{ plan.usedDays }}/{{ plan.availableDays }}</span>
         <span class="text-blue-600 font-semibold">{{ plan.totalDaysOff }} {{ 'common.off' | translate }}</span>
         <span *ngIf="getRemainingDays() > 0" class="text-gray-500">+{{ getRemainingDays() }} {{ 'common.remaining' | translate }}</span>
@@ -25,7 +25,7 @@
         type="button"
         (click)="toggleEditMode()"
         [disabled]="isLoading"
-        [attr.aria-label]="'Edit plan'"
+        [attr.aria-label]="'dashboard.editPlanAria' | translate"
         class="px-3 py-1 cursor-pointer font-medium text-white bg-primary-500 rounded-lg hover:bg-primary-600 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 transition-colors"
       >
         {{ 'common.edit' | translate }}
@@ -82,7 +82,7 @@
               (click)="togglePlansDropdown()"
               [attr.aria-expanded]="showPlansDropdown"
               [attr.aria-haspopup]="true"
-              [attr.aria-label]="'View saved plans'"
+              [attr.aria-label]="'dashboard.viewSavedPlans' | translate"
               class="min-h-[44px] px-4 py-2 bg-white text-gray-700 text-nowrap border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors flex items-center gap-2"
             >
               <lucide-angular name="folder" class="w-5 h-5" aria-hidden="true"></lucide-angular>
@@ -96,7 +96,7 @@
               class="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto"
               (click)="$event.stopPropagation()"
               role="menu"
-              [attr.aria-label]="'Saved plans menu'"
+              [attr.aria-label]="'dashboard.savedPlansMenu' | translate"
             >
               <div class="p-3 border-b border-gray-200 bg-gray-50">
                 <h3 class="text-sm font-semibold text-gray-900">{{ 'dashboard.yourSavedPlans' | translate }}</h3>
@@ -111,7 +111,7 @@
                   *ngFor="let savedPlan of savedPlans; trackBy: trackByPlanId"
                   type="button"
                   (click)="loadPlan(savedPlan)"
-                  [attr.aria-label]="'Load plan for ' + getCountryName(savedPlan.countryCode) + ' ' + savedPlan.year"
+                  [attr.aria-label]="('dashboard.loadPlanFor' | translate) + ' ' + getCountryName(savedPlan.countryCode) + ' ' + savedPlan.year"
                   [attr.aria-current]="savedPlan._id === plan?._id ? 'true' : null"
                   [class.bg-blue-50]="savedPlan._id === plan?._id"
                   [class.border-l-4]="savedPlan._id === plan?._id"
@@ -126,7 +126,7 @@
                         <span
                           *ngIf="savedPlan._id === plan?._id"
                           class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded"
-                          aria-label="Current plan"
+                          [attr.aria-label]="'dashboard.currentPlan' | translate"
                         >
                           Current
                         </span>
@@ -147,7 +147,7 @@
           <button
             type="button"
             (click)="startNewPlan()"
-            [attr.aria-label]="'Start a new plan'"
+            [attr.aria-label]="'dashboard.startNewPlan' | translate"
             class="min-h-[44px] px-4 py-2 bg-primary-600 text-white text-sm font-medium text-nowrap rounded-lg hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors flex items-center gap-2"
           >
             <span>{{ 'dashboard.newPlan' | translate }}</span>
@@ -239,7 +239,7 @@
       <button
         (click)="onManualPlan()"
         [disabled]="!selectedCountry || !selectedYear || !availableDays || isLoading"
-        [attr.aria-label]="'Start manual planning'"
+        [attr.aria-label]="'dashboard.startManualPlanning' | translate"
         [attr.aria-describedby]="'manual-description'"
         class="min-h-[200px] bg-white rounded-xl border-2 py-6 px-5 text-left transition-all shadow-sm border-gray-200 hover:border-blue-400 hover:shadow-md focus-visible:ring-4 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
@@ -277,7 +277,7 @@
       <button
         (click)="onPlan()"
         [disabled]="!selectedCountry || !selectedYear || !availableDays || isLoading"
-        [attr.aria-label]="'Generate automatic plan'"
+        [attr.aria-label]="'dashboard.generateAutomaticPlan' | translate"
         [attr.aria-describedby]="'ai-description'"
         class="relative min-h-[200px] bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border-2 border-orange-200 py-6 px-5 text-left transition-all hover:border-orange-400 hover:shadow-md focus-visible:ring-4 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
@@ -402,7 +402,7 @@
             type="button"
             (click)="toggleEditMode()"
             [disabled]="isLoading"
-            [attr.aria-label]="'Edit plan'"
+            [attr.aria-label]="'dashboard.editPlanAria' | translate"
             [attr.aria-disabled]="isLoading"
             class="min-h-[44px] px-4 py-2 text-sm font-medium bg-primary-600 text-white text-nowrap rounded-lg hover:bg-primary-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
@@ -449,7 +449,7 @@
               [disabled]="isLoading"
               [attr.aria-expanded]="showExportMenu && isPremium"
               [attr.aria-haspopup]="true"
-              [attr.aria-label]="isPremium ? 'Export options' : 'Export (Premium feature)'"
+              [attr.aria-label]="isPremium ? ('dashboard.exportOptions' | translate) : ('dashboard.exportPremiumFeature' | translate)"
               [attr.aria-disabled]="isLoading"
               class="min-h-[44px] px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
@@ -458,7 +458,7 @@
               <span
                 *ngIf="!isPremium"
                 class="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded"
-                aria-label="Premium feature"
+                [attr.aria-label]="'dashboard.premiumFeature' | translate"
               >
                 PREMIUM
               </span>
@@ -470,12 +470,12 @@
               *ngIf="showExportMenu && isPremium"
               class="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
               role="menu"
-              [attr.aria-label]="'Export options'"
+              [attr.aria-label]="'dashboard.exportOptions' | translate"
             >
               <button
                 type="button"
                 (click)="exportToICS()"
-                [attr.aria-label]="'Export to calendar file'"
+                [attr.aria-label]="'dashboard.exportToCalendar' | translate"
                 class="w-full min-h-[44px] px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center gap-3 transition-colors"
                 role="menuitem"
               >
@@ -488,7 +488,7 @@
               <button
                 type="button"
                 (click)="exportToPDF()"
-                [attr.aria-label]="'Export to PDF'"
+                [attr.aria-label]="'dashboard.exportToPDF' | translate"
                 class="w-full min-h-[44px] px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 flex items-center gap-3 transition-colors"
                 role="menuitem"
               >
@@ -521,7 +521,7 @@
                       Learn more about Premium →
                     </button>
                     <a
-                      [routerLink]="['/payment/info']"
+                      [routerLink]="getLocalizedRoute('/payment/info')"
                       (click)="showExportMenu = false"
                       class="text-xs font-medium text-blue-600 underline hover:text-blue-700"
                     >
@@ -656,7 +656,7 @@
         <button
           type="button"
           (click)="cancelPreferenceSelection()"
-          [attr.aria-label]="'Close strategy selection modal'"
+          [attr.aria-label]="'strategy.closeModal' | translate"
           class="text-gray-400 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 rounded p-1 transition-colors"
         >
           <lucide-angular name="x" class="w-6 h-6" aria-hidden="true"></lucide-angular>
@@ -712,7 +712,7 @@
         <button
           type="button"
           (click)="cancelPreferenceSelection()"
-          [attr.aria-label]="'Cancel strategy selection'"
+          [attr.aria-label]="'strategy.cancelSelection' | translate"
           class="min-h-[44px] flex-1 px-4 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors"
         >
           {{ 'common.cancel' | translate }}
@@ -720,7 +720,7 @@
         <button
           type="button"
           (click)="confirmPreferenceSelection()"
-          [attr.aria-label]="preferenceSelectionFor === 'ai' ? 'Generate plan' : preferenceSelectionFor === 'regenerate' ? 'Regenerate plan' : 'Optimize remaining days'"
+          [attr.aria-label]="preferenceSelectionFor === 'ai' ? ('strategy.generatePlanAria' | translate) : preferenceSelectionFor === 'regenerate' ? ('strategy.regeneratePlanAria' | translate) : ('strategy.optimizeRemainingAria' | translate)"
           class="min-h-[44px] flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors"
         >
           {{
@@ -846,7 +846,7 @@
         </p>
         <div class="text-center mt-4">
           <a
-            [routerLink]="['/payment/info']"
+            [routerLink]="getLocalizedRoute('/payment/info')"
             (click)="closePremiumModal()"
             class="text-sm text-blue-600 hover:text-blue-700 underline"
           >
@@ -862,13 +862,13 @@
 <footer class="mt-12 py-6 border-t border-gray-200 text-center">
   <div class="max-w-5xl mx-auto px-4">
     <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-gray-600 mb-4">
-      <span class="text-xs md:text-sm text-center">Payments processed by</span>
+      <span class="text-xs md:text-sm text-center">{{ 'footer.paymentsProcessed' | translate }}</span>
       <!-- Adjust path to match your actual Angular assets setup -->
       <img src="assets/stripe_logo.svg" alt="Stripe" class="h-6" />
     </div>
     <p class="text-xs text-gray-500">
       <a
-        [routerLink]="['/payment/info']"
+        [routerLink]="getLocalizedRoute('/payment/info')"
         class="text-gray-500 hover:text-gray-700 underline"
       >
         {{ 'footer.learnMoreSecurity' | translate }}

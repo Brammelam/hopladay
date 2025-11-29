@@ -1,11 +1,12 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '../shared/translate.pipe';
 
 @Component({
   selector: 'app-auth-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
     <div
       *ngIf="show"
@@ -19,13 +20,13 @@ import { FormsModule } from '@angular/forms';
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-2xl font-bold text-gray-900">
-            {{ mode === 'signin' ? 'Sign in' : 'Save your plan' }}
+            {{ mode === 'signin' ? ('auth.signIn' | translate) : ('auth.saveYourPlan' | translate) }}
           </h2>
           <button
             type="button"
             (click)="close.emit()"
             class="text-gray-400 hover:text-gray-600 focus:outline-none"
-            aria-label="Close"
+            [attr.aria-label]="'common.close' | translate"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -49,7 +50,7 @@ import { FormsModule } from '@angular/forms';
             [class.shadow-sm]="method === 'passkey'"
             class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            Passkey
+            {{ 'auth.passkey' | translate }}
           </button>
           <button
             type="button"
@@ -60,7 +61,7 @@ import { FormsModule } from '@angular/forms';
             [class.shadow-sm]="method === 'email'"
             class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            Email Link
+            {{ 'auth.emailLink' | translate }}
           </button>
         </div>
 
@@ -84,9 +85,9 @@ import { FormsModule } from '@angular/forms';
                 />
               </svg>
               <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1">Fast & secure</h3>
+                <h3 class="font-semibold text-gray-900 mb-1">{{ 'auth.fastSecure' | translate }}</h3>
                 <p class="text-sm text-gray-600">
-                  Use Face ID, Touch ID, or device PIN. Works on this device only.
+                  {{ 'auth.passkeyDescription' | translate }}
                 </p>
               </div>
             </div>
@@ -110,9 +111,9 @@ import { FormsModule } from '@angular/forms';
                 />
               </svg>
               <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1">Access from any device</h3>
+                <h3 class="font-semibold text-gray-900 mb-1">{{ 'auth.accessAnyDevice' | translate }}</h3>
                 <p class="text-sm text-gray-600">
-                  We'll send a secure link to your email. Click it to sign in.
+                  {{ 'auth.emailLinkDescription' | translate }}
                 </p>
               </div>
             </div>
@@ -133,10 +134,9 @@ import { FormsModule } from '@angular/forms';
                   />
                 </svg>
                 <div class="flex-1">
-                  <h3 class="font-semibold text-gray-900 mb-1">Check your email!</h3>
+                  <h3 class="font-semibold text-gray-900 mb-1">{{ 'auth.checkYourEmail' | translate }}</h3>
                   <p class="text-sm text-gray-600">
-                    We sent a secure link to <strong>{{ email }}</strong
-                    >.
+                    {{ 'auth.magicLinkSentDesc' | translate }} <strong>{{ email }}</strong>.
                   </p>
                 </div>
               </div>
@@ -144,12 +144,12 @@ import { FormsModule } from '@angular/forms';
           </ng-container>
 
           <!-- Email Field -->
-          <label class="block text-sm font-medium text-gray-700 mb-2 mt-4">Email Address</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2 mt-4">{{ 'auth.email' | translate }}</label>
           <input
             type="email"
             [(ngModel)]="email"
             (ngModelChange)="emailChange.emit($event)"
-            placeholder="your@email.com"
+            [attr.placeholder]="'auth.emailPlaceholder' | translate"
             [disabled]="magicLinkSent"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             (keyup.enter)="submit.emit()"
@@ -169,9 +169,9 @@ import { FormsModule } from '@angular/forms';
             {{
               method === 'passkey'
                 ? mode === 'signin'
-                  ? 'Sign In with Passkey'
-                  : 'Create Passkey'
-                : 'Send Magic Link'
+                  ? ('auth.signInWithPasskey' | translate)
+                  : ('auth.createPasskey' | translate)
+                : ('auth.sendMagicLink' | translate)
             }}
           </span>
           <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
@@ -190,7 +190,7 @@ import { FormsModule } from '@angular/forms';
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            Processing...
+            {{ 'auth.processing' | translate }}
           </span>
         </button>
 
@@ -201,7 +201,7 @@ import { FormsModule } from '@angular/forms';
           (click)="reset.emit()"
           class="w-full py-3 text-gray-700 bg-white border border-gray-300 font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors mt-3"
         >
-          Send to Different Email
+          {{ 'auth.sendToDifferentEmail' | translate }}
         </button>
 
         <!-- Switch -->
@@ -213,8 +213,8 @@ import { FormsModule } from '@angular/forms';
           >
             {{
               mode === 'signin'
-                ? "Don't have an account? Save your plan"
-                : 'Already have an account? Sign in'
+                ? ('auth.noAccountSavePlan' | translate)
+                : ('auth.haveAccountSignIn' | translate)
             }}
           </button>
         </div>
@@ -224,8 +224,8 @@ import { FormsModule } from '@angular/forms';
           <p class="text-xs text-gray-500 text-center">
             {{
               method === 'passkey'
-                ? "Passkeys use your device's biometric authentication (Face ID, Touch ID, Windows Hello)."
-                : 'Magic links provide one-time access from any device and expire after 15 minutes.'
+                ? ('auth.passkeyFooter' | translate)
+                : ('auth.magicLinkFooter' | translate)
             }}
           </p>
         </div>

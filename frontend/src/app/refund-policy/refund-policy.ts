@@ -1,22 +1,31 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { SEOService } from '../services/seo.service';
+import { TranslationService } from '../services/translation.service';
+import { TranslatePipe } from '../shared/translate.pipe';
 
 @Component({
   selector: 'app-refund-policy',
   standalone: true,
   templateUrl: './refund-policy.html',
-  imports: [CommonModule, RouterModule]
+  imports: [CommonModule, RouterModule, TranslatePipe]
 })
 export class RefundPolicyComponent implements OnInit {
   lastUpdated: string;
+  private translationService = inject(TranslationService);
 
   constructor(
     private router: Router,
     private seoService: SEOService
   ) {
-    this.lastUpdated = new Date().toLocaleDateString('en-US', { 
+    const lang = this.translationService.currentLang();
+    const localeMap: Record<string, string> = {
+      'en': 'en-US',
+      'no': 'nb-NO',
+      'nl': 'nl-NL'
+    };
+    this.lastUpdated = new Date().toLocaleDateString(localeMap[lang] || 'en-US', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
@@ -32,7 +41,8 @@ export class RefundPolicyComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/']);
+    const currentLang = this.translationService.currentLang();
+    this.router.navigate([`/${currentLang}`]);
   }
 }
 

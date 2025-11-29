@@ -66,6 +66,42 @@
           },
           "defaultConfiguration": "production"
         },
+        "server": {
+          "builder": "@angular/build:application:server",
+          "options": {
+            "outputPath": "dist/frontend/server",
+            "main": "src/main.server.ts",
+            "tsConfig": "tsconfig.server.json"
+          },
+          "configurations": {
+            "production": {
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "prerender": {
+          "builder": "@angular/build:application:prerender",
+          "options": {
+            "routesFile": "src/prerender-routes.txt"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "frontend:build:production",
+              "serverTarget": "frontend:server:production"
+            },
+            "development": {
+              "browserTarget": "frontend:build:development",
+              "serverTarget": "frontend:server:development"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
         "serve": {
           "builder": "@angular/build:dev-server",
           "configurations": {

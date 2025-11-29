@@ -285,7 +285,7 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
  */
 router.post('/', async (req, res) => {
   try {
-    const { userId, year, country = 'NO', availableDays, preference = 'balanced', generateAI = true } = req.body;
+    const { userId, year, country = 'NO', availableDays, preference = 'balanced', generateAI = true, lang = 'en' } = req.body;
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -298,7 +298,7 @@ router.post('/', async (req, res) => {
       // Generate AI suggestions
       const holidays = await getHolidaysForYear(year, country);
       const isPremium = user.isPremium || false;
-      planData = generateHolidayPlan(holidays, vacationDays, year, preference, { isPremium });
+      planData = generateHolidayPlan(holidays, vacationDays, year, preference, { isPremium, lang });
     }
     // Otherwise, create empty plan for manual planning
 
@@ -740,7 +740,7 @@ router.delete("/:planId/suggestions/:suggestionId/days/:date", async (req, res) 
 router.post("/:planId/regenerate", async (req, res) => {
   try {
     const { planId } = req.params;
-    const { preference = "balanced" } = req.body;
+    const { preference = "balanced", lang = 'en' } = req.body;
 
     const plan = await HolidayPlan.findById(planId);
     if (!plan) return res.status(404).json({ error: "Plan not found" });
@@ -823,7 +823,7 @@ router.post("/:planId/regenerate", async (req, res) => {
     console.log(`Generating AI suggestions with ${preference} strategy for ${remaining} remaining days`);
 
     // Generate new AI suggestions with new strategy
-    const aiPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium });
+      const aiPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium, lang });
 
     console.log(`Generated ${aiPlan.suggestions.length} new AI suggestions`);
 
@@ -866,7 +866,7 @@ router.post("/:planId/regenerate", async (req, res) => {
 router.post("/:planId/optimize-remaining", async (req, res) => {
   try {
     const { planId } = req.params;
-    const { preference = "balanced" } = req.body;
+    const { preference = "balanced", lang = 'en' } = req.body;
 
     const plan = await HolidayPlan.findById(planId);
     if (!plan) return res.status(404).json({ error: "Plan not found" });
@@ -930,7 +930,7 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
 
     // Generate plan for remaining days (planner will avoid blocked days)
     const isPremium = user.isPremium || false;
-    const optimizedPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium });
+    const optimizedPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium, lang });
 
     console.log(`AI generated ${optimizedPlan.suggestions.length} new suggestions using ${optimizedPlan.usedDays} days`);
 

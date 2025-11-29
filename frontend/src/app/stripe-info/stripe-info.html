@@ -7,14 +7,14 @@
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
     </svg>
-    Back to dashboard
+    {{ 'paymentInfo.backToDashboard' | translate }}
   </button>
   <!-- Header -->
   <header class="mb-6 md:mb-8 w-full max-w-5xl text-center">
     
-    <h1 class="text-2xl md:text-4xl font-bold text-primary mb-1">Payment information</h1>
+    <h1 class="text-2xl md:text-4xl font-bold text-primary mb-1">{{ 'paymentInfo.title' | translate }}</h1>
     <p class="text-gray-600 text-sm md:text-base">
-      How we handle your payment securely
+      {{ 'paymentInfo.subtitle' | translate }}
     </p>
   </header>
 
@@ -23,9 +23,8 @@
     
     <!-- Payment Processing -->
     <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
-      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Payment processing</h2>
-      <p class="text-sm md:text-base text-gray-700 mb-3 md:mb-4">
-        Payments are processed by <strong>Stripe</strong>. Your payment information is handled securely by Stripe and is not stored on our servers.
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">{{ 'paymentInfo.paymentProcessing' | translate }}</h2>
+      <p class="text-sm md:text-base text-gray-700 mb-3 md:mb-4" [innerHTML]="'paymentInfo.paymentProcessingDesc' | translate">
       </p>
       <div class="grid md:grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4">
         <div class="flex items-start gap-3">
@@ -33,9 +32,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
           <div>
-            <div class="font-medium text-gray-900">PCI DSS compliant</div>
+            <div class="font-medium text-gray-900">{{ 'paymentInfo.pciCompliant' | translate }}</div>
             <div class="text-sm text-gray-600">
-              Stripe is certified to the highest level of PCI DSS (Payment Card Industry Data Security Standard).
+              {{ 'paymentInfo.pciCompliantDesc' | translate }}
             </div>
           </div>
         </div>
@@ -44,9 +43,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
           <div>
-            <div class="font-medium text-gray-900">Encrypted connection</div>
+            <div class="font-medium text-gray-900">{{ 'paymentInfo.encryptedConnection' | translate }}</div>
             <div class="text-sm text-gray-600">
-              All data is transmitted over an encrypted SSL/TLS connection.
+              {{ 'paymentInfo.encryptedConnectionDesc' | translate }}
             </div>
           </div>
         </div>
@@ -55,27 +54,27 @@
 
     <!-- Payment Methods -->
     <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
-      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Payment methods</h2>
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">{{ 'paymentInfo.paymentMethods' | translate }}</h2>
       <p class="text-sm md:text-base text-gray-700 mb-3 md:mb-4">
-        We support several payment methods through Stripe. Available options may vary by country and device.
+        {{ 'paymentInfo.paymentMethodsDesc' | translate }}
       </p>
       <div class="grid md:grid-cols-3 gap-3 md:gap-4">
         <div class="p-3 md:p-4 border border-gray-200 rounded-lg">
-          <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Credit and debit cards</div>
+          <div class="font-medium text-sm md:text-base text-gray-900 mb-1">{{ 'paymentInfo.creditDebitCards' | translate }}</div>
           <div class="text-sm md:text-sm text-gray-600">
-            Major card networks such as Visa, Mastercard, and American Express.
+            {{ 'paymentInfo.creditDebitCardsDesc' | translate }}
           </div>
         </div>
         <div class="p-3 md:p-4 border border-gray-200 rounded-lg">
-          <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Digital wallets</div>
+          <div class="font-medium text-sm md:text-base text-gray-900 mb-1">{{ 'paymentInfo.digitalWallets' | translate }}</div>
           <div class="text-sm md:text-sm text-gray-600">
-            Where supported, wallets like Apple Pay, Google Pay, or Link by Stripe.
+            {{ 'paymentInfo.digitalWalletsDesc' | translate }}
           </div>
         </div>
         <div class="p-3 md:p-4 border border-gray-200 rounded-lg">
-          <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Local methods</div>
+          <div class="font-medium text-sm md:text-base text-gray-900 mb-1">{{ 'paymentInfo.localMethods' | translate }}</div>
           <div class="text-sm md:text-sm text-gray-600">
-            In some regions, local payment methods such as bank transfers may be available.
+            {{ 'paymentInfo.localMethodsDesc' | translate }}
           </div>
         </div>
       </div>
@@ -83,16 +82,16 @@
 
     <!-- Checkout Process -->
     <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
-      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Checkout process</h2>
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">{{ 'paymentInfo.checkoutProcess' | translate }}</h2>
       <div class="space-y-3 md:space-y-4">
         <div class="flex gap-3 md:gap-4">
           <div class="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-semibold text-xs md:text-sm">
             1
           </div>
           <div class="min-w-0 flex-1">
-            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Review your order</div>
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">{{ 'paymentInfo.reviewOrder' | translate }}</div>
             <div class="text-sm md:text-sm text-gray-600">
-              You see what you are purchasing and the total amount before entering any payment details.
+              {{ 'paymentInfo.reviewOrderDesc' | translate }}
             </div>
           </div>
         </div>
@@ -101,12 +100,9 @@
             2
           </div>
           <div class="min-w-0 flex-1">
-            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Enter payment details</div>
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">{{ 'paymentInfo.enterPaymentDetails' | translate }}</div>
             <div class="text-sm md:text-sm text-gray-600">
-              You enter your card or wallet details in a Stripe-powered payment form using a secure connection.
-              <!-- If you really use Stripe Checkout redirect, swap to:
-              "You are redirected to Stripe's secure checkout page to enter your payment information."
-              -->
+              {{ 'paymentInfo.enterPaymentDetailsDesc' | translate }}
             </div>
           </div>
         </div>
@@ -115,9 +111,9 @@
             3
           </div>
           <div class="min-w-0 flex-1">
-            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Confirm payment</div>
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">{{ 'paymentInfo.confirmPayment' | translate }}</div>
             <div class="text-sm md:text-sm text-gray-600">
-              You review the final amount and confirm the payment. The payment button shows the exact amount that will be charged.
+              {{ 'paymentInfo.confirmPaymentDesc' | translate }}
             </div>
           </div>
         </div>
@@ -126,9 +122,9 @@
             4
           </div>
           <div class="min-w-0 flex-1">
-            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">Access activated</div>
+            <div class="font-medium text-sm md:text-base text-gray-900 mb-1">{{ 'paymentInfo.accessActivated' | translate }}</div>
             <div class="text-sm md:text-sm text-gray-600">
-              After successful payment, you are redirected back to Hopladay and your Premium access is activated automatically.
+              {{ 'paymentInfo.accessActivatedDesc' | translate }}
             </div>
           </div>
         </div>
@@ -137,38 +133,38 @@
 
     <!-- Pricing Transparency -->
     <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
-      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Pricing</h2>
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">{{ 'paymentInfo.pricing' | translate }}</h2>
       <p class="text-sm md:text-base text-gray-700">
-        The price shown when you click “Upgrade” is the exact amount that will be charged. Any applicable taxes are included or clearly displayed before you pay. There are no hidden fees.
+        {{ 'paymentInfo.pricingDesc' | translate }}
       </p>
     </section>
 
     <!-- Support -->
     <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
-      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">Support</h2>
+      <h2 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4">{{ 'paymentInfo.support' | translate }}</h2>
       <div class="grid md:grid-cols-2 gap-4 md:gap-6">
         <div>
-          <div class="font-medium text-gray-900 mb-2">Payment questions</div>
+          <div class="font-medium text-gray-900 mb-2">{{ 'paymentInfo.paymentQuestions' | translate }}</div>
           <p class="text-sm text-gray-600 mb-3">
-            If you encounter an issue during checkout or have questions about a charge, contact us and we will help you resolve it.
+            {{ 'paymentInfo.paymentQuestionsDesc' | translate }}
           </p>
           <a
             href="mailto:hello@hopladay.com"
             class="text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
-            Contact support
+            {{ 'paymentInfo.contactSupport' | translate }}
           </a>
         </div>
         <div>
-          <div class="font-medium text-gray-900 mb-2">Refund policy</div>
+          <div class="font-medium text-gray-900 mb-2">{{ 'paymentInfo.refundPolicy' | translate }}</div>
           <p class="text-sm text-gray-600 mb-3">
-            We offer refunds in specific cases, such as technical issues or accidental duplicate charges. Full details are described in our refund policy.
+            {{ 'paymentInfo.refundPolicyDesc' | translate }}
           </p>
             <a
-              [routerLink]="['/refunds']"
+              [routerLink]="getLocalizedRoute('/refunds')"
               class="text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
-              View refund policy
+              {{ 'paymentInfo.viewRefundPolicy' | translate }}
             </a>
         </div>
       </div>
@@ -177,14 +173,14 @@
     <!-- Stripe Branding -->
     <section class="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
       <div class="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3 text-gray-600">
-        <span class="text-xs md:text-sm text-center">Payments processed by</span>
+        <span class="text-xs md:text-sm text-center">{{ 'paymentInfo.stripeBranding' | translate }}</span>
 
           <!-- Adjust path to match your actual Angular assets setup -->
           <img src="assets/stripe_logo.svg" alt="Stripe" class="h-6" />
 
       </div>
       <p class="text-center text-xs text-gray-500 mt-3 md:mt-4 px-2">
-        Stripe is a registered trademark of Stripe, Inc. Payments are processed through Stripe’s secure infrastructure.
+        {{ 'paymentInfo.stripeTrademark' | translate }}
       </p>
     </section>
   </div>

@@ -18,9 +18,12 @@ export async function getHolidaysForYear(year, countryCode = 'NO') {
         ` Returning ${existing.length} cached holidays for ${countryCode} ${year}`
       );
       // Normalize old data in case it was saved before date normalization was implemented
+      // Ensure localName is included for native language support (no translation needed)
       return existing.map((h) => ({
         ...h.toObject(),
         date: formatDate(parseISODate(h.date)),
+        localName: h.localName || h.name, // Prefer localName for native language
+        name: h.name, // Keep name as fallback
       }));
     }
 
@@ -36,10 +39,11 @@ export async function getHolidaysForYear(year, countryCode = 'NO') {
     }
 
     // 3 Normalize and prepare for DB
+    // localName is in the native language of the country (no translation needed)
     const holidays = data.map((h) => ({
       date: h.date.split("T")[0], // safely extract YYYY-MM-DD
-      localName: h.localName,
-      name: h.name,
+      localName: h.localName || h.name, // Prefer localName for native language support
+      name: h.name, // Keep English name as fallback
       countryCode,
       year: Number(year),
     }));

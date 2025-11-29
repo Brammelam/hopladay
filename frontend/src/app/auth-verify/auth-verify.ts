@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { UserService } from '../services/user.service';
+import { TranslationService } from '../services/translation.service';
 
 @Component({
   selector: 'app-auth-verify',
@@ -54,6 +55,7 @@ import { UserService } from '../services/user.service';
 export class AuthVerifyComponent implements OnInit {
   isVerifying = true;
   success = false;
+  private translationService = inject(TranslationService);
 
   constructor(
     private route: ActivatedRoute,
@@ -119,7 +121,8 @@ export class AuthVerifyComponent implements OnInit {
   }
 
   goToDashboard(): void {
-    this.router.navigate(['/']);
+    const currentLang = this.translationService.currentLang();
+    this.router.navigate([`/${currentLang}`]);
   }
 }
 

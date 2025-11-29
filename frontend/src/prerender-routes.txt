@@ -1,0 +1,11 @@
+/
+/en
+/no
+/nl
+/en/payment/info
+/no/payment/info
+/nl/payment/info
+/en/refunds
+/no/refunds
+/nl/refunds
+

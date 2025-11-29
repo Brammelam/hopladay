@@ -1,25 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+  <!-- English Routes -->
   <url>
-    <loc>https://hopladay.com/</loc>
+    <loc>https://hopladay.com/en</loc>
     <lastmod>2025-11-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://hopladay.com/no"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://hopladay.com/nl"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://hopladay.com/en"/>
   </url>
   <url>
-    <loc>https://hopladay.com/payment/info</loc>
+    <loc>https://hopladay.com/en/payment/info</loc>
     <lastmod>2025-11-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://hopladay.com/no/payment/info"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://hopladay.com/nl/payment/info"/>
   </url>
   <url>
-    <loc>https://hopladay.com/refunds</loc>
+    <loc>https://hopladay.com/en/refunds</loc>
     <lastmod>2025-11-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://hopladay.com/no/refunds"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://hopladay.com/nl/refunds"/>
+  </url>
+  <!-- Norwegian Routes -->
+  <url>
+    <loc>https://hopladay.com/no</loc>
+    <lastmod>2025-11-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://hopladay.com/no"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://hopladay.com/nl"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://hopladay.com/en"/>
+  </url>
+  <url>
+    <loc>https://hopladay.com/no/payment/info</loc>
+    <lastmod>2025-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://hopladay.com/no/payment/info"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://hopladay.com/nl/payment/info"/>
+  </url>
+  <url>
+    <loc>https://hopladay.com/no/refunds</loc>
+    <lastmod>2025-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://hopladay.com/no/refunds"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://hopladay.com/nl/refunds"/>
+  </url>
+  <!-- Dutch Routes -->
+  <url>
+    <loc>https://hopladay.com/nl</loc>
+    <lastmod>2025-11-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://hopladay.com/no"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://hopladay.com/nl"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://hopladay.com/en"/>
+  </url>
+  <url>
+    <loc>https://hopladay.com/nl/payment/info</loc>
+    <lastmod>2025-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://hopladay.com/no/payment/info"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://hopladay.com/nl/payment/info"/>
+  </url>
+  <url>
+    <loc>https://hopladay.com/nl/refunds</loc>
+    <lastmod>2025-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>
+    <xhtml:link rel="alternate" hreflang="no" href="https://hopladay.com/no/refunds"/>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://hopladay.com/nl/refunds"/>
   </url>
 </urlset>
 
