@@ -144,23 +144,35 @@ export class AuthVerifyComponent implements OnInit, OnDestroy {
         });
         
         if (result.verified && result.user) {
-          // Set user data
+          // Set user data - this will replace any anonymous user
           try {
+            // Clear any existing anonymous user first to ensure clean state
+            const currentUser = this.userService.getCurrentUser();
+            if (currentUser && !currentUser.email && result.user.email) {
+              console.log('🧹 Clearing anonymous user before setting authenticated user');
+              this.userService.clearCurrentUser();
+            }
+
+            // Set the authenticated user
             this.userService.setCurrentUser(result.user as any);
             console.log('✅ User authenticated and saved:', {
               userId: result.user._id,
               email: result.user.email,
               isPremium: result.user.isPremium,
+              browserId: result.user.browserId,
             });
             
             // Verify user was actually set
             const savedUser = this.userService.getCurrentUser();
             if (!savedUser) {
               console.warn('⚠️ User was not saved to service, but verification succeeded');
+            } else if (!savedUser.email) {
+              console.error('❌ User saved but missing email - this should not happen!', savedUser);
             } else {
               console.log('✅ Verified user is now in service:', {
                 userId: savedUser._id,
                 email: savedUser.email,
+                hasEmail: !!savedUser.email,
               });
             }
             
@@ -170,6 +182,7 @@ export class AuthVerifyComponent implements OnInit, OnDestroy {
             // Use window.location to ensure full page reload and proper user initialization
             setTimeout(() => {
               const currentLang = this.translationService.currentLang();
+              // Force a full page reload to ensure clean state
               window.location.href = `/${currentLang}`;
             }, 1500);
           } catch (err) {

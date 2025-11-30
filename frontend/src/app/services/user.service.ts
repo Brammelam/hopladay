@@ -184,6 +184,19 @@ export class UserService {
   }
 
   setCurrentUser(user: User): void {
+    // If this is an authenticated user (with email), ensure we replace any anonymous user
+    if (user.email) {
+      const currentUser = this.getCurrentUser();
+      // If we have an anonymous user (no email) and this is an authenticated user, replace it
+      if (currentUser && !currentUser.email && user.email) {
+        console.log('🔄 Replacing anonymous user with authenticated user:', {
+          oldUserId: currentUser._id,
+          newUserId: user._id,
+          email: user.email,
+        });
+      }
+    }
+
     this.saveUser(user);
 
     // Ensure correct browserId stays synced

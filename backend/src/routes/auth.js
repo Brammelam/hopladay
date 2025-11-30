@@ -577,11 +577,26 @@ router.post("/magic-link/verify", async (req, res) => {
       found: !!user,
       userId: magicLink.userId.toString(),
       email: user?.email,
+      hasBrowserId: !!user?.browserId,
     });
     
     if (!user) {
       console.error(' User not found for magic link');
       return res.status(404).json({ error: "User not found" });
+    }
+
+    // Ensure user has email (should already have it from magic-link/send, but double-check)
+    if (!user.email) {
+      console.warn(' User from magic link has no email, this should not happen');
+      // Try to get email from magic link
+      if (magicLink.email) {
+        user.email = magicLink.email;
+        if (!user.name) {
+          user.name = magicLink.email.split('@')[0];
+        }
+        await user.save();
+        console.log(' Added email to user from magic link');
+      }
     }
 
     // Mark link as used
@@ -591,8 +606,12 @@ router.post("/magic-link/verify", async (req, res) => {
     console.log(` Magic link verified successfully for ${user.email}`, {
       userId: user._id.toString(),
       userName: user.name,
+      hasEmail: !!user.email,
+      browserId: user.browserId,
     });
 
+    // Return user with all necessary fields
+    // IMPORTANT: Always return browserId so frontend can sync it
     res.json({
       verified: true,
       user: {
@@ -601,6 +620,7 @@ router.post("/magic-link/verify", async (req, res) => {
         name: user.name,
         availableDays: user.availableDays,
         browserId: user.browserId,
+        isPremium: user.isPremium || false,
       },
     });
   } catch (err) {
