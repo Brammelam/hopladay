@@ -118,6 +118,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Check if there's a token in query params (from magic link)
+    // If so, redirect to auth verify route
+    const token = this.route.snapshot.queryParamMap.get('token');
+    if (token) {
+      const currentLang = this.translationService.currentLang();
+      this.router.navigate([`/${currentLang}/auth/verify`], { 
+        queryParams: { token },
+        replaceUrl: true 
+      });
+      return;
+    }
+
     this.seoService.updateSEO({
       url: `https://hopladay.com/${this.translationService.currentLang()}`,
       title: 'Hopladay - Maximize your days off',
@@ -799,8 +811,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     try {
       const baseUrl = window.location.origin;
-      const successUrl = `${baseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
-      const cancelUrl = `${baseUrl}/payment/cancel`;
+      const currentLang = this.translationService.currentLang();
+      const successUrl = `${baseUrl}/${currentLang}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${baseUrl}/${currentLang}/payment/cancel`;
 
       this.api.createCheckoutSession(this.userId, successUrl, cancelUrl).subscribe({
         next: (response: any) => {
@@ -840,8 +853,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 this.userService.setCurrentUser(response.user);
                 this.isPremium = true;
                 this.toast(this.translationService.translate('premium.welcomePremium'), 'success');
-                // Clear query params
-                this.router.navigate([], { queryParams: {} });
+                // Clear query params and navigate to current language route
+                const currentLang = this.translationService.currentLang();
+                this.router.navigate([`/${currentLang}`], { queryParams: {} });
                 this.cdr.detectChanges();
               } else {
                 console.warn('Payment successful but no user data returned');

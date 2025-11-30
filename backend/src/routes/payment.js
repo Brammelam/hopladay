@@ -63,8 +63,10 @@ router.post("/create-checkout-session", async (req, res) => {
 
     // Get base URL from environment or request
     const baseUrl = process.env.FRONTEND_URL;
-    const defaultSuccessUrl = `${baseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
-    const defaultCancelUrl = `${baseUrl}/payment/cancel`;
+    // Default URLs include language prefix (default to 'en')
+    // Frontend should provide language-specific URLs, but these are fallbacks
+    const defaultSuccessUrl = `${baseUrl}/en/payment/success?session_id={CHECKOUT_SESSION_ID}`;
+    const defaultCancelUrl = `${baseUrl}/en/payment/cancel`;
 
     // Create Stripe Checkout Session
     const session = await stripeInstance.checkout.sessions.create({

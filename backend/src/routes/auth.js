@@ -20,6 +20,9 @@ const router = express.Router();
 const rpName = "Hopladay";
 
 const origin = process.env.FRONTEND_URL;
+// Extract rpID from origin (domain only, no protocol or path)
+// e.g., "https://hopladay.com" -> "hopladay.com"
+const rpID = origin ? new URL(origin).hostname : 'localhost';
 
 console.log('Auth module initialized:', {
   origin,
@@ -501,7 +504,9 @@ router.post("/magic-link/send", async (req, res) => {
     });
     await magicLink.save();
 
-    const magicUrl = `${origin}/auth/verify?token=${token}`;
+    // Generate magic link URL with language prefix (default to 'en')
+    // The frontend routes are now language-prefixed: /:lang/auth/verify
+    const magicUrl = `${origin}/en/auth/verify?token=${token}`;
 
     // Send magic link email in background (non-blocking)
     emailService.sendMagicLink(email, magicUrl);
