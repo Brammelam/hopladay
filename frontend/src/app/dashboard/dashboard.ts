@@ -229,7 +229,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // Before creating anonymous user, check if there's an authenticated user in localStorage
-    // that might not have been restored yet (iOS Safari timing issue)
+    // that might not have been restored yet (iOS Safari timing issue or auth in progress)
     try {
       const storedUserStr = localStorage.getItem('hopladay_user');
       if (storedUserStr) {
@@ -246,6 +246,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
           return;
         }
+      }
+
+      // Also check if authentication is in progress (magic link just verified)
+      const authInProgress = localStorage.getItem('hopladay_auth_in_progress');
+      if (authInProgress === 'true') {
+        console.log('⏳ Authentication in progress, waiting for user to be set...');
+        // Wait a bit longer for the user to be saved
+        setTimeout(() => {
+          const user = this.userService.getCurrentUser();
+          if (user && user.email) {
+            console.log('✅ Authenticated user found after auth in progress:', user.email);
+            this.userId = user._id;
+            this.isUserReady = true;
+            this.loadUserPlans(user._id);
+            this.loadSavedPlans();
+            this.isPremium = user.isPremium || false;
+            this.cdr.detectChanges();
+          } else {
+            console.warn('⚠️ No authenticated user found after auth in progress, initializing anonymous');
+            this.initializeAnonymousUser();
+          }
+        }, 1000);
+        return;
       }
     } catch (err) {
       console.warn('Failed to check localStorage for user:', err);

@@ -20,7 +20,8 @@ export class UserService {
   private baseUrl = environment.apiUrl;
   private readonly BROWSER_ID_KEY = 'hopladay_browser_id';
   private readonly USER_KEY = 'hopladay_user';
-  
+  private readonly AUTH_IN_PROGRESS_KEY = 'hopladay_auth_in_progress';
+
   private currentUserSubject = new BehaviorSubject<User | null>(this.restoreUser());
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -85,14 +86,62 @@ export class UserService {
    * Only creates anonymous user if no authenticated user exists
    */
   initializeUser(availableDays: number = 25): Observable<User> {
+    // Check if authentication is in progress (user just logged in via magic link)
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const authInProgress = localStorage.getItem(this.AUTH_IN_PROGRESS_KEY);
+        if (authInProgress === 'true') {
+          console.log('⏳ Authentication in progress, checking for authenticated user...');
+          // Wait a bit for the authenticated user to be available
+          const currentUser = this.getCurrentUser();
+          if (currentUser && currentUser.email) {
+            console.log('✅ Authenticated user found during auth in progress:', currentUser.email);
+            localStorage.removeItem(this.AUTH_IN_PROGRESS_KEY);
+            return of(currentUser);
+          }
+          // If no user yet, wait a bit more
+          return new Observable<User>(observer => {
+            setTimeout(() => {
+              const user = this.getCurrentUser();
+              if (user && user.email) {
+                console.log('✅ Authenticated user found after delay:', user.email);
+                try {
+                  localStorage.removeItem(this.AUTH_IN_PROGRESS_KEY);
+                } catch (e) {
+                  // Ignore
+                }
+                observer.next(user);
+                observer.complete();
+              } else {
+                console.warn('⚠️ No authenticated user found after delay, proceeding with anonymous init');
+                try {
+                  localStorage.removeItem(this.AUTH_IN_PROGRESS_KEY);
+                } catch (e) {
+                  // Ignore
+                }
+                this.doInitializeAnonymousUser(availableDays).subscribe(observer);
+              }
+            }, 1000);
+          });
+        }
+      } catch (e) {
+        // Ignore localStorage errors
+      }
+    }
+
     // Check if we already have an authenticated user (with email)
     const currentUser = this.getCurrentUser();
     if (currentUser && currentUser.email) {
-      console.log('⚠️ Authenticated user already exists, skipping anonymous initialization:', currentUser.email);
+      console.log('✅ Authenticated user already exists, skipping anonymous initialization:', currentUser.email);
       // Return the existing authenticated user instead of creating anonymous
       return of(currentUser);
     }
 
+    // Proceed with anonymous initialization
+    return this.doInitializeAnonymousUser(availableDays);
+  }
+
+  private doInitializeAnonymousUser(availableDays: number = 25): Observable<User> {
     const browserId = this.getBrowserId();
     
     return this.http.post<User>(`${this.baseUrl}/users/init`, {
@@ -138,8 +187,31 @@ export class UserService {
     this.saveUser(user);
 
     // Ensure correct browserId stays synced
-    if (user.browserId && user.browserId !== this.getBrowserId()) {
-      localStorage.setItem(this.BROWSER_ID_KEY, user.browserId);
+    if (user.browserId && typeof localStorage !== 'undefined') {
+      try {
+        if (user.browserId !== this.getBrowserId()) {
+          localStorage.setItem(this.BROWSER_ID_KEY, user.browserId);
+        }
+      } catch (e) {
+        console.error('Error setting browser ID in localStorage (setCurrentUser):', e);
+      }
+    }
+
+    // Mark authentication as in progress to prevent anonymous user creation
+    if (user.email && typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(this.AUTH_IN_PROGRESS_KEY, 'true');
+        // Clear the flag after a short delay (in case redirect fails)
+        setTimeout(() => {
+          try {
+            localStorage.removeItem(this.AUTH_IN_PROGRESS_KEY);
+          } catch (e) {
+            // Ignore errors
+          }
+        }, 5000);
+      } catch (e) {
+        // Ignore localStorage errors
+      }
     }
   }
 

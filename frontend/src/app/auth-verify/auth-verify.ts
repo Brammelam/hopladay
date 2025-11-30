@@ -83,8 +83,7 @@ export class AuthVerifyComponent implements OnInit, OnDestroy {
   private verifyToken(tokenFromRoute?: string): void {
     // Get token from query params - try multiple methods for iOS compatibility
     let token = tokenFromRoute;
-    if (token === null) return;
-
+    
     // Fallback 1: Parse directly from URL (iOS Safari sometimes has issues with Angular router)
     if (!token && typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
