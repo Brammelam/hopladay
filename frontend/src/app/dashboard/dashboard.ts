@@ -185,11 +185,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const currentUser = this.userService.getCurrentUser();
 
     if (currentUser && currentUser.email) {
-      console.log('✅ Using authenticated user:', {
-        userId: currentUser._id,
-        email: currentUser.email,
-        isPremium: currentUser.isPremium,
-      });
       this.userId = currentUser._id;
       this.isUserReady = true;
       this.loadUserPlans(currentUser._id);
@@ -202,12 +197,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Check if we're coming from auth verify (wait for authenticated user)
     const isFromAuthVerify = this.router.url.includes('/auth/verify');
     if (isFromAuthVerify) {
-      console.log('⏳ Coming from auth verify, waiting for authenticated user...');
       // Wait a bit for user to be set from auth verify
       setTimeout(() => {
         const user = this.userService.getCurrentUser();
         if (user && user.email) {
-          console.log('✅ Authenticated user found after delay:', user.email);
           this.userId = user._id;
           this.isUserReady = true;
           this.loadUserPlans(user._id);
@@ -215,7 +208,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.isPremium = user.isPremium || false;
           this.cdr.detectChanges();
         } else {
-          console.log('ℹ️ No authenticated user yet - user can still generate transient plans');
           this.isUserReady = true; // Allow plan generation without user
           this.cdr.detectChanges();
         }
@@ -227,11 +219,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     try {
       const authInProgress = localStorage.getItem('hopladay_auth_in_progress');
       if (authInProgress === 'true') {
-        console.log('⏳ Authentication in progress, waiting for user to be set...');
         setTimeout(() => {
           const user = this.userService.getCurrentUser();
           if (user && user.email) {
-            console.log('✅ Authenticated user found after auth in progress:', user.email);
             this.userId = user._id;
             this.isUserReady = true;
             this.loadUserPlans(user._id);
@@ -239,7 +229,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.isPremium = user.isPremium || false;
             this.cdr.detectChanges();
           } else {
-            console.log('ℹ️ No authenticated user yet - user can still generate transient plans');
             this.isUserReady = true; // Allow plan generation without user
             this.cdr.detectChanges();
           }
@@ -251,7 +240,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // No authenticated user - allow transient plan generation
-    console.log('ℹ️ No authenticated user - plans will be transient until user signs in');
     this.isUserReady = true; // Allow plan generation without user
     this.cdr.detectChanges();
   }
@@ -317,7 +305,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.openPremiumModal();
       return;
     }
-    console.log(`User selected preference: ${value}`);
     this.selectedPreference = value;
     this.cdr.markForCheck();
   }
@@ -340,7 +327,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
     
-    console.log(`Confirming preference selection: ${this.selectedPreference} for ${this.preferenceSelectionFor}`);
     this.showPreferenceSelector = false;
     this.cdr.markForCheck();
     
@@ -374,8 +360,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.cdr.markForCheck();
 
-    console.log(`Regenerating with strategy: ${this.selectedPreference}`);
-
     // Use regenerate endpoint which keeps manual days and regenerates AI suggestions
     this.api.regeneratePlanWithStrategy(this.plan._id, this.selectedPreference, this.translationService.currentLang())
       .pipe(
@@ -387,7 +371,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (updatedPlan) => {
-          console.log(`Plan regenerated from API, preference: ${updatedPlan.preference}`);
           this.plan = { ...updatedPlan };
           this.toast(this.translationService.translate('toast.planRegenerated', { strategy: this.getPreferenceLabel(updatedPlan.preference) }));
           this.cdr.detectChanges();
@@ -434,13 +417,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   generateAI = true
 ) {
   const isTransient = !userId;
-  console.log(`Generating ${generateAI ? 'AI' : 'manual'} ${isTransient ? 'transient' : 'saved'} plan for`, { 
-    userId: userId || 'transient', 
-    year, 
-    country, 
-    preference, 
-    availableDays 
-  });
   this.isLoading = true;
 
   this.api
@@ -449,7 +425,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       switchMap((holidayData) => {
         this.holidays = [...holidayData];
         const browserId = userId ? undefined : this.userService.getBrowserId();
-        console.log(`Calling API createPlan with preference: ${preference}, userId: ${userId || 'null'}, browserId: ${browserId || 'null'}`);
         return this.api.createPlan(userId, year, country, availableDays, preference, generateAI, this.translationService.currentLang(), browserId);
       }),
       catchError((err) => {
@@ -463,26 +438,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     .subscribe((plan) => {
       if (!plan) return; // handled in catchError
 
-      console.log('Plan successfully generated:', { 
-        preference: plan.preference, 
-        suggestions: plan.suggestions?.length,
-        usedDays: plan.usedDays,
-        isTransient: isTransient
-      });
       this.plan = { ...plan };
       this.editMode = !generateAI;
       this.isLoading = false;
 
-      if (this.isUserClaimed()) {
-        this.loadSavedPlans();
-        this.toast(this.translationService.translate('toast.planGenerated', { strategy: this.getPreferenceLabel(plan.preference) }), 'success');
-      } else if (isTransient) {
-        // Show toast prompting user to sign in to save
-        this.toast(this.translationService.translate('toast.planGeneratedTransient', { strategy: this.getPreferenceLabel(plan.preference) }), 'info');
-      } else {
-        this.toast(this.translationService.translate('toast.planGenerated', { strategy: this.getPreferenceLabel(plan.preference) }), 'success');
-      }
-      this.cdr.detectChanges();
+      // Use setTimeout to defer toast and change detection to next tick
+      // This prevents ExpressionChangedAfterItHasBeenCheckedError
+      setTimeout(() => {
+        if (this.isUserClaimed()) {
+          this.loadSavedPlans();
+          this.toast(this.translationService.translate('toast.planGenerated', { strategy: this.getPreferenceLabel(plan.preference) }), 'success');
+        } else if (isTransient) {
+          // Show toast prompting user to sign in to save
+          this.toast(this.translationService.translate('toast.planGeneratedTransient', { strategy: this.getPreferenceLabel(plan.preference) }), 'info');
+        } else {
+          this.toast(this.translationService.translate('toast.planGenerated', { strategy: this.getPreferenceLabel(plan.preference) }), 'success');
+        }
+        this.cdr.markForCheck();
+      }, 0);
     });
 }
 
@@ -515,12 +488,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const remaining = this.getRemainingDays();
     this.isLoading = true;
 
-    console.log(`Optimizing with preference: ${this.selectedPreference}`);
-
     this.api.optimizeRemainingDays(this.plan._id, this.selectedPreference, this.translationService.currentLang()).subscribe({
-      next: (updatedPlan) => {
-        console.log(`Plan updated from API, preference: ${updatedPlan.preference}`);
-        this.plan = { ...updatedPlan };
+        next: (updatedPlan) => {
+          this.plan = { ...updatedPlan };
         this.isLoading = false;
         this.editMode = false;
         this.toast(this.translationService.translate('toast.optimized', { strategy: this.getPreferenceLabel(updatedPlan.preference) }));
@@ -668,9 +638,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
    *  AUTHENTICATION
    *  ─────────────────────────────── */
   async handleAuth(): Promise<void> {
-    console.log('🟢 submit emitted, auth method: ' + this.authMethod);
     if (!this.authEmail || !this.authEmail.includes('@')) {
-      console.log("invalid: " + this.authEmail)
       this.toast('Please enter a valid email address.');
       return;
     }
@@ -727,7 +695,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   sendMagicLink(email: string): void {
-    console.log("sending magic link");
     this.isLoading = true;
     const browserId = this.userService['getBrowserId']();
 
@@ -762,7 +729,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   switchAuthMethod(method: 'passkey' | 'email'): void {
-    console.log("Method is: " + method);
     this.authMethod = method;
     this.magicLinkSent = false;
     this.cdr.detectChanges();
@@ -782,8 +748,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-  console.log('Logging out user');
-
   // Clear authentication info
   this.userService.clearCurrentUser(); // if your service has a method for this
 
@@ -905,11 +869,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       const sessionId = params['session_id'];
       if (sessionId) {
-        console.log('Checking payment status for session:', sessionId);
         // Check if payment was successful
         this.api.checkSession(sessionId).subscribe({
           next: (response: any) => {
-            console.log('Payment check response:', response);
             if (response.success && response.premium) {
               // Update user premium status
               if (response.user) {
@@ -927,7 +889,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 this.initializeUser();
               }
             } else {
-              console.log('Payment not completed yet:', response);
               if (response.payment_status === 'unpaid') {
                 this.toast('Payment is still processing. Please wait...', 'info');
               }

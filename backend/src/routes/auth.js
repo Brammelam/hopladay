@@ -9,7 +9,6 @@ import {
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import User from "../models/User.js";
 import MagicLink from "../models/MagicLink.js";
-import { findOrCreateUserByEmail } from "../services/userService.js";
 import emailService from "../services/emailService.js";
 import dotenv from "dotenv";
 dotenv.config();
@@ -24,12 +23,6 @@ const origin = process.env.FRONTEND_URL;
 // e.g., "https://hopladay.com" -> "hopladay.com"
 const rpID = origin ? new URL(origin).hostname : 'localhost';
 
-console.log('Auth module initialized:', {
-  origin,
-  hasEmailUser: !!process.env.EMAILUSER,
-  hasEmailPwd: !!process.env.EMAILPWD,
-  hasFrontendUrl: !!process.env.FRONTEND_URL
-});
 
 /**
  * GET /api/auth/config
@@ -139,13 +132,6 @@ router.post("/register/finish", async (req, res) => {
 
     const regInfo = verification.registrationInfo;
 
-    // Log the structure to understand v13 format
-    console.log('Full verification object structure:', {
-      verified: verification.verified,
-      registrationInfoKeys: Object.keys(regInfo),
-      hasCredential: !!regInfo.credential,
-      credentialKeys: regInfo.credential ? Object.keys(regInfo.credential) : 'N/A',
-    });
 
     // In SimpleWebAuthn v13+, credentials are in regInfo.credential
     const cred = regInfo.credential;
@@ -155,17 +141,6 @@ router.post("/register/finish", async (req, res) => {
       return res.status(500).json({ error: 'Invalid credential structure' });
     }
 
-    console.log('Credential details:', {
-      idType: typeof cred.id,
-      idConstructor: cred.id?.constructor?.name,
-      idIsUint8Array: cred.id instanceof Uint8Array,
-      idLength: cred.id?.length || 'unknown',
-      publicKeyType: typeof cred.publicKey,
-      publicKeyConstructor: cred.publicKey?.constructor?.name,
-      publicKeyLength: cred.publicKey?.length || 'unknown',
-      counter: cred.counter,
-      transports: cred.transports,
-    });
 
     // In v13, cred.id is a base64url string, publicKey is Uint8Array
     // Use SimpleWebAuthn's helper to ensure proper encoding
@@ -178,14 +153,6 @@ router.post("/register/finish", async (req, res) => {
       transports: cred.transports || [],
     };
 
-    console.log('Saving authenticator:', {
-      credentialIDType: typeof newAuthenticator.credentialID,
-      credentialIDLength: newAuthenticator.credentialID.length,
-      credentialID: newAuthenticator.credentialID,
-      publicKeyLength: newAuthenticator.credentialPublicKey.length,
-      counter: newAuthenticator.counter,
-      transports: newAuthenticator.transports,
-    });
 
     // Check if this is a new user (no authenticators before this one)
     const isNewUser = user.authenticators.length === 0;
@@ -193,8 +160,6 @@ router.post("/register/finish", async (req, res) => {
     user.authenticators.push(newAuthenticator);
     user.currentChallenge = undefined;
     await user.save();
-
-    console.log(` Passkey registered for ${email}`);
 
     // Send passkey registration email
     emailService.sendPasskeyRegistered(user.email);
@@ -238,12 +203,6 @@ router.post("/login/start", async (req, res) => {
       return res.status(404).json({ error: "No passkey found for this email" });
     }
 
-    console.log(' Found user with authenticators:', {
-      authenticatorCount: user.authenticators.length,
-      firstAuthType: typeof user.authenticators[0]?.credentialID,
-      firstAuthSample: user.authenticators[0]?.credentialID?.substring?.(0, 50),
-      firstAuthFullLength: user.authenticators[0]?.credentialID?.length,
-    });
 
     // Generate authentication options
     // In v13, allowCredentials[].id should be a base64url STRING, not Uint8Array
@@ -251,11 +210,6 @@ router.post("/login/start", async (req, res) => {
       // Convert to plain object to ensure we have clean data
       const authObj = auth.toObject ? auth.toObject() : auth;
       
-      console.log('Raw authenticator from DB:', {
-        credentialID: authObj.credentialID,
-        credentialIDType: typeof authObj.credentialID,
-        credentialIDLength: authObj.credentialID?.length,
-      });
       
       // credentialID is stored as base64url string, pass it directly
       const credentialIDString = String(authObj.credentialID);
@@ -268,13 +222,6 @@ router.post("/login/start", async (req, res) => {
       };
     });
 
-    console.log(' Generated allowCredentials:', {
-      count: allowCredentials.length,
-      firstId: allowCredentials[0]?.id,
-      firstIdType: typeof allowCredentials[0]?.id,
-      firstIdLength: allowCredentials[0]?.id?.length,
-      firstTransports: allowCredentials[0]?.transports,
-    });
 
     // Generate authentication options with base64url string IDs
     const options = await generateAuthenticationOptions({
@@ -307,17 +254,6 @@ router.post("/login/finish", async (req, res) => {
       return res.status(400).json({ error: "email and credential are required" });
     }
 
-    console.log('Login finish received:', {
-      email,
-      credentialKeys: credential ? Object.keys(credential) : 'N/A',
-      credentialId: credential?.id,
-      credentialType: credential?.type,
-      hasResponse: !!credential?.response,
-      responseKeys: credential?.response ? Object.keys(credential.response) : 'N/A',
-      authenticatorDataType: typeof credential?.response?.authenticatorData,
-      clientDataJSONType: typeof credential?.response?.clientDataJSON,
-      signatureType: typeof credential?.response?.signature,
-    });
 
     const user = await User.findOne({ email });
     if (!user || !user.currentChallenge) {
@@ -327,12 +263,6 @@ router.post("/login/finish", async (req, res) => {
     // Find the authenticator - credential.id is already base64url string
     const credentialIDFromClient = credential.id; // Already base64url string from browser
     
-    console.log(' Looking for authenticator:', {
-      clientCredentialID: credentialIDFromClient,
-      clientIDType: typeof credentialIDFromClient,
-      clientIDLength: credentialIDFromClient?.length,
-      storedIDs: user.authenticators.map(a => String(a.credentialID)),
-    });
     
     const authenticator = user.authenticators.find(auth => {
       const authObj = auth.toObject ? auth.toObject() : auth;
@@ -349,37 +279,15 @@ router.post("/login/finish", async (req, res) => {
     // Convert to plain object for processing
     const authObj = authenticator.toObject ? authenticator.toObject() : authenticator;
 
-    console.log('Preparing verification with authenticator:', {
-      credentialIDLength: String(authObj.credentialID).length,
-      publicKeyLength: String(authObj.credentialPublicKey).length,
-      counter: authObj.counter,
-    });
 
     // In v13: Use SimpleWebAuthn's helper to decode base64url strings
     const credentialIDUint8 = isoBase64URL.toBuffer(String(authObj.credentialID));
     const publicKeyUint8 = isoBase64URL.toBuffer(String(authObj.credentialPublicKey));
 
-    console.log('Calling verifyAuthenticationResponse with:', {
-      hasResponse: !!credential,
-      hasChallenge: !!user.currentChallenge,
-      expectedOrigin: origin,
-      expectedRPID: rpID,
-      authenticatorCredentialID: String(authObj.credentialID),
-      authenticatorCounter: authObj.counter,
-      credentialIDUint8Length: credentialIDUint8.length,
-      publicKeyLength: publicKeyUint8.length,
-    });
 
     // Verify the credential
     let verification;
     try {
-      console.log('Credential object for verification:', {
-        credentialIDType: credentialIDUint8?.constructor?.name,
-        credentialIDLength: credentialIDUint8?.length,
-        publicKeyType: publicKeyUint8?.constructor?.name,
-        publicKeyLength: publicKeyUint8?.length,
-        counter: authObj.counter,
-      });
       
       // Verify using SimpleWebAuthn v13 API
       // NOTE: The parameter is called "credential" not "authenticator" in v13!
@@ -396,11 +304,6 @@ router.post("/login/finish", async (req, res) => {
         },
       });
       
-      console.log(' Verification result:', {
-        verified: verification.verified,
-        hasAuthInfo: !!verification.authenticationInfo,
-        authInfoKeys: verification.authenticationInfo ? Object.keys(verification.authenticationInfo) : 'N/A',
-      });
     } catch (err) {
       console.error(' verifyAuthenticationResponse error:', err);
       console.error('Error details:', {
@@ -422,15 +325,10 @@ router.post("/login/finish", async (req, res) => {
     
     if (authIndex !== -1 && verification.authenticationInfo?.newCounter !== undefined) {
       user.authenticators[authIndex].counter = verification.authenticationInfo.newCounter;
-      console.log(` Updated counter to ${verification.authenticationInfo.newCounter} for authenticator ${authIndex}`);
-    } else {
-      console.warn(' Could not update counter:', { authIndex, hasNewCounter: !!verification.authenticationInfo?.newCounter });
     }
     
     user.currentChallenge = undefined;
     await user.save();
-
-    console.log(` User logged in: ${email}`);
 
     res.json({
       verified: true,
@@ -451,193 +349,133 @@ router.post("/login/finish", async (req, res) => {
 /**
  * POST /api/auth/magic-link/send
  * Request a magic link for email authentication
- * Body: { email, browserId? }
+ * Body: { email }
  */
 router.post("/magic-link/send", async (req, res) => {
   try {
-    const { email, browserId } = req.body;
+    const { email } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: "email is required" });
-    }
-
-    // Find or create user by email only (no anonymous user claiming)
-    // Anonymous users are not persisted, so we don't need to claim them
-    let user = await User.findOne({ email });
-    console.log(' User lookup by email:', { found: !!user, email });
-    
-    if (!user) {
-      // Create new user
-      console.log('Creating new user for email:', email);
-      const wasNew = !(await User.findOne({ email }));
-      user = await findOrCreateUserByEmail(email, { name: email.split('@')[0] });
-      
-      // Send welcome email if this is a new user
-      if (wasNew) {
-        emailService.sendWelcome(user.email, user.name);
-      }
     }
 
     // Generate unique token
     const token = crypto.randomBytes(32).toString('base64url');
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    // Save magic link
+    // Check if user exists - if not, we'll create them on verification
+    const existingUser = await User.findOne({ email });
+    const userId = existingUser ? existingUser._id : null;
+
+    // Save magic link (userId will be set on verification if user doesn't exist)
     const magicLink = new MagicLink({
       email,
       token,
       expiresAt,
-      userId: user._id,
+      userId,
     });
     await magicLink.save();
 
-    // Generate magic link URL with language prefix (default to 'en')
-    // The frontend routes are now language-prefixed: /:lang/auth/verify
+    // Generate magic link URL
     const magicUrl = `${origin}/en/auth/verify?token=${token}`;
 
     // Send magic link email in background (non-blocking)
     emailService.sendMagicLink(email, magicUrl);
-  } catch (err) {
-    console.error(" Error sending magic link:", err);
-    res.status(500).json({ error: "Failed to send magic link", message: err.message });
-  }
 
-      // Send immediate response
+    // Send immediate response
     res.json({
       success: true,
       message: "Magic link sent to your email",
       expiresIn: '15 minutes'
     });
+  } catch (err) {
+    console.error(" Error sending magic link:", err);
+    res.status(500).json({ error: "Failed to send magic link", message: err.message });
+  }
 });
 
 /**
  * POST /api/auth/magic-link/verify
- * Verify a magic link token
- * Body: { token }
+ * Verify a magic link token and log user in
+ * Body: { token, browserId? }
  */
 router.post("/magic-link/verify", async (req, res) => {
   try {
-    const { token, browserId } = req.body; // Accept browserId to migrate anonymous plans
-
-    console.log(' Magic link verification request:', {
-      hasToken: !!token,
-      tokenLength: token?.length,
-      tokenSample: token?.substring(0, 20) + '...',
-    });
+    const { token, browserId } = req.body;
 
     if (!token) {
-      console.error(' No token provided');
       return res.status(400).json({ error: "token is required" });
     }
 
     // Find the magic link
     const now = new Date();
     const magicLink = await MagicLink.findOne({ token });
-    
-    console.log(' Magic link lookup result:', {
-      found: !!magicLink,
-      used: magicLink?.used,
-      expired: magicLink ? magicLink.expiresAt < now : 'N/A',
-      expiresAt: magicLink?.expiresAt?.toISOString(),
-      currentTime: now.toISOString(),
-    });
 
     if (!magicLink) {
-      console.error(' Magic link not found in database');
       return res.status(400).json({ error: "Invalid magic link" });
     }
 
     if (magicLink.used) {
-      console.error(' Magic link already used');
       return res.status(400).json({ error: "This magic link has already been used" });
     }
 
     if (magicLink.expiresAt < now) {
-      console.error(' Magic link expired');
       return res.status(400).json({ error: "Magic link has expired" });
     }
 
-    // Get the user
-    const user = await User.findById(magicLink.userId);
-    
-    console.log(' User lookup:', {
-      found: !!user,
-      userId: magicLink.userId.toString(),
-      email: user?.email,
-      hasBrowserId: !!user?.browserId,
-    });
+    // Find or create user by email
+    let user = await User.findOne({ email: magicLink.email });
     
     if (!user) {
-      console.error(' User not found for magic link');
-      return res.status(404).json({ error: "User not found" });
+      // Create new user
+      user = new User({
+        email: magicLink.email,
+        name: magicLink.email.split('@')[0],
+        availableDays: 25,
+        browserId: browserId || undefined,
+      });
+      await user.save();
+      
+      // Send welcome email
+      emailService.sendWelcome(user.email, user.name);
+    } else if (browserId && browserId !== user.browserId) {
+      // Update browserId if provided
+      user.browserId = browserId;
+      await user.save();
     }
 
-    // Ensure user has email (should already have it from magic-link/send, but double-check)
-    if (!user.email) {
-      console.warn(' User from magic link has no email, this should not happen');
-      // Try to get email from magic link
-      if (magicLink.email) {
-        user.email = magicLink.email;
-        if (!user.name) {
-          user.name = magicLink.email.split('@')[0];
-        }
-        await user.save();
-        console.log(' Added email to user from magic link');
-      }
-    }
-
-    // Mark link as used
-    magicLink.used = true;
-    await magicLink.save();
-
-    // Migrate plans from browserId to userId
-    // Use browserId from request if provided, otherwise use user's stored browserId
-    const browserIdToMigrate = browserId || user.browserId;
-    
-    if (browserIdToMigrate) {
+    // Migrate anonymous plans (if browserId provided and user has plans)
+    if (browserId) {
+      const HolidayPlan = (await import('../models/HolidayPlan.js')).default;
       const plansToMigrate = await HolidayPlan.find({ 
-        browserId: browserIdToMigrate, 
+        browserId: browserId, 
         userId: { $exists: false } 
       });
       
       if (plansToMigrate.length > 0) {
-        console.log(` Migrating ${plansToMigrate.length} plan(s) from browserId ${browserIdToMigrate} to userId ${user._id}`);
-        
         for (const plan of plansToMigrate) {
           // Check if user already has a plan for this year
           const existingPlan = await HolidayPlan.findOne({ userId: user._id, year: plan.year });
           
           if (existingPlan) {
             // User already has a plan for this year - delete the anonymous one
-            console.log(` User already has plan for ${plan.year}, deleting anonymous plan`);
             await plan.deleteOne();
           } else {
             // Migrate the plan to userId
             plan.userId = user._id;
-            plan.browserId = undefined; // Remove browserId
+            plan.browserId = undefined;
             await plan.save();
-            console.log(` Migrated plan for year ${plan.year}`);
           }
         }
       }
-      
-      // Also update user's browserId if provided in request (for sync)
-      if (browserId && browserId !== user.browserId) {
-        user.browserId = browserId;
-        await user.save();
-        console.log(` Updated user browserId to ${browserId}`);
-      }
     }
 
-    console.log(` Magic link verified successfully for ${user.email}`, {
-      userId: user._id.toString(),
-      userName: user.name,
-      hasEmail: !!user.email,
-      browserId: user.browserId,
-    });
+    // Mark link as used
+    magicLink.used = true;
+    magicLink.userId = user._id; // Update userId in case it was null
+    await magicLink.save();
 
-    // Return user with all necessary fields
-    // IMPORTANT: Always return browserId so frontend can sync it
+    // Return user
     res.json({
       verified: true,
       user: {
@@ -650,10 +488,7 @@ router.post("/magic-link/verify", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error(" Error verifying magic link:", {
-      message: err.message,
-      stack: err.stack?.split('\n').slice(0, 5),
-    });
+    console.error(" Error verifying magic link:", err);
     res.status(500).json({ error: "Failed to verify magic link", message: err.message });
   }
 });

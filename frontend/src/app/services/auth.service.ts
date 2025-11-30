@@ -84,7 +84,7 @@ export class AuthService {
    * @param token - Magic link token
    * @param browserId - Optional browserId for migrating anonymous plans
    */
-  verifyMagicLink(token: string, browserId?: string): Observable<{ verified: boolean; user: AuthUser }> {
+  verifyMagicLink(token: string, browserId?: string) {
     return this.http.post<{ verified: boolean; user: AuthUser }>(
       `${this.baseUrl}/auth/magic-link/verify`,
       { token, browserId }

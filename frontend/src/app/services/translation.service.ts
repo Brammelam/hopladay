@@ -67,7 +67,23 @@ export class TranslationService {
   }
 
   private detectLanguage(): void {
-    const path = this.router.url;
+    // Use window.location.pathname to get the actual browser path (more reliable than router.url on initial load)
+    const browserPath = typeof window !== 'undefined' ? window.location.pathname : this.router.url;
+    const routerPath = this.router.url;
+    const path = browserPath || routerPath;
+    
+    // Don't redirect on auth/verify route - let it handle its own language
+    if (path.includes('/auth/verify') || (typeof window !== 'undefined' && window.location.pathname.includes('/auth/verify'))) {
+      const langMatch = path.match(/^\/(en|no|nl)(\/|$)/);
+      if (langMatch) {
+        const lang = langMatch[1] as Language;
+        this.setLanguage(lang);
+      } else {
+        this.setLanguage('en');
+      }
+      return;
+    }
+    
     const langMatch = path.match(/^\/(en|no|nl)(\/|$)/);
     
     // If language is already in the URL, use it
@@ -99,7 +115,15 @@ export class TranslationService {
   }
 
   private redirectToLanguage(lang: Language): void {
-    const currentPath = this.router.url;
+    // Use window.location.pathname to get the actual browser path
+    const browserPath = typeof window !== 'undefined' ? window.location.pathname : this.router.url;
+    const currentPath = browserPath || this.router.url;
+    
+    // Never redirect on auth/verify route - let it handle its own language
+    if (currentPath.includes('/auth/verify') || (typeof window !== 'undefined' && window.location.pathname.includes('/auth/verify'))) {
+      return;
+    }
+    
     if (!currentPath.match(/^\/(en|no|nl)(\/|$)/)) {
       const newPath = `/${lang}${currentPath === '/' ? '' : currentPath}`;
       this.router.navigateByUrl(newPath, { replaceUrl: true });

@@ -26,7 +26,6 @@ export function translationInitializer() {
       translationService.loadTranslations('en', en);
       translationService.loadTranslations('no', no);
       translationService.loadTranslations('nl', nl);
-      console.log('Translations loaded successfully');
     }).catch((error) => {
       console.error('Failed to load translations:', error);
       // Load empty translations as fallback to prevent showing keys

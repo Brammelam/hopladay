@@ -6,13 +6,13 @@ import { RefundPolicyComponent } from './refund-policy/refund-policy';
 import { UnsubscribeComponent } from './unsubscribe/unsubscribe';
 
 const appRoutes: Routes = [
-  { path: '', component: DashboardComponent },
   { path: 'auth/verify', component: AuthVerifyComponent },
   { path: 'payment/success', component: DashboardComponent },
   { path: 'payment/cancel', component: DashboardComponent },
   { path: 'payment/info', component: StripeInfoComponent },
   { path: 'refunds', component: RefundPolicyComponent },
-  { path: 'unsubscribe', component: UnsubscribeComponent }
+  { path: 'unsubscribe', component: UnsubscribeComponent },
+  { path: '', component: DashboardComponent }
 ];
 
 export const routes: Routes = [
