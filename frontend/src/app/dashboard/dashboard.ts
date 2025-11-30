@@ -448,8 +448,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     .pipe(
       switchMap((holidayData) => {
         this.holidays = [...holidayData];
-        console.log(`Calling API createPlan with preference: ${preference}, userId: ${userId || 'null (transient)'}`);
-        return this.api.createPlan(userId, year, country, availableDays, preference, generateAI, this.translationService.currentLang());
+        const browserId = userId ? undefined : this.userService.getBrowserId();
+        console.log(`Calling API createPlan with preference: ${preference}, userId: ${userId || 'null'}, browserId: ${browserId || 'null'}`);
+        return this.api.createPlan(userId, year, country, availableDays, preference, generateAI, this.translationService.currentLang(), browserId);
       }),
       catchError((err) => {
         console.error('Failed during plan generation pipeline:', err);

@@ -57,9 +57,9 @@ export class UserService {
   }
 
   /**
-   * Get or generate browser ID
+   * Get or generate browser ID (public method for anonymous sessions)
    */
-  private getBrowserId(): string {
+  getBrowserId(): string {
     try {
       let browserId = localStorage.getItem(this.BROWSER_ID_KEY);
       
@@ -172,19 +172,15 @@ export class UserService {
   }
 
   setCurrentUser(user: User): void {
-    // If this is an authenticated user (with email), ensure we replace any anonymous user
-    if (user.email) {
-      const currentUser = this.getCurrentUser();
-      // If we have an anonymous user (no email) and this is an authenticated user, replace it
-      if (currentUser && !currentUser.email && user.email) {
-        console.log('🔄 Replacing anonymous user with authenticated user:', {
-          oldUserId: currentUser._id,
-          newUserId: user._id,
-          email: user.email,
-        });
-      }
+    // 🔥 CRITICAL: Only store authenticated users (with email) as currentUser
+    // Anonymous users should NOT be stored as currentUser
+    if (!user.email) {
+      console.log('⚠️ Anonymous user - NOT storing as currentUser (only browserId is used)');
+      return; // Don't store anonymous users
     }
 
+    // This is an authenticated user - store it
+    console.log('✅ Storing authenticated user as currentUser:', user.email);
     this.saveUser(user);
 
     // Ensure correct browserId stays synced
@@ -199,7 +195,7 @@ export class UserService {
     }
 
     // Mark authentication as in progress to prevent anonymous user creation
-    if (user.email && typeof localStorage !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
       try {
         localStorage.setItem(this.AUTH_IN_PROGRESS_KEY, 'true');
         // Clear the flag after a short delay (in case redirect fails)

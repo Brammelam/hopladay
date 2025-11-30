@@ -517,7 +517,7 @@ router.post("/magic-link/send", async (req, res) => {
  */
 router.post("/magic-link/verify", async (req, res) => {
   try {
-    const { token } = req.body;
+    const { token, browserId } = req.body; // Accept browserId to migrate anonymous plans
 
     console.log(' Magic link verification request:', {
       hasToken: !!token,
@@ -589,6 +589,45 @@ router.post("/magic-link/verify", async (req, res) => {
     // Mark link as used
     magicLink.used = true;
     await magicLink.save();
+
+    // Migrate plans from browserId to userId
+    // Use browserId from request if provided, otherwise use user's stored browserId
+    const browserIdToMigrate = browserId || user.browserId;
+    
+    if (browserIdToMigrate) {
+      const plansToMigrate = await HolidayPlan.find({ 
+        browserId: browserIdToMigrate, 
+        userId: { $exists: false } 
+      });
+      
+      if (plansToMigrate.length > 0) {
+        console.log(` Migrating ${plansToMigrate.length} plan(s) from browserId ${browserIdToMigrate} to userId ${user._id}`);
+        
+        for (const plan of plansToMigrate) {
+          // Check if user already has a plan for this year
+          const existingPlan = await HolidayPlan.findOne({ userId: user._id, year: plan.year });
+          
+          if (existingPlan) {
+            // User already has a plan for this year - delete the anonymous one
+            console.log(` User already has plan for ${plan.year}, deleting anonymous plan`);
+            await plan.deleteOne();
+          } else {
+            // Migrate the plan to userId
+            plan.userId = user._id;
+            plan.browserId = undefined; // Remove browserId
+            await plan.save();
+            console.log(` Migrated plan for year ${plan.year}`);
+          }
+        }
+      }
+      
+      // Also update user's browserId if provided in request (for sync)
+      if (browserId && browserId !== user.browserId) {
+        user.browserId = browserId;
+        await user.save();
+        console.log(` Updated user browserId to ${browserId}`);
+      }
+    }
 
     console.log(` Magic link verified successfully for ${user.email}`, {
       userId: user._id.toString(),

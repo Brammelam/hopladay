@@ -285,59 +285,45 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
  */
 router.post('/', async (req, res) => {
   try {
-    const { userId, year, country = 'NO', availableDays, preference = 'balanced', generateAI = true, lang = 'en' } = req.body;
+    const { userId, browserId, year, country = 'NO', availableDays, preference = 'balanced', generateAI = true, lang = 'en' } = req.body;
 
-    // If no userId, generate transient plan (not saved to DB)
-    if (!userId) {
-      console.log('Generating transient plan (no userId provided)');
-      const vacationDays = availableDays || 25; // Default to 25 if not provided
-      
-      let planData = { suggestions: [], totalDaysOff: 0, usedDays: 0 };
-      
-      if (generateAI) {
-        // Generate AI suggestions
-        const holidays = await getHolidaysForYear(year, country);
-        // Transient plans are always free tier (no premium features)
-        planData = generateHolidayPlan(holidays, vacationDays, year, preference, { isPremium: false, lang });
-      }
-      
-      // Return transient plan object (not saved to DB)
-      const transientPlan = {
-        _id: null, // No ID for transient plans
-        userId: null,
-        year,
-        countryCode: country,
-        availableDays: vacationDays,
-        suggestions: planData.suggestions,
-        totalDaysOff: planData.totalDaysOff,
-        usedDays: planData.usedDays,
-        preference,
-        isModifiedByUser: false,
-        isTransient: true, // Flag to indicate this is a transient plan
-      };
-      
-      return res.json(transientPlan);
+    // Must have either userId (logged in) or browserId (anonymous)
+    if (!userId && !browserId) {
+      return res.status(400).json({ error: 'Either userId or browserId is required' });
     }
 
-    // UserId provided - save plan to DB
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    let user = null;
+    let vacationDays = availableDays || 25;
+    let isPremium = false;
 
-    const vacationDays = availableDays ?? user.availableDays;
-    
+    if (userId) {
+      // Logged in user
+      user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      vacationDays = availableDays ?? user.availableDays;
+      isPremium = user.isPremium || false;
+    }
+
+    // Generate plan data
     let planData = { suggestions: [], totalDaysOff: 0, usedDays: 0 };
     
     if (generateAI) {
-      // Generate AI suggestions
       const holidays = await getHolidaysForYear(year, country);
-      const isPremium = user.isPremium || false;
       planData = generateHolidayPlan(holidays, vacationDays, year, preference, { isPremium, lang });
     }
-    // Otherwise, create empty plan for manual planning
 
-    let plan = await HolidayPlan.findOne({ userId, year });
+    // Find or create plan
+    let plan;
+    if (userId) {
+      // Logged in: find by userId
+      plan = await HolidayPlan.findOne({ userId, year });
+    } else {
+      // Anonymous: find by browserId
+      plan = await HolidayPlan.findOne({ browserId, year });
+    }
 
     if (plan) {
+      // Update existing plan
       plan.suggestions = planData.suggestions;
       plan.totalDaysOff = planData.totalDaysOff;
       plan.usedDays = planData.usedDays;
@@ -348,9 +334,17 @@ router.post('/', async (req, res) => {
       if (generateAI) {
         plan.isModifiedByUser = false;
       }
+      // If plan was anonymous and user is now logged in, migrate it
+      if (plan.browserId && userId) {
+        console.log(`Migrating plan from browserId ${plan.browserId} to userId ${userId}`);
+        plan.userId = userId;
+        plan.browserId = undefined; // Remove browserId
+      }
     } else {
+      // Create new plan
       plan = new HolidayPlan({
-        userId,
+        userId: userId || undefined,
+        browserId: browserId || undefined,
         year,
         countryCode: country,
         availableDays: vacationDays,

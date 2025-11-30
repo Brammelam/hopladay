@@ -19,7 +19,8 @@ const manualDaySchema = new mongoose.Schema({
 });
 
 const planSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: false }, // Optional - can use browserId instead
+  browserId: { type: String, required: false }, // For anonymous sessions
   year: { type: Number, required: true },
   countryCode: { type: String, default: "NO" },
   availableDays: Number,
@@ -31,6 +32,8 @@ const planSchema = new mongoose.Schema({
   preference: { type: String, default: "balanced" },
 }, { timestamps: true });
 
-planSchema.index({ userId: 1, year: 1 }, { unique: true });
+// Index: userId+year OR browserId+year (but not both)
+planSchema.index({ userId: 1, year: 1 }, { unique: true, sparse: true });
+planSchema.index({ browserId: 1, year: 1 }, { unique: true, sparse: true });
 
 export default mongoose.model("HolidayPlan", planSchema);

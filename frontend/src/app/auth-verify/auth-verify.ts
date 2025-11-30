@@ -135,7 +135,8 @@ export class AuthVerifyComponent implements OnInit, OnDestroy {
 
     // Verify the token
     console.log('📤 Sending verification request to backend...');
-    this.authService.verifyMagicLink(token).subscribe({
+    const browserId = this.userService.getBrowserId(); // Get browserId for plan migration
+    this.authService.verifyMagicLink(token, browserId).subscribe({
       next: (result) => {
         console.log('📥 Verification response received:', {
           verified: result.verified,
