@@ -209,24 +209,20 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
         const aiGain = totalDaysOff - current.totalDaysOff;
         const actualRoi = aiGain / aiContribution;
         
-        console.log(`  Manual+AI merge: Manual had ${current.totalDaysOff} days, AI adds ${aiContribution} days for ${aiGain} extra → ROI: ${actualRoi.toFixed(1)}x`);
-        
         roi = actualRoi.toFixed(1);
         efficiency = actualRoi >= 4 ? 'high' : actualRoi >= 3 ? 'good' : 'normal';
         description = `Extended: +${aiContribution} day${aiContribution > 1 ? 's' : ''} → ${totalDaysOff} days total`;
-        reason = `AI added ${aiContribution} vacation day${aiContribution > 1 ? 's' : ''} to extend your manual selection (${aiGain} extra days)`;
+        reason = `We added ${aiContribution} vacation day${aiContribution > 1 ? 's' : ''} to extend your manual selection (${aiGain} extra days)`;
       } else if (!current.isManual && next.isManual) {
         // AI block merged with manual - show AI's actual contribution
         const aiContribution = current.vacationDaysUsed;
         const aiGain = totalDaysOff - next.totalDaysOff;
         const actualRoi = aiGain / aiContribution;
         
-        console.log(`  AI+Manual merge: Manual had ${next.totalDaysOff} days, AI adds ${aiContribution} days for ${aiGain} extra → ROI: ${actualRoi.toFixed(1)}x`);
-        
         roi = actualRoi.toFixed(1);
         efficiency = actualRoi >= 4 ? 'high' : actualRoi >= 3 ? 'good' : 'normal';
         description = `Extended: +${aiContribution} day${aiContribution > 1 ? 's' : ''} → ${totalDaysOff} days total`;
-        reason = `AI added ${aiContribution} vacation day${aiContribution > 1 ? 's' : ''} to extend your manual selection (${aiGain} extra days)`;
+        reason = `We added ${aiContribution} vacation day${aiContribution > 1 ? 's' : ''} to extend your manual selection (${aiGain} extra days)`;
       } else {
         // Both manual or both AI - use simple ROI
         const simpleRoi = totalDaysOff / vacationDaysUsed;
@@ -852,8 +848,6 @@ router.post("/:planId/regenerate", async (req, res) => {
     // Generate new AI suggestions with new strategy
       const aiPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium, lang });
 
-    console.log(`Generated ${aiPlan.suggestions.length} new AI suggestions`);
-
     // Combine manual suggestions with new AI suggestions
     const combinedSuggestions = [
       ...manualSuggestions,
@@ -959,10 +953,6 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
     const isPremium = user.isPremium || false;
     const optimizedPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium, lang });
 
-    console.log(`AI generated ${optimizedPlan.suggestions.length} new suggestions using ${optimizedPlan.usedDays} days`);
-
-    // Log the suggestions
-    console.log(`New suggestions from AI:`);
     optimizedPlan.suggestions.forEach((s, i) => {
       console.log(`  ${i}: ${parseISODate(s.startDate).toDateString()} - ${parseISODate(s.endDate).toDateString()} (${s.vacationDaysUsed} vacation days)`);
     });

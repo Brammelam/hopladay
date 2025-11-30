@@ -62,7 +62,7 @@
   },
   "planning": {
     "manualPlan": "Manual plan first",
-    "manualDescription": "Start with an empty calendar, add your preferred vacation days, and let AI fill in the rest.",
+    "manualDescription": "Start with an empty calendar, add your preferred vacation days, and let us fill in the rest.",
     "startPlanning": "Start planning",
     "generatePlan": "Generate plan",
     "generateDescription": "Let us automatically maximize your time off and generate your perfect plan.",
@@ -115,9 +115,9 @@
   },
   "strategy": {
     "chooseStrategy": "Choose Strategy",
-    "howShouldAI": "How should AI generate your vacation plan?",
+    "howShouldAI": "How should we generate your vacation plan?",
     "regenerateStrategy": "Try a different strategy and regenerate your plan",
-    "optimizeStrategy": "How should AI optimize your remaining vacation days?",
+    "optimizeStrategy": "How should we optimize your remaining vacation days?",
     "generatePlan": "Generate Plan",
     "regeneratePlan": "Regenerate Plan",
     "optimizeRemaining": "Optimize Remaining",

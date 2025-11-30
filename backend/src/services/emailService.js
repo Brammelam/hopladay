@@ -356,7 +356,7 @@ class EmailService {
                     <p style="margin: 30px 0 10px 0; color: #374151; font-size: 14px; font-weight: 600;">You will now have access to:</p>
                     <ul style="margin: 0 0 30px 0; padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.8;">
                       <li>Unlimited vacation suggestions</li>
-                      <li>All advanced AI strategies</li>
+                      <li>All advanced strategies</li>
                       <li>Full use of all available vacation days</li>
                       <li>Calendar (.ics) and PDF export</li>
                       <li>Detailed ROI and efficiency insights</li>
@@ -506,7 +506,7 @@ class EmailService {
                     <ol style="margin: 0 0 30px 0; padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.8;">
                       <li>Select your country and year</li>
                       <li>Enter your available vacation days</li>
-                      <li>Let our AI create the perfect plan for you</li>
+                      <li>Let our algorithms create the perfect plan for you</li>
                     </ol>
                     <p style="margin: 0; color: #6b7280; font-size: 13px; line-height: 1.5;">
                       If you have any questions, feel free to reach out to us at 

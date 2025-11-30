@@ -62,7 +62,7 @@
   },
   "planning": {
     "manualPlan": "Manuell plan først",
-    "manualDescription": "Start med en tom kalender, legg til dine foretrukne feriedager, og la AI fylle inn resten.",
+    "manualDescription": "Start med en tom kalender, legg til dine foretrukne feriedager, og la oss fylle inn resten.",
     "startPlanning": "Begynn planlegging",
     "generatePlan": "Generer plan",
     "generateDescription": "La oss automatisk maksimere fridagene dine og generere din perfekte plan.",
@@ -115,9 +115,9 @@
   },
   "strategy": {
     "chooseStrategy": "Velg strategi",
-    "howShouldAI": "Hvordan skal AI generere ferieplanen din?",
+    "howShouldAI": "Hvordan skal vi generere ferieplanen din?",
     "regenerateStrategy": "Prøv en annen strategi og regenerer planen din",
-    "optimizeStrategy": "Hvordan skal AI optimalisere de gjenværende feriedagene dine?",
+    "optimizeStrategy": "Hvordan skal vi optimalisere de gjenværende feriedagene dine?",
     "generatePlan": "Generer plan",
     "regeneratePlan": "Regenerer plan",
     "optimizeRemaining": "Optimaliser gjenværende",

@@ -62,7 +62,7 @@
   },
   "planning": {
     "manualPlan": "Handmatig plan eerst",
-    "manualDescription": "Begin met een lege kalender, voeg je voorkeursvakantiedagen toe en laat AI de rest invullen.",
+    "manualDescription": "Begin met een lege kalender, voeg je voorkeursvakantiedagen toe en laat ons de rest invullen.",
     "startPlanning": "Begin met plannen",
     "generatePlan": "Genereer plan",
     "generateDescription": "Laat ons automatisch je vrije dagen maximaliseren en je perfecte plan genereren.",
@@ -115,9 +115,9 @@
   },
   "strategy": {
     "chooseStrategy": "Kies strategie",
-    "howShouldAI": "Hoe moet AI je vakantieplan genereren?",
+    "howShouldAI": "Hoe zullen we je vakantieplan genereren?",
     "regenerateStrategy": "Probeer een andere strategie en genereer je plan opnieuw",
-    "optimizeStrategy": "Hoe moet AI je resterende vakantiedagen optimaliseren?",
+    "optimizeStrategy": "Hoe zullen we je resterende vakantiedagen optimaliseren?",
     "generatePlan": "Genereer plan",
     "regeneratePlan": "Plan opnieuw genereren",
     "optimizeRemaining": "Optimaliseer resterend",
