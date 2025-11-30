@@ -70,36 +70,32 @@ export class TranslationService {
     const path = this.router.url;
     const langMatch = path.match(/^\/(en|no|nl)(\/|$)/);
     
+    // If language is already in the URL, use it
     if (langMatch) {
       const lang = langMatch[1] as Language;
       this.setLanguage(lang);
       return;
     }
 
+    // Only redirect based on stored preference, not browser language
+    // This prevents SEO issues from automatic redirects
+    // Default to 'en' if no stored preference
     const stored = typeof window !== 'undefined' && window.localStorage 
       ? localStorage.getItem('hopladay_lang') as Language 
       : null;
+    
     if (stored && (stored === 'en' || stored === 'no' || stored === 'nl')) {
       this.setLanguage(stored);
-      this.redirectToLanguage(stored);
+      // Only redirect if we're not already on a language route
+      // This prevents redirect loops
+      if (!path.match(/^\/(en|no|nl)(\/|$)/)) {
+        this.redirectToLanguage(stored);
+      }
       return;
     }
 
-    const browserLang = typeof navigator !== 'undefined' 
-      ? navigator.language.split('-')[0] 
-      : 'en';
-    if (browserLang === 'no' || browserLang === 'nb' || browserLang === 'nn') {
-      this.setLanguage('no');
-      this.redirectToLanguage('no');
-    } else if (browserLang === 'nl') {
-      this.setLanguage('nl');
-      this.redirectToLanguage('nl');
-    } else {
-      this.setLanguage('en');
-      if (!path.startsWith('/en')) {
-        this.redirectToLanguage('en');
-      }
-    }
+    // Default to English - no redirect needed as router handles it
+    this.setLanguage('en');
   }
 
   private redirectToLanguage(lang: Language): void {

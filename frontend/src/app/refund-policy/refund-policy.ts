@@ -33,11 +33,12 @@ export class RefundPolicyComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const currentLang = this.translationService.currentLang();
     this.seoService.updateSEO({
       title: 'Refund Policy - Hopladay Premium',
       description: 'Read Hopladay\'s refund policy for Premium subscriptions. Learn about our cancellation and refund terms.',
-      url: 'https://hopladay.com/refunds'
-    });
+      url: `https://hopladay.com/${currentLang}/refunds`
+    }, currentLang);
   }
 
   goBack(): void {
