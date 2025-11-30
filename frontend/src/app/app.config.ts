@@ -5,7 +5,7 @@ import {
   provideZonelessChangeDetection,
   importProvidersFrom
 } from '@angular/core';
-import { provideRouter, withPreloading } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { translationInitializer } from './services/translation-initializer';
 import {
@@ -35,7 +35,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch()),
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes, withPreloading()),
+    provideRouter(routes),
     {
       provide: APP_INITIALIZER,
       useFactory: translationInitializer,
