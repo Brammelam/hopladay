@@ -178,7 +178,7 @@
   </header>
 
   <!-- Onboarding Message for First-Time Users -->
-  <section *ngIf="!plan && !isLoading && !isUserClaimed" class="w-full max-w-3xl mb-10 mx-auto" aria-labelledby="welcome-heading">
+  <section *ngIf="!plan && !isLoading && !isUserClaimed()" class="w-full max-w-3xl mb-10 mx-auto" aria-labelledby="welcome-heading">
     <div
       class="bg-white border border-gray-200 rounded-lg p-6 md:p-8"
     >
