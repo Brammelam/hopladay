@@ -82,8 +82,17 @@ export class UserService {
 
   /**
    * Initialize user session
+   * Only creates anonymous user if no authenticated user exists
    */
   initializeUser(availableDays: number = 25): Observable<User> {
+    // Check if we already have an authenticated user (with email)
+    const currentUser = this.getCurrentUser();
+    if (currentUser && currentUser.email) {
+      console.log('⚠️ Authenticated user already exists, skipping anonymous initialization:', currentUser.email);
+      // Return the existing authenticated user instead of creating anonymous
+      return of(currentUser);
+    }
+
     const browserId = this.getBrowserId();
     
     return this.http.post<User>(`${this.baseUrl}/users/init`, {
@@ -91,11 +100,17 @@ export class UserService {
       availableDays
     }).pipe(
       tap(user => {
-        this.currentUserSubject.next(user);
-        console.log(' User initialized:', user);
+        // Only set if we don't already have an authenticated user
+        const existingUser = this.getCurrentUser();
+        if (!existingUser || !existingUser.email) {
+          this.currentUserSubject.next(user);
+          console.log('✅ Anonymous user initialized:', user._id);
+        } else {
+          console.log('⚠️ Skipping anonymous user initialization, authenticated user exists:', existingUser.email);
+        }
       }),
       catchError(err => {
-        console.error(' Failed to initialize user:', err);
+        console.error('❌ Failed to initialize user:', err);
         throw err;
       })
     );

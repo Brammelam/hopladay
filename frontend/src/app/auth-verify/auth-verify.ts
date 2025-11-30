@@ -158,12 +158,21 @@ export class AuthVerifyComponent implements OnInit, OnDestroy {
             const savedUser = this.userService.getCurrentUser();
             if (!savedUser) {
               console.warn('⚠️ User was not saved to service, but verification succeeded');
+            } else {
+              console.log('✅ Verified user is now in service:', {
+                userId: savedUser._id,
+                email: savedUser.email,
+              });
             }
             
             this.success = true;
             
             // Auto-redirect after 1.5 seconds (reduced from 2 for better UX)
-            setTimeout(() => this.goToDashboard(), 1500);
+            // Use window.location to ensure full page reload and proper user initialization
+            setTimeout(() => {
+              const currentLang = this.translationService.currentLang();
+              window.location.href = `/${currentLang}`;
+            }, 1500);
           } catch (err) {
             console.error('❌ Error setting user data:', err);
             this.success = false;

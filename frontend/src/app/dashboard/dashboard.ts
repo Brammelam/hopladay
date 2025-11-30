@@ -185,6 +185,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const currentUser = this.userService.getCurrentUser();
 
     if (currentUser) {
+      console.log('✅ Using existing user:', {
+        userId: currentUser._id,
+        email: currentUser.email,
+        isPremium: currentUser.isPremium,
+      });
       this.userId = currentUser._id;
       this.isUserReady = true;
 
@@ -198,7 +203,59 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Anonymous session init
+    // Check if we're coming from auth verify (don't create anonymous user if we just authenticated)
+    const isFromAuthVerify = this.router.url.includes('/auth/verify');
+    if (isFromAuthVerify) {
+      console.log('⚠️ Coming from auth verify but no user found. Waiting for user to be set...');
+      // Wait a bit for user to be set from auth verify
+      setTimeout(() => {
+        const user = this.userService.getCurrentUser();
+        if (user) {
+          console.log('✅ User found after delay:', user.email);
+          this.userId = user._id;
+          this.isUserReady = true;
+          if (user.email) {
+            this.loadUserPlans(user._id);
+            this.loadSavedPlans();
+          }
+          this.isPremium = user.isPremium || false;
+          this.cdr.detectChanges();
+        } else {
+          console.warn('⚠️ Still no user after delay, initializing anonymous session');
+          this.initializeAnonymousUser();
+        }
+      }, 500);
+      return;
+    }
+
+    // Before creating anonymous user, check if there's an authenticated user in localStorage
+    // that might not have been restored yet (iOS Safari timing issue)
+    try {
+      const storedUserStr = localStorage.getItem('hopladay_user');
+      if (storedUserStr) {
+        const storedUser = JSON.parse(storedUserStr);
+        // If there's an authenticated user (with email) in storage, use it instead of creating anonymous
+        if (storedUser && storedUser.email) {
+          console.log('✅ Found authenticated user in localStorage, restoring:', storedUser.email);
+          this.userService.setCurrentUser(storedUser);
+          this.userId = storedUser._id;
+          this.isUserReady = true;
+          this.loadUserPlans(storedUser._id);
+          this.loadSavedPlans();
+          this.isPremium = storedUser.isPremium || false;
+          this.cdr.detectChanges();
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to check localStorage for user:', err);
+    }
+
+    // Anonymous session init (only if no authenticated user exists)
+    this.initializeAnonymousUser();
+  }
+
+  private initializeAnonymousUser(): void {
     this.userService.initializeUser(this.availableDays).subscribe({
       next: (user) => {
         this.userId = user._id;
