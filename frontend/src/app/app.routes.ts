@@ -1,18 +1,34 @@
 import { Routes } from '@angular/router';
-import { DashboardComponent } from './dashboard/dashboard';
-import { AuthVerifyComponent } from './auth-verify/auth-verify';
-import { StripeInfoComponent } from './stripe-info/stripe-info';
-import { RefundPolicyComponent } from './refund-policy/refund-policy';
-import { UnsubscribeComponent } from './unsubscribe/unsubscribe';
 
 const appRoutes: Routes = [
-  { path: 'auth/verify', component: AuthVerifyComponent },
-  { path: 'payment/success', component: DashboardComponent },
-  { path: 'payment/cancel', component: DashboardComponent },
-  { path: 'payment/info', component: StripeInfoComponent },
-  { path: 'refunds', component: RefundPolicyComponent },
-  { path: 'unsubscribe', component: UnsubscribeComponent },
-  { path: '', component: DashboardComponent }
+  {
+    path: 'auth/verify',
+    loadComponent: () => import('./auth-verify/auth-verify').then(m => m.AuthVerifyComponent)
+  },
+  {
+    path: 'payment/success',
+    loadComponent: () => import('./dashboard/dashboard').then(m => m.DashboardComponent)
+  },
+  {
+    path: 'payment/cancel',
+    loadComponent: () => import('./dashboard/dashboard').then(m => m.DashboardComponent)
+  },
+  {
+    path: 'payment/info',
+    loadComponent: () => import('./stripe-info/stripe-info').then(m => m.StripeInfoComponent)
+  },
+  {
+    path: 'refunds',
+    loadComponent: () => import('./refund-policy/refund-policy').then(m => m.RefundPolicyComponent)
+  },
+  {
+    path: 'unsubscribe',
+    loadComponent: () => import('./unsubscribe/unsubscribe').then(m => m.UnsubscribeComponent)
+  },
+  {
+    path: '',
+    loadComponent: () => import('./dashboard/dashboard').then(m => m.DashboardComponent)
+  }
 ];
 
 export const routes: Routes = [

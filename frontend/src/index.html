@@ -55,98 +55,26 @@
     <link rel="icon" type="image/png" href="assets/favicon.png" />
     <link rel="apple-touch-icon" href="assets/favicon.png" />
 
-    <!-- SoftwareApplication schema -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "Hopladay",
-        "applicationCategory": "ProductivityApplication",
-        "operatingSystem": "Web, iOS, Android",
-        "offers": {
-          "@type": "Offer",
-          "price": "5",
-          "priceCurrency": "USD"
-        },
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.8",
-          "ratingCount": "150"
-        },
-        "description": "Smart holiday planner and vacation app that helps you maximize your days off with smart scheduling. Plan long weekends, summer vacations, and extended breaks efficiently.",
-        "featureList": [
-          "AI-powered vacation planning",
-          "Holiday calendar integration",
-          "Vacation day optimization",
-          "Multiple planning strategies",
-          "Export to calendar apps",
-          "Multi-country support"
-        ],
-        "screenshot": "https://hopladay.com/assets/favicon.png",
-        "url": "https://hopladay.com",
-        "author": {
-          "@type": "Organization",
-          "name": "Hopladay"
-        }
-      }
-    </script>
+    <!-- Resource hints for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 
-    <!-- WebSite schema -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "Hopladay",
-        "url": "https://hopladay.com",
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": "https://hopladay.com/?q={search_term_string}",
-          "query-input": "required name=search_term_string"
-        }
-      }
-    </script>
-
-    <!-- FAQ schema -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "How does Hopladay maximize vacation days?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Hopladay calculates optimal vacation periods by combining public holidays, weekends, and available leave days — often turning 3 vacation days into 7–10 days off."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Does Hopladay work for my country?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes. Hopladay supports multi-country holiday data and automatically adapts to national holidays and regional calendars."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Is Hopladay free?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "You can generate full vacation plans for free. Premium features such as export, multiple strategies and advanced optimization insights are optional."
-            }
-          }
-        ]
-      }
-    </script>
-
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com" />
-    <link href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts with optimized loading - async load -->
     <link
+      rel="preload"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+
   </head>
 
   <body class="bg-gray-50 text-gray-800 font-[Inter] antialiased">

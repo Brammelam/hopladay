@@ -5,9 +5,8 @@ import {
   provideZonelessChangeDetection,
   importProvidersFrom
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
-import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideRouter, withPreloading } from '@angular/router';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import { translationInitializer } from './services/translation-initializer';
 import {
   LucideAngularModule,
@@ -33,11 +32,10 @@ import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(),
+    provideHttpClient(withFetch()),
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes),
-    provideAnimations(), //  enable animations for standalone apps
+    provideRouter(routes, withPreloading()),
     {
       provide: APP_INITIALIZER,
       useFactory: translationInitializer,
