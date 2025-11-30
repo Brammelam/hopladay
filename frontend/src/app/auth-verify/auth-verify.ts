@@ -1,9 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { UserService } from '../services/user.service';
 import { TranslationService } from '../services/translation.service';
+import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-auth-verify',
@@ -52,10 +54,11 @@ import { TranslationService } from '../services/translation.service';
     </div>
   `,
 })
-export class AuthVerifyComponent implements OnInit {
+export class AuthVerifyComponent implements OnInit, OnDestroy {
   isVerifying = true;
   success = false;
   private translationService = inject(TranslationService);
+  private subscription?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -65,18 +68,67 @@ export class AuthVerifyComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Get token from query params
-    const token = this.route.snapshot.queryParamMap.get('token');
+    // Use observable for better iOS compatibility (snapshot can be stale)
+    this.subscription = this.route.queryParams.pipe(take(1)).subscribe(params => {
+      this.verifyToken(params['token']);
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
+
+  private verifyToken(tokenFromRoute?: string): void {
+    // Get token from query params - try multiple methods for iOS compatibility
+    let token = tokenFromRoute;
+    if (token === null) return;
+
+    // Fallback 1: Parse directly from URL (iOS Safari sometimes has issues with Angular router)
+    if (!token && typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      token = urlParams.get('token')!;
+      
+      // Fallback 2: Parse from hash (some email clients use hash)
+      if (!token && window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        token = hashParams.get('token')!;
+      }
+      
+      // Fallback 3: Try to extract from full URL as last resort
+      if (!token) {
+        const urlMatch = window.location.href.match(/[?&]token=([^&]+)/);
+        if (urlMatch) {
+          token = decodeURIComponent(urlMatch[1]);
+        }
+      }
+    
+    }
+    
+    const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
     
     console.log('🔍 Auth verification page loaded:', {
       hasToken: !!token,
       tokenLength: token?.length,
       tokenSample: token?.substring(0, 20) + '...',
       fullUrl: window.location.href,
+      search: window.location.search,
+      hash: window.location.hash,
+      pathname: window.location.pathname,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
+      isIOS,
     });
     
     if (!token) {
-      console.error(' No token in URL');
+      console.error('❌ No token in URL');
+      console.error('URL details:', {
+        href: window.location.href,
+        search: window.location.search,
+        hash: window.location.hash,
+        pathname: window.location.pathname,
+        queryParams: this.route.snapshot.queryParams,
+      });
       this.isVerifying = false;
       this.success = false;
       return;
@@ -92,22 +144,39 @@ export class AuthVerifyComponent implements OnInit {
           userEmail: result.user?.email,
         });
         
-        if (result.verified) {
-          this.userService.setCurrentUser(result.user as any);
-          this.success = true;
-          
-          console.log(' User authenticated, redirecting in 2 seconds...');
-          
-          // Auto-redirect after 2 seconds
-          setTimeout(() => this.goToDashboard(), 2000);
+        if (result.verified && result.user) {
+          // Set user data
+          try {
+            this.userService.setCurrentUser(result.user as any);
+            console.log('✅ User authenticated and saved:', {
+              userId: result.user._id,
+              email: result.user.email,
+              isPremium: result.user.isPremium,
+            });
+            
+            // Verify user was actually set
+            const savedUser = this.userService.getCurrentUser();
+            if (!savedUser) {
+              console.warn('⚠️ User was not saved to service, but verification succeeded');
+            }
+            
+            this.success = true;
+            
+            // Auto-redirect after 1.5 seconds (reduced from 2 for better UX)
+            setTimeout(() => this.goToDashboard(), 1500);
+          } catch (err) {
+            console.error('❌ Error setting user data:', err);
+            this.success = false;
+            this.isVerifying = false;
+          }
         } else {
-          console.error(' Verification returned false');
+          console.error('❌ Verification returned false or no user data');
           this.success = false;
         }
         this.isVerifying = false;
       },
       error: (err) => {
-        console.error(' Magic link verification failed:', {
+        console.error('❌ Magic link verification failed:', {
           status: err.status,
           statusText: err.statusText,
           error: err.error,

@@ -811,11 +811,10 @@ export function generateHolidayPlan(
     return a.startDate - b.startDate;
   });
 
-  // Limit suggestions for free tier
-  const maxSuggestions = isPremium ? merged.length : 3;
-  const limited = merged.slice(0, maxSuggestions);
+  // Return all suggestions (no limit for free users)
+  const limited = merged;
 
-  // Recalculate totals from limited suggestions
+  // Recalculate totals from all suggestions
   const finalUsedDays = limited.reduce((s, c) => s + c.vacationDaysUsed, 0);
   const finalTotalDaysOff = limited.reduce((s, c) => s + c.totalDaysOff, 0);
 

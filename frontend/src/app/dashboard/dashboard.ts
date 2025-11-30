@@ -120,13 +120,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Check if there's a token in query params (from magic link)
     // If so, redirect to auth verify route
-    const token = this.route.snapshot.queryParamMap.get('token');
+    // Use multiple methods for iOS compatibility
+    let token = this.route.snapshot.queryParamMap.get('token');
+    
+    // Fallback: Parse directly from URL (iOS Safari sometimes has issues with Angular router)
+    if (!token && typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      token = urlParams.get('token');
+    }
+    
     if (token) {
       const currentLang = this.translationService.currentLang();
-      this.router.navigate([`/${currentLang}/auth/verify`], { 
-        queryParams: { token },
-        replaceUrl: true 
-      });
+      // Use window.location for iOS compatibility instead of router.navigate
+      // This ensures the token is preserved during redirect
+      const verifyUrl = `/${currentLang}/auth/verify?token=${encodeURIComponent(token)}`;
+      window.location.href = verifyUrl;
       return;
     }
 

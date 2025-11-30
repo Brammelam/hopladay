@@ -27,13 +27,19 @@ export class UserService {
   constructor(private http: HttpClient) {}
 
   private restoreUser(): User | null {
-    const stored = localStorage.getItem(this.USER_KEY);
-    if (!stored) return null;
-
     try {
+      const stored = localStorage.getItem(this.USER_KEY);
+      if (!stored) return null;
+
       return JSON.parse(stored);
-    } catch {
-      localStorage.removeItem(this.USER_KEY);
+    } catch (err) {
+      // iOS Safari can block localStorage in private mode
+      console.warn('Failed to restore user from localStorage:', err);
+      try {
+        localStorage.removeItem(this.USER_KEY);
+      } catch {
+        // Ignore if removal also fails
+      }
       return null;
     }
   }
@@ -42,14 +48,25 @@ export class UserService {
    * Get or generate browser ID
    */
   private getBrowserId(): string {
-    let browserId = localStorage.getItem(this.BROWSER_ID_KEY);
-    
-    if (!browserId) {
-      browserId = this.generateUUID();
-      localStorage.setItem(this.BROWSER_ID_KEY, browserId);
+    try {
+      let browserId = localStorage.getItem(this.BROWSER_ID_KEY);
+      
+      if (!browserId) {
+        browserId = this.generateUUID();
+        try {
+          localStorage.setItem(this.BROWSER_ID_KEY, browserId);
+        } catch (err) {
+          console.warn('Failed to save browserId to localStorage:', err);
+          // Return the generated ID anyway - it will work for this session
+        }
+      }
+      
+      return browserId;
+    } catch (err) {
+      // iOS Safari private mode or localStorage blocked
+      console.warn('localStorage not available, generating temporary browserId:', err);
+      return this.generateUUID();
     }
-    
-    return browserId;
   }
 
   /**
@@ -113,7 +130,13 @@ export class UserService {
 
   private saveUser(user: User) {
     this.currentUserSubject.next(user);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    try {
+      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    } catch (err) {
+      // iOS Safari can block localStorage in private mode or when storage is full
+      console.warn('Failed to save user to localStorage:', err);
+      // User is still set in memory, so authentication will work for this session
+    }
   }
 
   /**
