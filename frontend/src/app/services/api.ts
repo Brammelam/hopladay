@@ -35,9 +35,10 @@ export class ApiService {
 
   /**
    * Generate or fetch a vacation optimization plan for a given user/year.
+   * userId is optional - if not provided, plan will be transient (not saved)
    */
   createPlan(
-    userId: string,
+    userId: string | null,
     year: number,
     country: string,
     availableDays: number,
@@ -45,7 +46,15 @@ export class ApiService {
     generateAI: boolean = true,
     lang: string = 'en'
   ): Observable<any> {
-    return this.http.post(`${this.baseUrl}/plans`, { userId, year, country, availableDays, preference, generateAI, lang });
+    return this.http.post(`${this.baseUrl}/plans`, { 
+      userId: userId || undefined, // Send undefined instead of null
+      year, 
+      country, 
+      availableDays, 
+      preference, 
+      generateAI, 
+      lang 
+    });
   }
 
   /**

@@ -184,75 +184,50 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private initializeUser(): void {
     const currentUser = this.userService.getCurrentUser();
 
-    if (currentUser) {
-      console.log('✅ Using existing user:', {
+    if (currentUser && currentUser.email) {
+      console.log('✅ Using authenticated user:', {
         userId: currentUser._id,
         email: currentUser.email,
         isPremium: currentUser.isPremium,
       });
       this.userId = currentUser._id;
       this.isUserReady = true;
-
-      if (currentUser.email) {
-        this.loadUserPlans(currentUser._id);
-        this.loadSavedPlans();
-      }
-      
+      this.loadUserPlans(currentUser._id);
+      this.loadSavedPlans();
       this.isPremium = currentUser.isPremium || false;
       this.cdr.detectChanges();
       return;
     }
 
-    // Check if we're coming from auth verify (don't create anonymous user if we just authenticated)
+    // Check if we're coming from auth verify (wait for authenticated user)
     const isFromAuthVerify = this.router.url.includes('/auth/verify');
     if (isFromAuthVerify) {
-      console.log('⚠️ Coming from auth verify but no user found. Waiting for user to be set...');
+      console.log('⏳ Coming from auth verify, waiting for authenticated user...');
       // Wait a bit for user to be set from auth verify
       setTimeout(() => {
         const user = this.userService.getCurrentUser();
-        if (user) {
-          console.log('✅ User found after delay:', user.email);
+        if (user && user.email) {
+          console.log('✅ Authenticated user found after delay:', user.email);
           this.userId = user._id;
           this.isUserReady = true;
-          if (user.email) {
-            this.loadUserPlans(user._id);
-            this.loadSavedPlans();
-          }
+          this.loadUserPlans(user._id);
+          this.loadSavedPlans();
           this.isPremium = user.isPremium || false;
           this.cdr.detectChanges();
         } else {
-          console.warn('⚠️ Still no user after delay, initializing anonymous session');
-          this.initializeAnonymousUser();
+          console.log('ℹ️ No authenticated user yet - user can still generate transient plans');
+          this.isUserReady = true; // Allow plan generation without user
+          this.cdr.detectChanges();
         }
       }, 500);
       return;
     }
 
-    // Before creating anonymous user, check if there's an authenticated user in localStorage
-    // that might not have been restored yet (iOS Safari timing issue or auth in progress)
+    // Check if authentication is in progress (magic link just verified)
     try {
-      const storedUserStr = localStorage.getItem('hopladay_user');
-      if (storedUserStr) {
-        const storedUser = JSON.parse(storedUserStr);
-        // If there's an authenticated user (with email) in storage, use it instead of creating anonymous
-        if (storedUser && storedUser.email) {
-          console.log('✅ Found authenticated user in localStorage, restoring:', storedUser.email);
-          this.userService.setCurrentUser(storedUser);
-          this.userId = storedUser._id;
-          this.isUserReady = true;
-          this.loadUserPlans(storedUser._id);
-          this.loadSavedPlans();
-          this.isPremium = storedUser.isPremium || false;
-          this.cdr.detectChanges();
-          return;
-        }
-      }
-
-      // Also check if authentication is in progress (magic link just verified)
       const authInProgress = localStorage.getItem('hopladay_auth_in_progress');
       if (authInProgress === 'true') {
         console.log('⏳ Authentication in progress, waiting for user to be set...');
-        // Wait a bit longer for the user to be saved
         setTimeout(() => {
           const user = this.userService.getCurrentUser();
           if (user && user.email) {
@@ -264,36 +239,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.isPremium = user.isPremium || false;
             this.cdr.detectChanges();
           } else {
-            console.warn('⚠️ No authenticated user found after auth in progress, initializing anonymous');
-            this.initializeAnonymousUser();
+            console.log('ℹ️ No authenticated user yet - user can still generate transient plans');
+            this.isUserReady = true; // Allow plan generation without user
+            this.cdr.detectChanges();
           }
         }, 1000);
         return;
       }
     } catch (err) {
-      console.warn('Failed to check localStorage for user:', err);
+      console.warn('Failed to check localStorage for auth in progress:', err);
     }
 
-    // Anonymous session init (only if no authenticated user exists)
-    this.initializeAnonymousUser();
-  }
-
-  private initializeAnonymousUser(): void {
-    this.userService.initializeUser(this.availableDays).subscribe({
-      next: (user) => {
-        this.userId = user._id;
-        this.isUserReady = true;
-
-        if (user.email) {
-          this.loadUserPlans(user._id);
-          this.loadSavedPlans();
-        }
-        
-        this.isPremium = user.isPremium || false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => console.error('Failed to initialize user:', err),
-    });
+    // No authenticated user - allow transient plan generation
+    console.log('ℹ️ No authenticated user - plans will be transient until user signs in');
+    this.isUserReady = true; // Allow plan generation without user
+    this.cdr.detectChanges();
   }
 
   private prefetchHolidays(): void {
@@ -366,7 +326,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   onManualPlan() {
     if (!this.validateInputs()) return;
     // Create empty plan for manual planning - no AI preference needed
-    this.requestPlan(this.userId, this.selectedYear, this.selectedCountry, this.availableDays, 'balanced', false);
+    this.requestPlan(this.userId || null, this.selectedYear, this.selectedCountry, this.availableDays, 'balanced', false);
   }
 
   // Execute plan generation with selected preference
@@ -385,7 +345,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
     
     if (this.preferenceSelectionFor === 'ai') {
-      this.requestPlan(this.userId, this.selectedYear, this.selectedCountry, this.availableDays, this.selectedPreference, true);
+      this.requestPlan(this.userId || null, this.selectedYear, this.selectedCountry, this.availableDays, this.selectedPreference, true);
     } else if (this.preferenceSelectionFor === 'optimize') {
       this.executeOptimizeRemaining();
     } else if (this.preferenceSelectionFor === 'regenerate') {
@@ -466,14 +426,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private requestPlan(
-  userId: string,
+  userId: string | null,
   year: number,
   country: string,
   availableDays: number,
   preference: string = 'balanced',
   generateAI = true
 ) {
-  console.log(`Generating ${generateAI ? 'AI' : 'manual'} plan for`, { userId, year, country, preference, availableDays });
+  const isTransient = !userId;
+  console.log(`Generating ${generateAI ? 'AI' : 'manual'} ${isTransient ? 'transient' : 'saved'} plan for`, { 
+    userId: userId || 'transient', 
+    year, 
+    country, 
+    preference, 
+    availableDays 
+  });
   this.isLoading = true;
 
   this.api
@@ -481,7 +448,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     .pipe(
       switchMap((holidayData) => {
         this.holidays = [...holidayData];
-        console.log(`Calling API createPlan with preference: ${preference}`);
+        console.log(`Calling API createPlan with preference: ${preference}, userId: ${userId || 'null (transient)'}`);
         return this.api.createPlan(userId, year, country, availableDays, preference, generateAI, this.translationService.currentLang());
       }),
       catchError((err) => {
@@ -498,15 +465,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
       console.log('Plan successfully generated:', { 
         preference: plan.preference, 
         suggestions: plan.suggestions?.length,
-        usedDays: plan.usedDays 
+        usedDays: plan.usedDays,
+        isTransient: isTransient
       });
       this.plan = { ...plan };
       this.editMode = !generateAI;
       this.isLoading = false;
 
-      if (this.isUserClaimed()) this.loadSavedPlans();
-
-      this.toast(this.translationService.translate('toast.planGenerated', { strategy: this.getPreferenceLabel(plan.preference) }), 'success');
+      if (this.isUserClaimed()) {
+        this.loadSavedPlans();
+        this.toast(this.translationService.translate('toast.planGenerated', { strategy: this.getPreferenceLabel(plan.preference) }), 'success');
+      } else if (isTransient) {
+        // Show toast prompting user to sign in to save
+        this.toast(this.translationService.translate('toast.planGeneratedTransient', { strategy: this.getPreferenceLabel(plan.preference) }), 'info');
+      } else {
+        this.toast(this.translationService.translate('toast.planGenerated', { strategy: this.getPreferenceLabel(plan.preference) }), 'success');
+      }
       this.cdr.detectChanges();
     });
 }

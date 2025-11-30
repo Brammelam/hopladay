@@ -219,6 +219,7 @@
     "initializing": "Initializing session, please wait...",
     "selectDetails": "Please select year, country, and available days first.",
     "planGenerated": "Plan generated with {{strategy}} strategy!",
+    "planGeneratedTransient": "Plan generated! Sign in to save your plan and access it later.",
     "planRegenerated": "Plan regenerated with {{strategy}} strategy!",
     "optimized": "Optimized with {{strategy}} strategy!",
     "failedToRegenerate": "Failed to regenerate plan. Please try again.",

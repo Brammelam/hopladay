@@ -287,6 +287,39 @@ router.post('/', async (req, res) => {
   try {
     const { userId, year, country = 'NO', availableDays, preference = 'balanced', generateAI = true, lang = 'en' } = req.body;
 
+    // If no userId, generate transient plan (not saved to DB)
+    if (!userId) {
+      console.log('Generating transient plan (no userId provided)');
+      const vacationDays = availableDays || 25; // Default to 25 if not provided
+      
+      let planData = { suggestions: [], totalDaysOff: 0, usedDays: 0 };
+      
+      if (generateAI) {
+        // Generate AI suggestions
+        const holidays = await getHolidaysForYear(year, country);
+        // Transient plans are always free tier (no premium features)
+        planData = generateHolidayPlan(holidays, vacationDays, year, preference, { isPremium: false, lang });
+      }
+      
+      // Return transient plan object (not saved to DB)
+      const transientPlan = {
+        _id: null, // No ID for transient plans
+        userId: null,
+        year,
+        countryCode: country,
+        availableDays: vacationDays,
+        suggestions: planData.suggestions,
+        totalDaysOff: planData.totalDaysOff,
+        usedDays: planData.usedDays,
+        preference,
+        isModifiedByUser: false,
+        isTransient: true, // Flag to indicate this is a transient plan
+      };
+      
+      return res.json(transientPlan);
+    }
+
+    // UserId provided - save plan to DB
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 

@@ -219,6 +219,7 @@
     "initializing": "Initialiserer sesjon, vennligst vent...",
     "selectDetails": "Vennligst velg år, land og tilgjengelige dager først.",
     "planGenerated": "Plan generert med {{strategy}} strategi!",
+    "planGeneratedTransient": "Plan generert! Logg inn for å lagre planen din og få tilgang senere.",
     "planRegenerated": "Plan regenerert med {{strategy}} strategi!",
     "optimized": "Optimalisert med {{strategy}} strategi!",
     "failedToRegenerate": "Kunne ikke regenerere plan. Vennligst prøv igjen.",

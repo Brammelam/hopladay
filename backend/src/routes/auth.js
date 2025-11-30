@@ -461,23 +461,10 @@ router.post("/magic-link/send", async (req, res) => {
       return res.status(400).json({ error: "email is required" });
     }
 
-    // Find or create user
+    // Find or create user by email only (no anonymous user claiming)
+    // Anonymous users are not persisted, so we don't need to claim them
     let user = await User.findOne({ email });
-    console.log(' User lookup:', { found: !!user, email });
-    
-    if (!user && browserId) {
-      // Claim anonymous plans if user doesn't exist
-      const anonUser = await User.findOne({ browserId });
-      console.log(' Anonymous user lookup:', { found: !!anonUser, browserId });
-      
-      if (anonUser) {
-        anonUser.email = email;
-        anonUser.name = email.split('@')[0];
-        user = anonUser;
-        await user.save();
-        console.log(' Claimed anonymous user');
-      }
-    }
+    console.log(' User lookup by email:', { found: !!user, email });
     
     if (!user) {
       // Create new user

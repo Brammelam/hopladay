@@ -219,6 +219,7 @@
     "initializing": "Sessie initialiseren, even geduld...",
     "selectDetails": "Selecteer eerst jaar, land en beschikbare dagen.",
     "planGenerated": "Plan gegenereerd met {{strategy}} strategie!",
+    "planGeneratedTransient": "Plan gegenereerd! Log in om je plan op te slaan en later te openen.",
     "planRegenerated": "Plan opnieuw gegenereerd met {{strategy}} strategie!",
     "optimized": "Geoptimaliseerd met {{strategy}} strategie!",
     "failedToRegenerate": "Kan plan niet opnieuw genereren. Probeer het opnieuw.",

@@ -32,7 +32,18 @@ export class UserService {
       const stored = localStorage.getItem(this.USER_KEY);
       if (!stored) return null;
 
-      return JSON.parse(stored);
+      const user = JSON.parse(stored);
+      // Only restore authenticated users (with email)
+      // Anonymous users should not be persisted
+      if (user && user.email) {
+        console.log('✅ Restored authenticated user from localStorage:', user.email);
+        return user;
+      } else {
+        // Clear invalid/anonymous user from storage
+        console.log('🧹 Clearing invalid/anonymous user from localStorage');
+        localStorage.removeItem(this.USER_KEY);
+        return null;
+      }
     } catch (err) {
       // iOS Safari can block localStorage in private mode
       console.warn('Failed to restore user from localStorage:', err);
@@ -83,9 +94,9 @@ export class UserService {
 
   /**
    * Initialize user session
-   * Only creates anonymous user if no authenticated user exists
+   * Only returns authenticated users - no anonymous user creation
    */
-  initializeUser(availableDays: number = 25): Observable<User> {
+  initializeUser(availableDays: number = 25): Observable<User | null> {
     // Check if authentication is in progress (user just logged in via magic link)
     if (typeof localStorage !== 'undefined') {
       try {
@@ -100,7 +111,7 @@ export class UserService {
             return of(currentUser);
           }
           // If no user yet, wait a bit more
-          return new Observable<User>(observer => {
+          return new Observable<User | null>(observer => {
             setTimeout(() => {
               const user = this.getCurrentUser();
               if (user && user.email) {
@@ -113,13 +124,14 @@ export class UserService {
                 observer.next(user);
                 observer.complete();
               } else {
-                console.warn('⚠️ No authenticated user found after delay, proceeding with anonymous init');
+                console.log('ℹ️ No authenticated user found - user must sign in to save plans');
                 try {
                   localStorage.removeItem(this.AUTH_IN_PROGRESS_KEY);
                 } catch (e) {
                   // Ignore
                 }
-                this.doInitializeAnonymousUser(availableDays).subscribe(observer);
+                observer.next(null);
+                observer.complete();
               }
             }, 1000);
           });
@@ -132,37 +144,13 @@ export class UserService {
     // Check if we already have an authenticated user (with email)
     const currentUser = this.getCurrentUser();
     if (currentUser && currentUser.email) {
-      console.log('✅ Authenticated user already exists, skipping anonymous initialization:', currentUser.email);
-      // Return the existing authenticated user instead of creating anonymous
+      console.log('✅ Authenticated user already exists:', currentUser.email);
       return of(currentUser);
     }
 
-    // Proceed with anonymous initialization
-    return this.doInitializeAnonymousUser(availableDays);
-  }
-
-  private doInitializeAnonymousUser(availableDays: number = 25): Observable<User> {
-    const browserId = this.getBrowserId();
-    
-    return this.http.post<User>(`${this.baseUrl}/users/init`, {
-      browserId,
-      availableDays
-    }).pipe(
-      tap(user => {
-        // Only set if we don't already have an authenticated user
-        const existingUser = this.getCurrentUser();
-        if (!existingUser || !existingUser.email) {
-          this.currentUserSubject.next(user);
-          console.log('✅ Anonymous user initialized:', user._id);
-        } else {
-          console.log('⚠️ Skipping anonymous user initialization, authenticated user exists:', existingUser.email);
-        }
-      }),
-      catchError(err => {
-        console.error('❌ Failed to initialize user:', err);
-        throw err;
-      })
-    );
+    // No authenticated user - return null (no anonymous user creation)
+    console.log('ℹ️ No authenticated user - plans will be transient until user signs in');
+    return of(null);
   }
 
   /**
@@ -230,12 +218,19 @@ export class UserService {
 
   private saveUser(user: User) {
     this.currentUserSubject.next(user);
-    try {
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-    } catch (err) {
-      // iOS Safari can block localStorage in private mode or when storage is full
-      console.warn('Failed to save user to localStorage:', err);
-      // User is still set in memory, so authentication will work for this session
+    // Only persist authenticated users (with email) to localStorage
+    // Anonymous users are not persisted to prevent hijacking magic links
+    if (user.email && typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        console.log('💾 Authenticated user saved to localStorage:', user.email);
+      } catch (err) {
+        // iOS Safari can block localStorage in private mode or when storage is full
+        console.warn('Failed to save user to localStorage:', err);
+        // User is still set in memory, so authentication will work for this session
+      }
+    } else {
+      console.log('ℹ️ Not persisting anonymous user to localStorage (transient session)');
     }
   }
 
