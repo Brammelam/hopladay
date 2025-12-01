@@ -141,8 +141,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.seoService.updateSEO({
       url: `https://hopladay.com/${this.translationService.currentLang()}`,
       title: 'Hopladay - Maximize your days off',
-      description: 'Hopladay finds the most efficient way to book time off by combining national holidays and weekends. Turn 3 vacation days into 8–10 days off. Free vacation optimizer, multi-country support',
-      keywords: 'holiday planner, vacation app, vacation planner, maximize vacation days, optimize holidays, vacation scheduler, holiday calendar, time off planner, vacation planning tool, holiday optimizer, vacation days calculator'
+      description: 'Hopladay is a vacation planner that combines public holidays, weekends, and your available days off to generate optimal vacation plans. Turn 3 vacation days into 7-10 days off. Free vacation optimizer with multi-country support for Norway, Sweden, Denmark, and other European countries.',
+      keywords: 'holiday planner, vacation app, vacation planner, maximize vacation days, optimize holidays, vacation scheduler, holiday calendar, time off planner, vacation planning tool, holiday optimizer, vacation days calculator, combine public holidays with weekends, Norwegian public holidays, vacation days calculator'
     }, this.translationService.currentLang());
     this.initializeUser();
     this.prefetchHolidays();

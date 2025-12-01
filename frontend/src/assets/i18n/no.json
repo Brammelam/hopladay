@@ -23,7 +23,50 @@
     "welcome": "Velkommen til Hopladay!",
     "welcomeDescription": "Begynn med å fylle inn detaljene dine for å generere din personlige ferieplan.",
     "alreadyCreated": "Har du allerede opprettet en på en annen enhet?",
-    "signIn": "Logg inn her"
+    "signIn": "Logg inn her",
+    "whatIsHopladay": "Hva er Hopladay?",
+    "productDescription": "Hopladay er en ferieplanlegger som kombinerer offentlige helligdager, helger og dine tilgjengelige fridager for å generere optimale ferieplaner. Verktøyet finner automatisk de beste kombinasjonene slik at du kan gjøre noen få feriedager om til lange pauser.",
+    "productFeature1": "Kombinerer automatisk nasjonale helligdager, helger og feriedager",
+    "productFeature2": "Maksimerer fridagene dine ved å finne optimale datokombinasjoner",
+    "productFeature3": "Støtter flere land inkludert Norge, Sverige, Danmark og andre europeiske land",
+    "productFeature4": "Fungerer som en feriedagskalkulator for å hjelpe deg med å planlegge effektivt",
+    "howItWorks": "Hvordan Hopladay fungerer",
+    "howItWorksDescription": "Hopladay bruker en algoritme for å analysere dine tilgjengelige feriedager, nasjonale helligdager og helger for å lage den mest effektive ferieplanen mulig.",
+    "step1Title": "Velg ditt land og år",
+    "step1Description": "Velg landet du jobber i og året du vil planlegge for. Hopladay laster automatisk inn alle offentlige helligdager for det landet.",
+    "step2Title": "Skriv inn dine tilgjengelige feriedager",
+    "step2Description": "Fortell Hopladay hvor mange feriedager du har tilgjengelig for året.",
+    "step3Title": "Hopladay finner optimale kombinasjoner",
+    "step3Description": "Algoritmen analyserer helligdager, helger og dine feriedager for å finne de beste kombinasjonene som maksimerer fridagene dine.",
+    "step4Title": "Gjennomgå og juster planen din",
+    "step4Description": "Gjennomgå den foreslåtte ferieplanen og gjør manuelle justeringer hvis nødvendig. Du kan eksportere planen din til kalenderapper.",
+    "whoIsItFor": "Hvem er Hopladay for?",
+    "whoIsItForDescription": "Hopladay er designet for alle som ønsker å få mest mulig ut av feriedagene sine og offentlige helligdager.",
+    "useCase1": "Folk som ønsker å maksimere feriedager ved å kombinere dem med offentlige helligdager og helger",
+    "useCase2": "Ansatte som planlegger ferier rundt nasjonale helligdager i Norge, Sverige, Danmark og andre europeiske land",
+    "useCase3": "Alle som leter etter en feriedagskalkulator for å optimalisere fridagene sine",
+    "useCase4": "Folk som ønsker å gjøre 3 feriedager om til 7-10 fridager ved hjelp av strategisk planlegging",
+    "faqTitle": "Ofte stilte spørsmål",
+    "faq1Question": "Hvordan maksimerer Hopladay mine feriedager?",
+    "faq1Answer": "Hopladay maksimerer feriedager ved automatisk å finne kombinasjoner av offentlige helligdager, helger og dine tilgjengelige feriedager. For eksempel, hvis en offentlig helligdag faller på en torsdag, vil Hopladay foreslå å ta fredag fri for å skape en 4-dagers helg. Dette lar deg ofte gjøre 3 feriedager om til 7-10 fridager.",
+    "faq2Question": "Kan jeg bruke Hopladay for norske offentlige helligdager?",
+    "faq2Answer": "Ja, Hopladay støtter fullt ut norske offentlige helligdager. Verktøyet inkluderer automatisk alle nasjonale helligdager i Norge, inkludert Grunnlovsdagen (17. mai), jul, påske og andre offentlige helligdager. Du kan planlegge ferien din rundt disse helligdagene for å maksimere fridagene dine.",
+    "faq3Question": "Fungerer Hopladay for andre land i Europa?",
+    "faq3Answer": "Ja, Hopladay støtter flere europeiske land inkludert Norge, Sverige, Danmark, Finland, Nederland, Tyskland, Belgia, Frankrike, Spania, Portugal, Italia, Sveits, Østerrike, Irland og Storbritannia. Verktøyet tilpasser seg automatisk hvert lands nasjonale helligdager og kalender.",
+    "faq4Question": "Trenger jeg en konto for å bruke Hopladay?",
+    "faq4Answer": "Nei, du kan generere ferieplaner gratis uten å opprette en konto. Men å opprette en gratis konto lar deg lagre planene dine, få tilgang til dem fra hvilken som helst enhet og synkronisere dem på tvers av flere enheter. Premium-funksjoner som eksport og avanserte strategier krever en konto.",
+    "faq5Question": "Er Hopladay gratis å bruke?",
+    "faq5Answer": "Ja, Hopladay er gratis å bruke for å generere ferieplaner. Du kan opprette ubegrensede planer og bruke de grunnleggende planleggingsfunksjonene uten kostnad. Premium-funksjoner som kalendereksport (ICS-filer), PDF-rapporter, avanserte planleggingsstrategier og ubegrensede forslag er tilgjengelige for en engangsbetaling på 50 kr.",
+    "faq6Question": "Hvordan kombinerer jeg offentlige helligdager med helger?",
+    "faq6Answer": "Hopladay identifiserer automatisk når offentlige helligdager faller nær helger og foreslår å ta tilstøtende feriedager for å skape lengre pauser. For eksempel, hvis en helligdag er på en fredag, skaper det å ta torsdag fri en 4-dagers helg. Verktøyet beregner disse kombinasjonene automatisk for å maksimere fridagene dine.",
+    "faq7Question": "Hvordan maksimere feriedager i Norge?",
+    "faq7Answer": "For å maksimere feriedager i Norge, bruk Hopladay til å kombinere norske offentlige helligdager med helger og dine tilgjengelige feriedager. Verktøyet finner automatisk optimale kombinasjoner, for eksempel å ta en dag fri før eller etter en offentlig helligdag som faller nær en helg, og gjøre 3 feriedager om til 7-10 fridager.",
+    "faq8Question": "Hva er Hopladays refusjonspolicy?",
+    "faq8Answer": "Hopladay tilbyr en 365-dagers pengene-tilbake-garanti uten spørsmål. Hvis du kjøper Premium og ikke er fornøyd av noen grunn, kan du be om full refusjon innen 365 dager etter kjøpet ditt. Kontakt oss ganske enkelt på hello@hopladay.com med e-postadressen til kontoen din, så behandler vi en full refusjon til din opprinnelige betalingsmetode innen 5-7 virkedager."
+  },
+  "faq": {
+    "backToDashboard": "Tilbake til dashboard",
+    "subtitle": "Finn svar på vanlige spørsmål om Hopladay ferieplanlegger"
   },
   "dashboard": {
     "myPlans": "Mine Planer",
@@ -53,7 +96,8 @@
     "exportPremiumFeature": "Eksport (Premium-funksjon)",
     "premiumFeature": "Premium-funksjon",
     "exportToCalendar": "Eksporter til kalenderfil",
-    "exportToPDF": "Eksporter til PDF"
+    "exportToPDF": "Eksporter til PDF",
+    "learnMore": "Lær mer"
   },
   "steps": {
     "step1": "Skriv inn detaljer",
@@ -213,7 +257,8 @@
   },
   "footer": {
     "paymentsProcessed": "Betalinger behandlet av",
-    "learnMoreSecurity": "Lær mer om betalingssikkerhet"
+    "learnMoreSecurity": "Lær mer om betalingssikkerhet",
+    "faq": "Ofte stilte spørsmål"
   },
   "toast": {
     "initializing": "Initialiserer sesjon, vennligst vent...",

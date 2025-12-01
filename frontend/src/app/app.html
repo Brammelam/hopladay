@@ -19,14 +19,15 @@
       "ratingValue": "4.8",
       "ratingCount": "150"
     },
-    "description": "Smart holiday planner and vacation app that helps you maximize your days off with smart scheduling. Plan long weekends, summer vacations, and extended breaks efficiently.",
+    "description": "Hopladay is a vacation planner that combines public holidays, weekends, and your available days off to generate optimal vacation plans. The tool automatically finds the best combinations so you can turn a few vacation days into long breaks. Supports multiple countries including Norway, Sweden, Denmark, and other European countries.",
     "featureList": [
-      "AI-powered vacation planning",
-      "Holiday calendar integration",
-      "Vacation day optimization",
+      "Automatic vacation day optimization",
+      "Public holiday and weekend combination",
+      "Multi-country holiday support",
+      "Vacation days calculator",
       "Multiple planning strategies",
       "Export to calendar apps",
-      "Multi-country support"
+      "AI-powered vacation planning"
     ],
     "screenshot": "https://hopladay.com/assets/favicon.png",
     "url": "https://hopladay.com",
@@ -43,6 +44,7 @@
     "@type": "WebSite",
     "name": "Hopladay",
     "url": "https://hopladay.com",
+    "description": "Hopladay is a vacation planner that combines public holidays, weekends, and your available days off to generate optimal vacation plans. Turn a few vacation days into long breaks with automatic holiday optimization.",
     "potentialAction": {
       "@type": "SearchAction",
       "target": "https://hopladay.com/?q={search_term_string}",
@@ -54,30 +56,114 @@
 <script type="application/ld+json">
   {
     "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Generate an Optimal Vacation Plan with Hopladay",
+    "description": "Step-by-step guide on how to use Hopladay to maximize your vacation days by combining public holidays, weekends, and available time off.",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "position": 1,
+        "name": "Choose your country and year",
+        "text": "Select the country where you work and the year you want to plan for. Hopladay automatically loads all public holidays for that country, including Norway, Sweden, Denmark, and other European countries."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 2,
+        "name": "Enter your available vacation days",
+        "text": "Tell Hopladay how many vacation days you have available for the year. This is the number of paid vacation days you can use."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 3,
+        "name": "Hopladay finds optimal combinations",
+        "text": "The algorithm analyzes holidays, weekends, and your vacation days to find the best combinations that maximize your time off. For example, it will suggest taking Friday off when a public holiday falls on Thursday to create a 4-day weekend."
+      },
+      {
+        "@type": "HowToStep",
+        "position": 4,
+        "name": "Review and adjust your plan",
+        "text": "Review the suggested vacation plan and make manual adjustments if needed. You can export your plan to calendar apps like Google Calendar, Outlook, or Apple Calendar."
+      }
+    ],
+    "totalTime": "PT5M"
+  }
+</script>
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "How does Hopladay maximize vacation days?",
+        "name": "How does Hopladay maximize my vacation days?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Hopladay calculates optimal vacation periods by combining public holidays, weekends, and available leave days — often turning 3 vacation days into 7–10 days off."
+          "text": "Hopladay maximizes vacation days by automatically finding combinations of public holidays, weekends, and your available vacation days. For example, if a public holiday falls on a Thursday, Hopladay will suggest taking Friday off to create a 4-day weekend. This often allows you to turn 3 vacation days into 7-10 days off."
         }
       },
       {
         "@type": "Question",
-        "name": "Does Hopladay work for my country?",
+        "name": "Can I use Hopladay for Norwegian public holidays?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. Hopladay supports multi-country holiday data and automatically adapts to national holidays and regional calendars."
+          "text": "Yes, Hopladay fully supports Norwegian public holidays. The tool automatically includes all national holidays in Norway, including Constitution Day (May 17th), Christmas, Easter, and other public holidays. You can plan your vacation around these holidays to maximize your time off."
         }
       },
       {
         "@type": "Question",
-        "name": "Is Hopladay free?",
+        "name": "Does Hopladay work for other countries in Europe?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "You can generate full vacation plans for free. Premium features such as export, multiple strategies and advanced optimization insights are optional."
+          "text": "Yes, Hopladay supports multiple European countries including Norway, Sweden, Denmark, Finland, Netherlands, Germany, Belgium, France, Spain, Portugal, Italy, Switzerland, Austria, Ireland, and the United Kingdom. The tool automatically adapts to each country's national holidays and calendar."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need an account to use Hopladay?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No, you can generate vacation plans for free without creating an account. However, creating a free account allows you to save your plans, access them from any device, and sync them across multiple devices. Premium features like export and advanced strategies require an account."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Hopladay free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, Hopladay is free to use for generating vacation plans. You can create unlimited plans and use the basic planning features at no cost. Premium features such as calendar export (ICS files), PDF reports, advanced planning strategies, and unlimited suggestions are available for a one-time payment of $5."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I combine public holidays with weekends?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hopladay automatically identifies when public holidays fall near weekends and suggests taking adjacent vacation days to create longer breaks. For example, if a holiday is on a Friday, taking Thursday off creates a 4-day weekend. The tool calculates these combinations automatically to maximize your time off."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to maximize vacation days in Norway?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "To maximize vacation days in Norway, use Hopladay to combine Norwegian public holidays with weekends and your available vacation days. The tool automatically finds optimal combinations, such as taking a day off before or after a public holiday that falls near a weekend, turning 3 vacation days into 7-10 days off."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How to turn 3 days off into 10 days vacation?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hopladay helps you turn 3 vacation days into 10 days off by strategically placing those days around public holidays and weekends. For example, if a public holiday falls on a Thursday, taking Friday off creates a 4-day weekend. The algorithm finds multiple such opportunities throughout the year to maximize your total time off."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is Hopladay's refund policy?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hopladay offers a 365-day money-back guarantee with no questions asked. If you purchase Premium and are not satisfied for any reason, you can request a full refund within 365 days of your purchase. Simply contact us at hello@hopladay.com with your account email address, and we'll process a full refund to your original payment method within 5-7 business days."
         }
       }
     ]

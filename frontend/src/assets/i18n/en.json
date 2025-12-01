@@ -23,7 +23,50 @@
     "welcome": "Welcome to Hopladay!",
     "welcomeDescription": "Start by filling in your details to generate your personal vacation plan.",
     "alreadyCreated": "Already created one on another device?",
-    "signIn": "Sign in here"
+    "signIn": "Sign in here",
+    "whatIsHopladay": "What is Hopladay?",
+    "productDescription": "Hopladay is a vacation planner that combines public holidays, weekends, and your available days off to generate optimal vacation plans. The tool automatically finds the best combinations so you can turn a few vacation days into long breaks.",
+    "productFeature1": "Automatically combines national holidays, weekends, and vacation days",
+    "productFeature2": "Maximizes your time off by finding optimal date combinations",
+    "productFeature3": "Supports multiple countries including Norway, Sweden, Denmark, and other European countries",
+    "productFeature4": "Works as a vacation days calculator to help you plan efficiently",
+    "howItWorks": "How Hopladay Works",
+    "howItWorksDescription": "Hopladay uses an algorithm to analyze your available vacation days, national holidays, and weekends to create the most efficient vacation plan possible.",
+    "step1Title": "Choose your country and year",
+    "step1Description": "Select the country where you work and the year you want to plan for. Hopladay automatically loads all public holidays for that country.",
+    "step2Title": "Enter your available vacation days",
+    "step2Description": "Tell Hopladay how many vacation days you have available for the year.",
+    "step3Title": "Hopladay finds optimal combinations",
+    "step3Description": "The algorithm analyzes holidays, weekends, and your vacation days to find the best combinations that maximize your time off.",
+    "step4Title": "Review and adjust your plan",
+    "step4Description": "Review the suggested vacation plan and make manual adjustments if needed. You can export your plan to calendar apps.",
+    "whoIsItFor": "Who is Hopladay For?",
+    "whoIsItForDescription": "Hopladay is designed for anyone who wants to make the most of their vacation days and public holidays.",
+    "useCase1": "People who want to maximize vacation days by combining them with public holidays and weekends",
+    "useCase2": "Employees planning holidays around national holidays in Norway, Sweden, Denmark, and other European countries",
+    "useCase3": "Anyone looking for a vacation days calculator to optimize their time off",
+    "useCase4": "People who want to turn 3 vacation days into 7-10 days off using strategic planning",
+    "faqTitle": "Frequently Asked Questions",
+    "faq1Question": "How does Hopladay maximize my vacation days?",
+    "faq1Answer": "Hopladay maximizes vacation days by automatically finding combinations of public holidays, weekends, and your available vacation days. For example, if a public holiday falls on a Thursday, Hopladay will suggest taking Friday off to create a 4-day weekend. This often allows you to turn 3 vacation days into 7-10 days off.",
+    "faq2Question": "Can I use Hopladay for Norwegian public holidays?",
+    "faq2Answer": "Yes, Hopladay fully supports Norwegian public holidays. The tool automatically includes all national holidays in Norway, including Constitution Day (May 17th), Christmas, Easter, and other public holidays. You can plan your vacation around these holidays to maximize your time off.",
+    "faq3Question": "Does Hopladay work for other countries in Europe?",
+    "faq3Answer": "Yes, Hopladay supports multiple European countries including Norway, Sweden, Denmark, Finland, Netherlands, Germany, Belgium, France, Spain, Portugal, Italy, Switzerland, Austria, Ireland, and the United Kingdom. The tool automatically adapts to each country's national holidays and calendar.",
+    "faq4Question": "Do I need an account to use Hopladay?",
+    "faq4Answer": "No, you can generate vacation plans for free without creating an account. However, creating a free account allows you to save your plans, access them from any device, and sync them across multiple devices. Premium features like export and advanced strategies require an account.",
+    "faq5Question": "Is Hopladay free to use?",
+    "faq5Answer": "Yes, Hopladay is free to use for generating vacation plans. You can create unlimited plans and use the basic planning features at no cost. Premium features such as calendar export (ICS files), PDF reports, advanced planning strategies, and unlimited suggestions are available for a one-time payment of $5.",
+    "faq6Question": "How do I combine public holidays with weekends?",
+    "faq6Answer": "Hopladay automatically identifies when public holidays fall near weekends and suggests taking adjacent vacation days to create longer breaks. For example, if a holiday is on a Friday, taking Thursday off creates a 4-day weekend. The tool calculates these combinations automatically to maximize your time off.",
+    "faq7Question": "How to maximize vacation days in Norway?",
+    "faq7Answer": "To maximize vacation days in Norway, use Hopladay to combine Norwegian public holidays with weekends and your available vacation days. The tool automatically finds optimal combinations, such as taking a day off before or after a public holiday that falls near a weekend, turning 3 vacation days into 7-10 days off.",
+    "faq8Question": "What is Hopladay's refund policy?",
+    "faq8Answer": "Hopladay offers a 365-day money-back guarantee with no questions asked. If you purchase Premium and are not satisfied for any reason, you can request a full refund within 365 days of your purchase. Simply contact us at hello@hopladay.com with your account email address, and we'll process a full refund to your original payment method within 5-7 business days."
+  },
+  "faq": {
+    "backToDashboard": "Back to dashboard",
+    "subtitle": "Find answers to common questions about Hopladay vacation planner"
   },
   "dashboard": {
     "myPlans": "My Plans",
@@ -53,7 +96,8 @@
     "exportPremiumFeature": "Export (Premium feature)",
     "premiumFeature": "Premium feature",
     "exportToCalendar": "Export to calendar file",
-    "exportToPDF": "Export to PDF"
+    "exportToPDF": "Export to PDF",
+    "learnMore": "Learn more"
   },
   "steps": {
     "step1": "Enter details",
@@ -213,7 +257,8 @@
   },
   "footer": {
     "paymentsProcessed": "Payments processed by",
-    "learnMoreSecurity": "Learn more about payment security"
+    "learnMoreSecurity": "Learn more about payment security",
+    "faq": "FAQ"
   },
   "toast": {
     "initializing": "Initializing session, please wait...",

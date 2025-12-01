@@ -23,7 +23,50 @@
     "welcome": "Welkom bij Hopladay!",
     "welcomeDescription": "Begin met het invullen van je gegevens om je persoonlijke vakantieplan te genereren.",
     "alreadyCreated": "Heb je er al een gemaakt op een ander apparaat?",
-    "signIn": "Log hier in"
+    "signIn": "Log hier in",
+    "whatIsHopladay": "Wat is Hopladay?",
+    "productDescription": "Hopladay is een vakantieplanner die openbare feestdagen, weekenden en je beschikbare vrije dagen combineert om optimale vakantieplannen te genereren. De tool vindt automatisch de beste combinaties zodat je een paar vakantiedagen kunt omzetten in lange pauzes.",
+    "productFeature1": "Combineert automatisch nationale feestdagen, weekenden en vakantiedagen",
+    "productFeature2": "Maximaliseert je vrije dagen door optimale datacombinaties te vinden",
+    "productFeature3": "Ondersteunt meerdere landen, waaronder Noorwegen, Zweden, Denemarken en andere Europese landen",
+    "productFeature4": "Werkt als een vakantiedagencalculator om je te helpen efficiënt te plannen",
+    "howItWorks": "Hoe Hopladay werkt",
+    "howItWorksDescription": "Hopladay gebruikt een algoritme om je beschikbare vakantiedagen, nationale feestdagen en weekenden te analyseren om het meest efficiënte vakantieplan mogelijk te maken.",
+    "step1Title": "Kies je land en jaar",
+    "step1Description": "Selecteer het land waar je werkt en het jaar waarvoor je wilt plannen. Hopladay laadt automatisch alle openbare feestdagen voor dat land.",
+    "step2Title": "Voer je beschikbare vakantiedagen in",
+    "step2Description": "Vertel Hopladay hoeveel vakantiedagen je beschikbaar hebt voor het jaar.",
+    "step3Title": "Hopladay vindt optimale combinaties",
+    "step3Description": "Het algoritme analyseert feestdagen, weekenden en je vakantiedagen om de beste combinaties te vinden die je vrije dagen maximaliseren.",
+    "step4Title": "Bekijk en pas je plan aan",
+    "step4Description": "Bekijk het voorgestelde vakantieplan en maak indien nodig handmatige aanpassingen. Je kunt je plan exporteren naar kalenderapps.",
+    "whoIsItFor": "Voor wie is Hopladay?",
+    "whoIsItForDescription": "Hopladay is ontworpen voor iedereen die het meeste uit zijn vakantiedagen en openbare feestdagen wil halen.",
+    "useCase1": "Mensen die vakantiedagen willen maximaliseren door ze te combineren met openbare feestdagen en weekenden",
+    "useCase2": "Werknemers die vakanties plannen rond nationale feestdagen in Noorwegen, Zweden, Denemarken en andere Europese landen",
+    "useCase3": "Iedereen die op zoek is naar een vakantiedagencalculator om zijn vrije dagen te optimaliseren",
+    "useCase4": "Mensen die 3 vakantiedagen willen omzetten in 7-10 vrije dagen met strategische planning",
+    "faqTitle": "Veelgestelde vragen",
+    "faq1Question": "Hoe maximaliseert Hopladay mijn vakantiedagen?",
+    "faq1Answer": "Hopladay maximaliseert vakantiedagen door automatisch combinaties te vinden van openbare feestdagen, weekenden en je beschikbare vakantiedagen. Als een openbare feestdag bijvoorbeeld op een donderdag valt, stelt Hopladay voor om vrijdag vrij te nemen om een 4-daags weekend te creëren. Dit stelt je vaak in staat om 3 vakantiedagen om te zetten in 7-10 vrije dagen.",
+    "faq2Question": "Kan ik Hopladay gebruiken voor Noorse openbare feestdagen?",
+    "faq2Answer": "Ja, Hopladay ondersteunt volledig Noorse openbare feestdagen. De tool bevat automatisch alle nationale feestdagen in Noorwegen, inclusief Grunnlovsdagen (17 mei), Kerstmis, Pasen en andere openbare feestdagen. Je kunt je vakantie rond deze feestdagen plannen om je vrije dagen te maximaliseren.",
+    "faq3Question": "Werkt Hopladay voor andere landen in Europa?",
+    "faq3Answer": "Ja, Hopladay ondersteunt meerdere Europese landen, waaronder Noorwegen, Zweden, Denemarken, Finland, Nederland, Duitsland, België, Frankrijk, Spanje, Portugal, Italië, Zwitserland, Oostenrijk, Ierland en het Verenigd Koninkrijk. De tool past zich automatisch aan aan de nationale feestdagen en kalender van elk land.",
+    "faq4Question": "Heb ik een account nodig om Hopladay te gebruiken?",
+    "faq4Answer": "Nee, je kunt gratis vakantieplannen genereren zonder een account aan te maken. Het aanmaken van een gratis account stelt je echter in staat om je plannen op te slaan, er vanaf elk apparaat toegang toe te krijgen en ze op meerdere apparaten te synchroniseren. Premium-functies zoals export en geavanceerde strategieën vereisen een account.",
+    "faq5Question": "Is Hopladay gratis te gebruiken?",
+    "faq5Answer": "Ja, Hopladay is gratis te gebruiken voor het genereren van vakantieplannen. Je kunt onbeperkt plannen maken en de basisplanfuncties zonder kosten gebruiken. Premium-functies zoals kalenderexport (ICS-bestanden), PDF-rapporten, geavanceerde planningsstrategieën en onbeperkte suggesties zijn beschikbaar voor een eenmalige betaling van €5.",
+    "faq6Question": "Hoe combineer ik openbare feestdagen met weekenden?",
+    "faq6Answer": "Hopladay identificeert automatisch wanneer openbare feestdagen in de buurt van weekenden vallen en stelt voor om aangrenzende vakantiedagen te nemen om langere pauzes te creëren. Als een feestdag bijvoorbeeld op een vrijdag valt, creëert het nemen van donderdag vrij een 4-daags weekend. De tool berekent deze combinaties automatisch om je vrije dagen te maximaliseren.",
+    "faq7Question": "Hoe maximaliseer ik vakantiedagen in Noorwegen?",
+    "faq7Answer": "Om vakantiedagen in Noorwegen te maximaliseren, gebruik je Hopladay om Noorse openbare feestdagen te combineren met weekenden en je beschikbare vakantiedagen. De tool vindt automatisch optimale combinaties, zoals het nemen van een vrije dag voor of na een openbare feestdag die in de buurt van een weekend valt, waardoor 3 vakantiedagen worden omgezet in 7-10 vrije dagen.",
+    "faq8Question": "Wat is het restitutiebeleid van Hopladay?",
+    "faq8Answer": "Hopladay biedt een 365-dagen geld-terug-garantie zonder vragen. Als je Premium koopt en om welke reden dan ook niet tevreden bent, kun je binnen 365 dagen na je aankoop een volledige restitutie aanvragen. Neem gewoon contact met ons op via hello@hopladay.com met het e-mailadres van je account, en we verwerken een volledige restitutie naar je oorspronkelijke betaalmethode binnen 5-7 werkdagen."
+  },
+  "faq": {
+    "backToDashboard": "Terug naar dashboard",
+    "subtitle": "Vind antwoorden op veelgestelde vragen over Hopladay vakantieplanner"
   },
   "dashboard": {
     "myPlans": "Mijn Plannen",
@@ -53,7 +96,8 @@
     "exportPremiumFeature": "Exporteren (Premium-functie)",
     "premiumFeature": "Premium-functie",
     "exportToCalendar": "Exporteren naar kalenderbestand",
-    "exportToPDF": "Exporteren naar PDF"
+    "exportToPDF": "Exporteren naar PDF",
+    "learnMore": "Meer informatie"
   },
   "steps": {
     "step1": "Voer gegevens in",
@@ -213,7 +257,8 @@
   },
   "footer": {
     "paymentsProcessed": "Betalingen verwerkt door",
-    "learnMoreSecurity": "Meer informatie over betalingsbeveiliging"
+    "learnMoreSecurity": "Meer informatie over betalingsbeveiliging",
+    "faq": "Veelgestelde vragen"
   },
   "toast": {
     "initializing": "Sessie initialiseren, even geduld...",

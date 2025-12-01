@@ -22,6 +22,10 @@ const appRoutes: Routes = [
     loadComponent: () => import('./refund-policy/refund-policy').then(m => m.RefundPolicyComponent)
   },
   {
+    path: 'faq',
+    loadComponent: () => import('./faq/faq').then(m => m.FAQComponent)
+  },
+  {
     path: 'unsubscribe',
     loadComponent: () => import('./unsubscribe/unsubscribe').then(m => m.UnsubscribeComponent)
   },

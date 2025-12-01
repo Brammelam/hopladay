@@ -15,7 +15,7 @@ export interface SEOData {
 })
 export class SEOService {
   private defaultTitle = 'Hopladay - Maximize your days off';
-  private defaultDescription = 'Hopladay is the ultimate holiday planner and vacation app. Plan your holidays, maximize vacation days, and optimize your time off with AI-powered scheduling.';
+  private defaultDescription = 'Hopladay is a vacation planner that combines public holidays, weekends, and your available days off to generate optimal vacation plans. Turn 3 vacation days into 7-10 days off. Free vacation optimizer with multi-country support.';
   private defaultImage = 'https://hopladay.com/assets/favicon.png';
   private baseUrl = 'https://hopladay.com';
 

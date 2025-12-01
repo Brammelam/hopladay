@@ -183,7 +183,7 @@
       class="bg-white border border-gray-200 rounded-lg p-6 md:p-8"
     >
       <h2 id="welcome-heading" class="text-lg font-semibold mb-3 text-gray-900">{{ 'app.welcome' | translate }}</h2>
-      <p class="text-gray-600 leading-relaxed mb-3 text-sm">
+      <p class="text-gray-600 leading-relaxed mb-4 text-sm">
         {{ 'app.welcomeDescription' | translate }}
       </p>
       <p class="text-gray-600 leading-relaxed text-sm">
@@ -199,6 +199,25 @@
       </p>
     </div>
   </section>
+
+  <!-- Product Description for AI SEO -->
+  <section *ngIf="!plan && !isLoading" class="w-full max-w-6xl mb-10 mx-auto" aria-labelledby="product-description-heading">
+    <div class="bg-white border border-gray-200 rounded-lg p-6 md:p-8">
+      <h2 id="product-description-heading" class="text-xl font-semibold text-gray-900 mb-3">{{ 'app.whatIsHopladay' | translate }}</h2>
+      <p class="text-gray-700 leading-relaxed mb-3 text-sm">
+        {{ 'app.productDescription' | translate }}
+      </p>
+      <p class="text-gray-600 text-sm">
+        <a
+          [routerLink]="getLocalizedRoute('/faq')"
+          class="text-gray-900 hover:text-gray-700 font-medium underline transition-colors"
+        >
+          {{ 'dashboard.learnMore' | translate }} →
+        </a>
+      </p>
+    </div>
+  </section>
+
 
   <!-- STEP 1: Select Year & Country -->
   <section *ngIf="!plan && !isLoading" class="w-full max-w-6xl mb-10" aria-labelledby="step1-heading">
@@ -868,13 +887,20 @@
       <span class="text-xs text-center">{{ 'footer.paymentsProcessed' | translate }}</span>
       <img src="assets/stripe_logo.svg" alt="Stripe" class="h-5" width="60" height="20" loading="lazy" />
     </div>
-    <p class="text-xs text-gray-500">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-gray-500">
+      <a
+        [routerLink]="getLocalizedRoute('/faq')"
+        class="text-gray-500 hover:text-gray-900 underline transition-colors"
+      >
+        {{ 'footer.faq' | translate }}
+      </a>
+      <span class="hidden sm:inline text-gray-300" aria-hidden="true">•</span>
       <a
         [routerLink]="getLocalizedRoute('/payment/info')"
         class="text-gray-500 hover:text-gray-900 underline transition-colors"
       >
         {{ 'footer.learnMoreSecurity' | translate }}
       </a>
-    </p>
+    </div>
   </div>
 </footer>

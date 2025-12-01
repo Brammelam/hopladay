@@ -1,0 +1,64 @@
+<div class="min-h-screen bg-gray-50 py-8 px-4" role="main">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <header class="mb-8">
+      <button
+        type="button"
+        (click)="goBack()"
+        [attr.aria-label]="'faq.backToDashboard' | translate"
+        class="mb-6 text-gray-600 hover:text-gray-900 flex items-center gap-2 text-sm font-medium transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        {{ 'faq.backToDashboard' | translate }}
+      </button>
+      <h1 class="text-3xl font-semibold text-gray-900 mb-2">{{ 'app.faqTitle' | translate }}</h1>
+      <p class="text-gray-600 text-sm">{{ 'faq.subtitle' | translate }}</p>
+    </header>
+
+    <!-- FAQ Content -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6 md:p-8 space-y-8">
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 mb-2">{{ 'app.faq1Question' | translate }}</h2>
+        <p class="text-gray-700 text-sm leading-relaxed">{{ 'app.faq1Answer' | translate }}</p>
+      </div>
+
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 mb-2">{{ 'app.faq2Question' | translate }}</h2>
+        <p class="text-gray-700 text-sm leading-relaxed">{{ 'app.faq2Answer' | translate }}</p>
+      </div>
+
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 mb-2">{{ 'app.faq3Question' | translate }}</h2>
+        <p class="text-gray-700 text-sm leading-relaxed">{{ 'app.faq3Answer' | translate }}</p>
+      </div>
+
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 mb-2">{{ 'app.faq4Question' | translate }}</h2>
+        <p class="text-gray-700 text-sm leading-relaxed">{{ 'app.faq4Answer' | translate }}</p>
+      </div>
+
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 mb-2">{{ 'app.faq5Question' | translate }}</h2>
+        <p class="text-gray-700 text-sm leading-relaxed">{{ 'app.faq5Answer' | translate }}</p>
+      </div>
+
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 mb-2">{{ 'app.faq6Question' | translate }}</h2>
+        <p class="text-gray-700 text-sm leading-relaxed">{{ 'app.faq6Answer' | translate }}</p>
+      </div>
+
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 mb-2">{{ 'app.faq7Question' | translate }}</h2>
+        <p class="text-gray-700 text-sm leading-relaxed">{{ 'app.faq7Answer' | translate }}</p>
+      </div>
+
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 mb-2">{{ 'app.faq8Question' | translate }}</h2>
+        <p class="text-gray-700 text-sm leading-relaxed">{{ 'app.faq8Answer' | translate }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
