@@ -2,7 +2,7 @@ import { Injectable, signal, computed } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
-export type Language = 'en' | 'no' | 'nl';
+export type Language = 'en' | 'no' | 'nl' | 'de' | 'fr' | 'es' | 'sv' | 'da';
 
 interface Translations {
   [key: string]: string | Translations;
@@ -74,7 +74,7 @@ export class TranslationService {
     
     // Don't redirect on auth/verify route - let it handle its own language
     if (path.includes('/auth/verify') || (typeof window !== 'undefined' && window.location.pathname.includes('/auth/verify'))) {
-      const langMatch = path.match(/^\/(en|no|nl)(\/|$)/);
+      const langMatch = path.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/);
       if (langMatch) {
         const lang = langMatch[1] as Language;
         this.setLanguage(lang);
@@ -84,7 +84,7 @@ export class TranslationService {
       return;
     }
     
-    const langMatch = path.match(/^\/(en|no|nl)(\/|$)/);
+    const langMatch = path.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/);
     
     // If language is already in the URL, use it
     if (langMatch) {
@@ -100,12 +100,12 @@ export class TranslationService {
       ? localStorage.getItem('hopladay_lang') as Language 
       : null;
     
-    if (stored && (stored === 'en' || stored === 'no' || stored === 'nl')) {
-      this.setLanguage(stored);
+    if (stored && ['en', 'no', 'nl', 'de', 'fr', 'es', 'sv', 'da'].includes(stored)) {
+      this.setLanguage(stored as Language);
       // Only redirect if we're not already on a language route
       // This prevents redirect loops
-      if (!path.match(/^\/(en|no|nl)(\/|$)/)) {
-        this.redirectToLanguage(stored);
+      if (!path.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/)) {
+        this.redirectToLanguage(stored as Language);
       }
       return;
     }
@@ -124,7 +124,7 @@ export class TranslationService {
       return;
     }
     
-    if (!currentPath.match(/^\/(en|no|nl)(\/|$)/)) {
+    if (!currentPath.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/)) {
       const newPath = `/${lang}${currentPath === '/' ? '' : currentPath}`;
       this.router.navigateByUrl(newPath, { replaceUrl: true });
     }
@@ -137,12 +137,12 @@ export class TranslationService {
   }
 
   getLanguageFromPath(path: string): Language {
-    const match = path.match(/^\/(en|no|nl)(\/|$)/);
+    const match = path.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/);
     return (match?.[1] as Language) || 'en';
   }
 
   getPathWithoutLanguage(path: string): string {
-    return path.replace(/^\/(en|no|nl)(\/|$)/, '/') || '/';
+    return path.replace(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/, '/') || '/';
   }
 }
 

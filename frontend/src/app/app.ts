@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet, Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
 import { ToastComponent } from './shared/toast';
-import { TranslationService } from './services/translation.service';
+import { TranslationService, Language } from './services/translation.service';
 
 @Component({
   selector: 'app-root',
@@ -20,18 +20,18 @@ export class App implements OnInit {
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe(() => {
         const url = this.router.url;
-        const langMatch = url.match(/^\/(en|no|nl)(\/|$)/);
+        const langMatch = url.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/);
         if (langMatch) {
-          const lang = langMatch[1] as 'en' | 'no' | 'nl';
+          const lang = langMatch[1] as Language;
           this.translationService.setLanguage(lang);
         }
       });
     
     // Also check initial route
     const url = this.router.url;
-    const langMatch = url.match(/^\/(en|no|nl)(\/|$)/);
+    const langMatch = url.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/);
     if (langMatch) {
-      const lang = langMatch[1] as 'en' | 'no' | 'nl';
+      const lang = langMatch[1] as Language;
       this.translationService.setLanguage(lang);
     }
   }

@@ -55,11 +55,16 @@ export class LanguageSwitcherComponent {
   showDropdown = false;
   currentLang = this.translationService.currentLang;
   
-  languages: Language[] = ['en', 'no', 'nl'];
+  languages: Language[] = ['en', 'no', 'nl', 'de', 'fr', 'es', 'sv', 'da'];
   langNames: Record<Language, string> = {
     en: 'English',
     no: 'Norsk',
-    nl: 'Nederlands'
+    nl: 'Nederlands',
+    de: 'Deutsch',
+    fr: 'Français',
+    es: 'Español',
+    sv: 'Svenska',
+    da: 'Dansk'
   };
 
   constructor() {
@@ -68,7 +73,7 @@ export class LanguageSwitcherComponent {
 
   switchLanguage(lang: Language): void {
     const currentPath = this.router.url;
-    const pathWithoutLang = currentPath.replace(/^\/(en|no|nl)(\/|$)/, '/') || '/';
+    const pathWithoutLang = currentPath.replace(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/, '/') || '/';
     const newPath = `/${lang}${pathWithoutLang === '/' ? '' : pathWithoutLang}`;
     
     this.translationService.setLanguage(lang);
