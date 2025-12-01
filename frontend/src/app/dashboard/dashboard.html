@@ -1,4 +1,4 @@
-<div class="min-h-screen flex flex-col items-center py-8 px-4 bg-gray-50" role="main">
+<div class="min-h-screen flex flex-col items-center py-8 px-2 sm:px-4 bg-gray-50" role="main">
   <!-- Language Switcher - Fixed Top Right -->
   <div *ngIf="!plan || !showStickyStats" class="fixed top-4 right-4 z-999">
     <app-language-switcher></app-language-switcher>
@@ -388,12 +388,13 @@
             <span class="font-medium text-gray-900">{{ getCountryName(selectedCountry) }} {{ selectedYear }}</span>
           </dd>
         </div>
-        <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
+<div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
+
         <div class="flex items-center gap-2 text-sm">
-          <dt class="sr-only">Vacation days used</dt>
+          <dt class="sr-only">Total days off</dt>
           <dd class="flex items-center gap-2 text-gray-600">
             <lucide-angular name="calendar" class="w-5 h-5 text-gray-400" aria-hidden="true"></lucide-angular>
-            <span>{{ plan.usedDays }}/{{ plan.availableDays }} {{ 'planning.vacationDaysUsed' | translate }}</span>
+            <span>{{ plan.usedDays }}/{{ plan.availableDays }} {{ 'planning.vacationDaysUsed' | translate }} ({{ plan.totalDaysOff }} {{ 'common.days' | translate }} {{ 'common.off' | translate }}) </span>
           </dd>
         </div>
         <div class="h-4 w-px bg-gray-300" aria-hidden="true"></div>
@@ -570,7 +571,7 @@
           [class.bg-white]="activeTab !== 'calendar'"
           [class.text-gray-600]="activeTab !== 'calendar'"
           [class.border-transparent]="activeTab !== 'calendar'"
-          class="min-h-[44px] min-w-[50%] px-4 py-2 text-sm text-center font-medium border-b-2 transition-colors focus:outline-none flex items-center justify-center gap-2"
+          class="min-h-[44px] min-w-[50%] py-2 text-sm text-center font-medium border-b-2 transition-colors focus:outline-none flex items-center justify-center gap-2"
         >
           <lucide-angular name="calendar" class="w-4 h-4" aria-hidden="true"></lucide-angular>
           <span>{{ 'calendar.calendar' | translate }}</span>
@@ -588,7 +589,7 @@
           [class.bg-white]="activeTab !== 'suggestions'"
           [class.text-gray-600]="activeTab !== 'suggestions'"
           [class.border-transparent]="activeTab !== 'suggestions'"
-          class="min-h-[44px] w-[100%] px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none  flex items-center justify-center gap-2"
+          class="min-h-[44px] w-[100%] py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none  flex items-center justify-center gap-2"
         >
           <lucide-angular name="clipboard" class="w-4 h-4" aria-hidden="true"></lucide-angular>
           <span>{{ 'calendar.suggestions' | translate }}</span>

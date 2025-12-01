@@ -1,4 +1,4 @@
-<div *ngIf="plan" class="bg-white border border-gray-200 rounded-lg p-6">
+<div *ngIf="plan" class="bg-white border border-gray-200 rounded-lg p-5 md:p-6">
   <h2 class="text-lg font-semibold mb-6 text-gray-900">Your vacation plan for {{ plan.year }}</h2>
   
   <!-- Suggestions -->
@@ -28,7 +28,7 @@
       <li *ngFor="let s of getAISuggestions()" 
           [class.border-gray-400]="s.isMerged"
           [class.border-gray-900]="!s.isMerged"
-          class="border-l-2 pl-4 py-3 bg-gray-50 rounded-r hover:bg-gray-100 transition-colors">
+          class="border-l-2 pl-4 py-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
         <div class="space-y-2">
           <div class="flex items-start justify-between gap-3">
             <div class="flex-1 min-w-0">
@@ -44,7 +44,7 @@
                 {{ s.description || (s.totalDaysOff + ' days off using ' + s.vacationDaysUsed + ' vacation day' + (s.vacationDaysUsed > 1 ? 's' : '')) }}
               </p>
             </div>
-            <div class="flex flex-col items-end gap-1 flex-shrink-0">
+            <div class="flex flex-col items-end pr-3 gap-1 flex-shrink-0">
               <div class="px-2 py-0.5 rounded text-xs font-semibold bg-gray-200 text-gray-900">
                 {{ s.roi || (s.totalDaysOff / s.vacationDaysUsed).toFixed(1) }}x
               </div>
@@ -106,6 +106,10 @@
       <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
         <div class="text-xs text-gray-600 mb-1.5">{{ 'plan.totalDaysOffLabel' | translate }}</div>
         <div class="text-xl font-semibold text-gray-900">{{ plan.totalDaysOff || 0 }}</div>
+      </div>
+      <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
+        <div class="text-xs text-gray-600 mb-1.5">{{ 'plan.vacationDays' | translate }}</div>
+        <div class="text-xl font-semibold text-gray-900">{{ plan.availableDays || 0 }}</div>
       </div>
       <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
         <div class="text-xs text-gray-600 mb-1.5">{{ 'plan.totalSuggestions' | translate }}</div>
