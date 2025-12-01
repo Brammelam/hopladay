@@ -134,7 +134,13 @@
     "vacationDays": "semestersdagar",
     "totalDaysOff": "totalt antal lediga dagar",
     "efficiency": "Effektivitet",
-    "roi": "ROI"
+    "roi": "ROI",
+    "summaryStatistics": "Sammanfattande statistik",
+    "totalDaysOffLabel": "Totalt antal lediga dagar",
+    "totalSuggestions": "Totalt antal förslag",
+    "manualBlocks": "Manuella block",
+    "longestBreak": "Längsta pausen",
+    "avgEfficiency": "Genomsnittlig effektivitet"
   },
   "calendar": {
     "calendar": "Kalender",
@@ -194,7 +200,22 @@
     "learnMorePremium": "Läs mer om Premium →",
     "paymentSecurity": "Betalningssäkerhetsinformation →",
     "exportDownloaded": "Kalenderfil nedladdad! Importera den till Google Kalender, Outlook eller Apple Kalender.",
-    "noPlanToExport": "Ingen plan att exportera"
+    "noPlanToExport": "Ingen plan att exportera",
+    "vacationLabel": "Semester",
+    "reasonLabel": "Anledning",
+    "includesManualAndAI": "(Inkluderar manuella och AI-föreslagna dagar)",
+    "manuallyAdded": "(Manuellt tillagt)",
+    "strategyLabel": "Strategi",
+    "pdfTitle": "Semesterplan",
+    "vacationDaysUsed": "Använda semestersdagar",
+    "availableDays": "Tillgängliga dagar",
+    "vacationBlocks": "Semesterblock",
+    "vacationSchedule": "Semesterschema",
+    "noVacationDaysPlanned": "Inga semestersdagar planerade ännu.",
+    "manual": "Manuell",
+    "suggested": "Föreslagen",
+    "generatedBy": "Genererad av",
+    "printOrSavePDF": "Skriv ut eller spara som PDF med hjälp av webbläsarens utskriftsdialog"
   },
   "premium": {
     "upgradeToPremium": "Uppgradera till Premium",

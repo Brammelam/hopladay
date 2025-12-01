@@ -1,7 +1,7 @@
 <div *ngIf="plan" class="bg-white border border-gray-200 rounded-lg p-6">
   <h2 class="text-lg font-semibold mb-6 text-gray-900">Your vacation plan for {{ plan.year }}</h2>
   
-  <!-- AI Suggestions -->
+  <!-- Suggestions -->
   <div *ngIf="getAISuggestions().length > 0" class="mb-6">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-4">
@@ -101,22 +101,26 @@
 
   <!-- Stats -->
   <div class="border-t border-gray-200 pt-6 mt-6">
-    <h3 class="text-sm font-semibold text-gray-900 mb-4">Summary statistics</h3>
-    <div class="grid grid-cols-2 gap-3">
+    <h3 class="text-sm font-semibold text-gray-900 mb-4">{{ 'plan.summaryStatistics' | translate }}</h3>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
       <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
-        <div class="text-xs text-gray-600 mb-1.5">Total suggestions</div>
+        <div class="text-xs text-gray-600 mb-1.5">{{ 'plan.totalDaysOffLabel' | translate }}</div>
+        <div class="text-xl font-semibold text-gray-900">{{ plan.totalDaysOff || 0 }}</div>
+      </div>
+      <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
+        <div class="text-xs text-gray-600 mb-1.5">{{ 'plan.totalSuggestions' | translate }}</div>
         <div class="text-xl font-semibold text-gray-900">{{ totalSuggestions }}</div>
       </div>
       <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
-        <div class="text-xs text-gray-600 mb-1.5">Manual blocks</div>
+        <div class="text-xs text-gray-600 mb-1.5">{{ 'plan.manualBlocks' | translate }}</div>
         <div class="text-xl font-semibold text-gray-900">{{ getManualSuggestions().length }}</div>
       </div>
       <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
-        <div class="text-xs text-gray-600 mb-1.5">Longest break</div>
-        <div class="text-xl font-semibold text-gray-900">{{ longestBreak || 0 }} days</div>
+        <div class="text-xs text-gray-600 mb-1.5">{{ 'plan.longestBreak' | translate }}</div>
+        <div class="text-xl font-semibold text-gray-900">{{ longestBreak || 0 }} {{ 'common.days' | translate }}</div>
       </div>
       <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
-        <div class="text-xs text-gray-600 mb-1.5">Avg. efficiency</div>
+        <div class="text-xs text-gray-600 mb-1.5">{{ 'plan.avgEfficiency' | translate }}</div>
         <div class="text-xl font-semibold text-gray-900">{{ averageEfficiency || 0 }}x</div>
       </div>
     </div>

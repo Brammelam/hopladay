@@ -144,5 +144,10 @@ export class TranslationService {
   getPathWithoutLanguage(path: string): string {
     return path.replace(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/, '/') || '/';
   }
+
+  getTranslations(): Translations {
+    const lang = this.currentLanguage();
+    return this.translations.get(lang) || this.translations.get('en') || {};
+  }
 }
 

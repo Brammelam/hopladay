@@ -134,7 +134,13 @@
     "vacationDays": "vakantiedagen",
     "totalDaysOff": "totale vrije dagen",
     "efficiency": "Efficiëntie",
-    "roi": "ROI"
+    "roi": "ROI",
+    "summaryStatistics": "Samenvatting statistieken",
+    "totalDaysOffLabel": "Totale vrije dagen",
+    "totalSuggestions": "Totale suggesties",
+    "manualBlocks": "Handmatige blokken",
+    "longestBreak": "Langste pauze",
+    "avgEfficiency": "Gem. efficiëntie"
   },
   "calendar": {
     "calendar": "Kalender",
@@ -194,7 +200,22 @@
     "learnMorePremium": "Meer informatie over Premium →",
     "paymentSecurity": "Betalingsbeveiligingsinformatie →",
     "exportDownloaded": "Kalenderbestand gedownload! Importeer het in Google Kalender, Outlook of Apple Kalender.",
-    "noPlanToExport": "Geen plan om te exporteren"
+    "noPlanToExport": "Geen plan om te exporteren",
+    "vacationLabel": "Vakantie",
+    "reasonLabel": "Reden",
+    "includesManualAndAI": "(Inclusief handmatige en AI-voorgestelde dagen)",
+    "manuallyAdded": "(Handmatig toegevoegd)",
+    "strategyLabel": "Strategie",
+    "pdfTitle": "Vakantieplan",
+    "vacationDaysUsed": "Gebruikte vakantiedagen",
+    "availableDays": "Beschikbare dagen",
+    "vacationBlocks": "Vakantieblokken",
+    "vacationSchedule": "Vakantieschema",
+    "noVacationDaysPlanned": "Nog geen vakantiedagen gepland.",
+    "manual": "Handmatig",
+    "suggested": "Voorgesteld",
+    "generatedBy": "Gegenereerd door",
+    "printOrSavePDF": "Afdrukken of opslaan als PDF met behulp van het afdrukdialoogvenster van uw browser"
   },
   "premium": {
     "upgradeToPremium": "Upgraden naar Premium",

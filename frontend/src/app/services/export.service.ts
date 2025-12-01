@@ -1,7 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { TranslationService } from './translation.service';
 
 @Injectable({ providedIn: 'root' })
 export class ExportService {
+  private translationService = inject(TranslationService);
   /**
    * Export plan as iCalendar (.ics) file - compatible with Google Calendar, Outlook, Apple Calendar
    */
@@ -97,15 +99,21 @@ export class ExportService {
 
   private getEventTitle(suggestion: any, countryName: string): string {
     if (suggestion.isManual) {
-      return `Vacation - ${countryName}`;
+      return `${this.translationService.translate('export.vacationLabel')} - ${countryName}`;
     }
     if (suggestion.description) {
       return suggestion.description;
     }
-    return `Vacation - ${suggestion.totalDaysOff} days off (${suggestion.vacationDaysUsed} vacation days)`;
+    const daysOff = suggestion.totalDaysOff;
+    const vacationDays = suggestion.vacationDaysUsed;
+    const dayLabel = vacationDays === 1 
+      ? this.translationService.translate('common.day')
+      : this.translationService.translate('common.days');
+    return `${this.translationService.translate('export.vacationLabel')} - ${daysOff} ${this.translationService.translate('common.off')} (${vacationDays} ${this.translationService.translate('plan.vacationDays')})`;
   }
 
   private getEventDescription(suggestion: any, plan: any): string {
+    const lang = this.translationService.currentLang();
     const parts: string[] = [];
     
     if (suggestion.description) {
@@ -113,23 +121,23 @@ export class ExportService {
     }
     
     if (suggestion.reason) {
-      parts.push(`\nReason: ${suggestion.reason}`);
+      parts.push(`\n${this.translationService.translate('export.reasonLabel')}: ${suggestion.reason}`);
     }
     
-    parts.push(`\nVacation days used: ${suggestion.vacationDaysUsed}`);
-    parts.push(`Total days off: ${suggestion.totalDaysOff}`);
+    parts.push(`\n${this.translationService.translate('export.vacationDaysUsed')}: ${suggestion.vacationDaysUsed}`);
+    parts.push(`${this.translationService.translate('plan.totalDaysOff')}: ${suggestion.totalDaysOff}`);
     
     if (suggestion.roi) {
-      parts.push(`ROI: ${suggestion.roi}x`);
+      parts.push(`${this.translationService.translate('plan.roi')}: ${suggestion.roi}x`);
     }
     
     if (suggestion.isMerged) {
-      parts.push('\n(Includes manual and AI-suggested days)');
+      parts.push(`\n${this.translationService.translate('export.includesManualAndAI')}`);
     } else if (suggestion.isManual) {
-      parts.push('\n(Manually added)');
+      parts.push(`\n${this.translationService.translate('export.manuallyAdded')}`);
     }
     
-    parts.push(`\nStrategy: ${this.formatPreference(plan.preference || 'balanced')}`);
+    parts.push(`\n${this.translationService.translate('export.strategyLabel')}: ${this.formatPreference(plan.preference || 'balanced', lang)}`);
     
     return parts.join('');
   }
@@ -142,20 +150,23 @@ export class ExportService {
       .replace(/\n/g, '\\n');
   }
 
-  private formatPreference(pref: string): string {
-    const labels: Record<string, string> = {
-      balanced: 'Balanced',
-      many_long_weekends: 'Long Weekends',
-      few_long_vacations: 'Long Vacations',
-      summer_vacation: 'Summer Focus',
-      spread_out: 'Spread Out',
+  private formatPreference(pref: string, lang: string = 'en'): string {
+    const strategyLabels: Record<string, string> = {
+      balanced: this.translationService.translate('strategy.balanced'),
+      many_long_weekends: this.translationService.translate('strategy.longWeekends'),
+      few_long_vacations: this.translationService.translate('strategy.longVacations'),
+      summer_vacation: this.translationService.translate('strategy.summerFocus'),
+      spread_out: this.translationService.translate('strategy.spreadOut'),
     };
-    return labels[pref] || pref;
+    return strategyLabels[pref] || pref;
   }
 
   private generatePrintHTML(plan: any, countryName: string, holidays: any[]): string {
+    const lang = this.translationService.currentLang();
+    const locale = lang === 'en' ? 'en-US' : lang === 'no' ? 'nb-NO' : lang === 'nl' ? 'nl-NL' : lang === 'de' ? 'de-DE' : lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : lang === 'sv' ? 'sv-SE' : lang === 'da' ? 'da-DK' : 'en-US';
+    
     const formatDate = (date: Date): string => {
-      return new Date(date).toLocaleDateString('en-US', {
+      return new Date(date).toLocaleDateString(locale, {
         weekday: 'short',
         year: 'numeric',
         month: 'short',
@@ -164,11 +175,11 @@ export class ExportService {
     };
 
     const formatDateRange = (start: Date, end: Date): string => {
-      const startStr = new Date(start).toLocaleDateString('en-US', {
+      const startStr = new Date(start).toLocaleDateString(locale, {
         month: 'short',
         day: 'numeric',
       });
-      const endStr = new Date(end).toLocaleDateString('en-US', {
+      const endStr = new Date(end).toLocaleDateString(locale, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -183,10 +194,10 @@ export class ExportService {
 
     const html = `
 <!DOCTYPE html>
-<html>
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8">
-  <title>Vacation Plan ${plan.year} - ${countryName}</title>
+  <title>${this.translationService.translate('export.pdfTitle')} ${plan.year} - ${countryName}</title>
   <style>
     @media print {
       @page {
@@ -390,44 +401,48 @@ export class ExportService {
 </head>
 <body>
   <div class="header">
-    <h1>Vacation Plan ${plan.year}</h1>
-    <div class="subtitle">${countryName} • Strategy: ${this.formatPreference(plan.preference || 'balanced')}</div>
+    <h1>${this.translationService.translate('export.pdfTitle')} ${plan.year}</h1>
+    <div class="subtitle">${countryName} • ${this.translationService.translate('export.strategyLabel')}: ${this.formatPreference(plan.preference || 'balanced', lang)}</div>
   </div>
   
   <div class="stats">
     <div class="stat-item">
       <div class="stat-value">${plan.usedDays || 0}</div>
-      <div class="stat-label">Vacation Days Used</div>
+      <div class="stat-label">${this.translationService.translate('export.vacationDaysUsed')}</div>
     </div>
     <div class="stat-item">
       <div class="stat-value">${plan.availableDays || 0}</div>
-      <div class="stat-label">Available Days</div>
+      <div class="stat-label">${this.translationService.translate('export.availableDays')}</div>
     </div>
     <div class="stat-item">
       <div class="stat-value">${plan.totalDaysOff || 0}</div>
-      <div class="stat-label">Total Days Off</div>
+      <div class="stat-label">${this.translationService.translate('plan.totalDaysOff')}</div>
     </div>
     <div class="stat-item">
       <div class="stat-value">${sortedSuggestions.length}</div>
-      <div class="stat-label">Vacation Blocks</div>
+      <div class="stat-label">${this.translationService.translate('export.vacationBlocks')}</div>
     </div>
   </div>
   
   <div class="section">
-    <h2 class="section-title">Vacation Schedule</h2>
+    <h2 class="section-title">${this.translationService.translate('export.vacationSchedule')}</h2>
     ${
       sortedSuggestions.length === 0
-        ? '<div class="no-vacations">No vacation days planned yet.</div>'
+        ? `<div class="no-vacations">${this.translationService.translate('export.noVacationDaysPlanned')}</div>`
         : sortedSuggestions
             .map((s: any) => {
               const badgeClass = s.isMerged ? 'badge-merged' : s.isManual ? 'badge-manual' : 'badge-ai';
-              const badgeText = s.isMerged ? 'Mixed' : s.isManual ? 'Manual' : 'AI Suggested';
+              const badgeText = s.isMerged 
+                ? this.translationService.translate('plan.mixed')
+                : s.isManual 
+                  ? this.translationService.translate('export.manual')
+                  : this.translationService.translate('export.suggested');
               const blockClass = s.isMerged ? 'merged' : s.isManual ? 'manual' : '';
               
               return `
                 <div class="vacation-block ${blockClass}">
                   <div class="block-header">
-                    <div class="block-title">${s.description || 'Vacation'}</div>
+                    <div class="block-title">${s.description || this.translationService.translate('export.vacationLabel')}</div>
                     <span class="block-badge ${badgeClass}">${badgeText}</span>
                   </div>
                   <div class="block-dates">${formatDateRange(new Date(s.startDate), new Date(s.endDate))}</div>
@@ -438,18 +453,18 @@ export class ExportService {
                   }
                   <div class="block-details">
                     <div class="detail-item">
-                      <div class="detail-label">Vacation Days</div>
+                      <div class="detail-label">${this.translationService.translate('plan.vacationDays')}</div>
                       <div class="detail-value">${s.vacationDaysUsed}</div>
                     </div>
                     <div class="detail-item">
-                      <div class="detail-label">Total Days Off</div>
+                      <div class="detail-label">${this.translationService.translate('plan.totalDaysOff')}</div>
                       <div class="detail-value">${s.totalDaysOff}</div>
                     </div>
                     ${
                       s.roi
                         ? `
                       <div class="detail-item">
-                        <div class="detail-label">ROI</div>
+                        <div class="detail-label">${this.translationService.translate('plan.roi')}</div>
                         <div class="detail-value">${s.roi}x</div>
                       </div>
                     `
@@ -464,8 +479,8 @@ export class ExportService {
   </div>
   
   <div class="footer">
-    <div>Generated by Hopladay • ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-    <div style="margin-top: 0.5rem;">Print or save as PDF using your browser's print dialog</div>
+    <div>${this.translationService.translate('export.generatedBy')} Hopladay • ${new Date().toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+    <div style="margin-top: 0.5rem;">${this.translationService.translate('export.printOrSavePDF')}</div>
   </div>
 </body>
 </html>

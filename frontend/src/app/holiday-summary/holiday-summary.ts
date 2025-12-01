@@ -1,11 +1,12 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { DatePipe, NgFor, NgIf } from '@angular/common';
+import { TranslatePipe } from '../shared/translate.pipe';
 
 @Component({
   selector: 'app-holiday-summary',
   templateUrl: './holiday-summary.html',
   standalone: true,
-  imports: [NgIf, NgFor, DatePipe]
+  imports: [NgIf, NgFor, DatePipe, TranslatePipe]
 })
 export class HolidaySummaryComponent implements OnChanges {
   /**

@@ -134,7 +134,13 @@
     "vacationDays": "Urlaubstage",
     "totalDaysOff": "gesamte freie Tage",
     "efficiency": "Effizienz",
-    "roi": "ROI"
+    "roi": "ROI",
+    "summaryStatistics": "Zusammenfassende Statistiken",
+    "totalDaysOffLabel": "Gesamte freie Tage",
+    "totalSuggestions": "Gesamte Vorschläge",
+    "manualBlocks": "Manuelle Blöcke",
+    "longestBreak": "Längste Pause",
+    "avgEfficiency": "Durchschn. Effizienz"
   },
   "calendar": {
     "calendar": "Kalender",
@@ -194,7 +200,22 @@
     "learnMorePremium": "Mehr über Premium erfahren →",
     "paymentSecurity": "Zahlungssicherheitsinformationen →",
     "exportDownloaded": "Kalenderdatei heruntergeladen! Importieren Sie sie in Google Kalender, Outlook oder Apple Kalender.",
-    "noPlanToExport": "Kein Plan zum Exportieren"
+    "noPlanToExport": "Kein Plan zum Exportieren",
+    "vacationLabel": "Urlaub",
+    "reasonLabel": "Grund",
+    "includesManualAndAI": "(Enthält manuelle und KI-vorgeschlagene Tage)",
+    "manuallyAdded": "(Manuell hinzugefügt)",
+    "strategyLabel": "Strategie",
+    "pdfTitle": "Urlaubsplan",
+    "vacationDaysUsed": "Verwendete Urlaubstage",
+    "availableDays": "Verfügbare Tage",
+    "vacationBlocks": "Urlaubsblöcke",
+    "vacationSchedule": "Urlaubsplan",
+    "noVacationDaysPlanned": "Noch keine Urlaubstage geplant.",
+    "manual": "Manuell",
+    "suggested": "Vorgeschlagen",
+    "generatedBy": "Generiert von",
+    "printOrSavePDF": "Drucken oder als PDF speichern über das Druckdialogfeld Ihres Browsers"
   },
   "premium": {
     "upgradeToPremium": "Auf Premium upgraden",

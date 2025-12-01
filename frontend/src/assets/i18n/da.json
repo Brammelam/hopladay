@@ -134,7 +134,13 @@
     "vacationDays": "feriedage",
     "totalDaysOff": "totale fridage",
     "efficiency": "Effektivitet",
-    "roi": "ROI"
+    "roi": "ROI",
+    "summaryStatistics": "Sammendragsstatistik",
+    "totalDaysOffLabel": "Totale fridage",
+    "totalSuggestions": "Totale forslag",
+    "manualBlocks": "Manuelle blokke",
+    "longestBreak": "Længste pause",
+    "avgEfficiency": "Gns. effektivitet"
   },
   "calendar": {
     "calendar": "Kalender",
@@ -194,7 +200,22 @@
     "learnMorePremium": "Læs mere om Premium →",
     "paymentSecurity": "Betalingssikkerhedsinformation →",
     "exportDownloaded": "Kalenderfil downloadet! Importer den til Google Kalender, Outlook eller Apple Kalender.",
-    "noPlanToExport": "Ingen plan at eksportere"
+    "noPlanToExport": "Ingen plan at eksportere",
+    "vacationLabel": "Ferie",
+    "reasonLabel": "Årsag",
+    "includesManualAndAI": "(Inkluderer manuelle og AI-foreslåede dage)",
+    "manuallyAdded": "(Manuelt tilføjet)",
+    "strategyLabel": "Strategi",
+    "pdfTitle": "Ferieplan",
+    "vacationDaysUsed": "Brugte feriedage",
+    "availableDays": "Tilgængelige dage",
+    "vacationBlocks": "Ferieblokke",
+    "vacationSchedule": "Ferieplan",
+    "noVacationDaysPlanned": "Ingen feriedage planlagt endnu.",
+    "manual": "Manuel",
+    "suggested": "Foreslået",
+    "generatedBy": "Genereret af",
+    "printOrSavePDF": "Udskriv eller gem som PDF ved hjælp af browserens udskriftsdialog"
   },
   "premium": {
     "upgradeToPremium": "Opgrader til Premium",

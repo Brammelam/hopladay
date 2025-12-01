@@ -843,8 +843,6 @@ router.post("/:planId/regenerate", async (req, res) => {
 
     const holidaysWithBlocked = [...holidays, ...blockedDays];
 
-    console.log(`Generating AI suggestions with ${preference} strategy for ${remaining} remaining days`);
-
     // Generate new AI suggestions with new strategy
       const aiPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium, lang });
 

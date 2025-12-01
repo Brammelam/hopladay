@@ -134,7 +134,13 @@
     "vacationDays": "jours de vacances",
     "totalDaysOff": "jours de congé totaux",
     "efficiency": "Efficacité",
-    "roi": "ROI"
+    "roi": "ROI",
+    "summaryStatistics": "Statistiques récapitulatives",
+    "totalDaysOffLabel": "Jours de congé totaux",
+    "totalSuggestions": "Suggestions totales",
+    "manualBlocks": "Blocs manuels",
+    "longestBreak": "Pause la plus longue",
+    "avgEfficiency": "Efficacité moy."
   },
   "calendar": {
     "calendar": "Calendrier",
@@ -194,7 +200,22 @@
     "learnMorePremium": "En savoir plus sur Premium →",
     "paymentSecurity": "Informations sur la sécurité des paiements →",
     "exportDownloaded": "Fichier calendrier téléchargé ! Importez-le dans Google Calendar, Outlook ou Apple Calendar.",
-    "noPlanToExport": "Aucun plan à exporter"
+    "noPlanToExport": "Aucun plan à exporter",
+    "vacationLabel": "Vacances",
+    "reasonLabel": "Raison",
+    "includesManualAndAI": "(Inclut les jours manuels et suggérés par l'IA)",
+    "manuallyAdded": "(Ajouté manuellement)",
+    "strategyLabel": "Stratégie",
+    "pdfTitle": "Plan de vacances",
+    "vacationDaysUsed": "Jours de vacances utilisés",
+    "availableDays": "Jours disponibles",
+    "vacationBlocks": "Blocs de vacances",
+    "vacationSchedule": "Calendrier des vacances",
+    "noVacationDaysPlanned": "Aucun jour de vacances planifié pour le moment.",
+    "manual": "Manuel",
+    "suggested": "Suggéré",
+    "generatedBy": "Généré par",
+    "printOrSavePDF": "Imprimer ou enregistrer en PDF à l'aide de la boîte de dialogue d'impression de votre navigateur"
   },
   "premium": {
     "upgradeToPremium": "Passer à Premium",
