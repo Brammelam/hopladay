@@ -32,8 +32,21 @@ const planSchema = new mongoose.Schema({
   preference: { type: String, default: "balanced" },
 }, { timestamps: true });
 
-// Index: userId+year OR browserId+year (but not both)
-planSchema.index({ userId: 1, year: 1 }, { unique: true, sparse: true });
-planSchema.index({ browserId: 1, year: 1 }, { unique: true, sparse: true });
+planSchema.index(
+  { userId: 1, year: 1 }, 
+  { 
+    unique: true, 
+    name: 'userId_year_unique',
+    partialFilterExpression: { userId: { $exists: true, $ne: null } } 
+  }
+);
+planSchema.index(
+  { browserId: 1, year: 1 }, 
+  { 
+    unique: true,
+    name: 'browserId_year_unique',
+    partialFilterExpression: { browserId: { $exists: true, $ne: null } } 
+  }
+);
 
 export default mongoose.model("HolidayPlan", planSchema);

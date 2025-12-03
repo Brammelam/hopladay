@@ -281,7 +281,12 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
  */
 router.post('/', async (req, res) => {
   try {
-    const { userId, browserId, year, country = 'NO', availableDays, preference = 'balanced', generateAI = true, lang = 'en' } = req.body;
+    let { userId, browserId, year, country = 'NO', availableDays, preference = 'balanced', generateAI = true, lang = 'en' } = req.body;
+
+    // Validate and sanitize identifiers
+    // Ensure we never use undefined/null values in queries
+    userId = userId || null;
+    browserId = browserId || null;
 
     // Must have either userId (logged in) or browserId (anonymous)
     if (!userId && !browserId) {
@@ -308,54 +313,82 @@ router.post('/', async (req, res) => {
       planData = generateHolidayPlan(holidays, vacationDays, year, preference, { isPremium, lang });
     }
 
-    // Find or create plan
-    let plan;
+    // Build query - CRITICAL: only include fields that have actual values
+    const query = {};
+    query.year = year;
     if (userId) {
-      // Logged in: find by userId
-      plan = await HolidayPlan.findOne({ userId, year });
+      query.userId = userId;
     } else {
-      // Anonymous: find by browserId
-      plan = await HolidayPlan.findOne({ browserId, year });
+      query.browserId = browserId;
     }
-
-    if (plan) {
-      // Update existing plan
-      plan.suggestions = planData.suggestions;
-      plan.totalDaysOff = planData.totalDaysOff;
-      plan.usedDays = planData.usedDays;
-      plan.availableDays = vacationDays;
-      plan.countryCode = country;
-      plan.preference = preference;
-      // Only reset modification flag on AI regeneration
-      if (generateAI) {
-        plan.isModifiedByUser = false;
-      }
-      // If plan was anonymous and user is now logged in, migrate it
-      if (plan.browserId && userId) {
-        console.log(`Migrating plan from browserId ${plan.browserId} to userId ${userId}`);
-        plan.userId = userId;
-        plan.browserId = undefined; // Remove browserId
-      }
-    } else {
-      // Create new plan
-      plan = new HolidayPlan({
-        userId: userId || undefined,
-        browserId: browserId || undefined,
-        year,
-        countryCode: country,
-        availableDays: vacationDays,
+    
+    console.log(`Looking for plan with query:`, query);
+    
+    const updateDoc = {
+      $set: {
         suggestions: planData.suggestions,
         totalDaysOff: planData.totalDaysOff,
         usedDays: planData.usedDays,
-        preference,
-        isModifiedByUser: false,
-      });
+        availableDays: vacationDays,
+        countryCode: country,
+        preference: preference,
+      }
+    };
+    
+    // Only reset modification flag on AI regeneration
+    if (generateAI) {
+      updateDoc.$set.isModifiedByUser = false;
     }
-
-    await plan.save();
+    
+    // Set userId or browserId on creation (via setOnInsert)
+    const setOnInsert = { year };
+    if (userId) {
+      setOnInsert.userId = userId;
+    } else if (browserId) {
+      setOnInsert.browserId = browserId;
+    } else {
+      return res.status(400).json({ error: 'Either userId or browserId must be provided' });
+    }
+    updateDoc.$setOnInsert = setOnInsert;
+    
+    // Handle migration from browserId to userId if user just logged in
+    if (userId && browserId) {
+      // Check if there's an anonymous plan to migrate
+      const anonymousPlan = await HolidayPlan.findOne({ browserId, year });
+      if (anonymousPlan) {
+        console.log(`Migrating anonymous plan to user ${userId}`);
+        anonymousPlan.userId = userId;
+        anonymousPlan.browserId = undefined;
+        anonymousPlan.suggestions = planData.suggestions;
+        anonymousPlan.totalDaysOff = planData.totalDaysOff;
+        anonymousPlan.usedDays = planData.usedDays;
+        anonymousPlan.availableDays = vacationDays;
+        anonymousPlan.countryCode = country;
+        anonymousPlan.preference = preference;
+        if (generateAI) {
+          anonymousPlan.isModifiedByUser = false;
+        }
+        await anonymousPlan.save();
+        return res.json(anonymousPlan);
+      }
+    }
+    
+    const plan = await HolidayPlan.findOneAndUpdate(
+      query,
+      updateDoc,
+      { 
+        new: true,           // Return updated document
+        upsert: true,        // Create if doesn't exist
+        runValidators: true  // Run schema validators
+      }
+    );
+    
+    console.log(`Plan ${plan._id} ${plan.createdAt === plan.updatedAt ? 'created' : 'updated'}`);
     res.json(plan);
   } catch (err) {
-    console.error('Error creating plan:', err);
+    console.error('Error creating/updating plan:', err);
+    console.error('Request details:', { userId, browserId, year, country });
+    
     res.status(500).json({ message: 'Failed to create plan', error: err.message });
   }
 });
