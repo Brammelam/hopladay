@@ -36,18 +36,16 @@ planSchema.index(
   { userId: 1, year: 1 }, 
   { 
     unique: true, 
-    sparse: true,
     name: 'userId_year_unique',
-    partialFilterExpression: { userId: { $exists: true, $ne: null } } 
+    partialFilterExpression: { userId: { $type: 'objectId' } } 
   }
 );
 planSchema.index(
   { browserId: 1, year: 1 }, 
   { 
     unique: true,
-    sparse: true,
     name: 'browserId_year_unique',
-    partialFilterExpression: { browserId: { $exists: true, $ne: null } } 
+    partialFilterExpression: { browserId: { $type: 'string' } } 
   }
 );
 

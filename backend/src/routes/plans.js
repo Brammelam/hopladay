@@ -284,9 +284,15 @@ router.post('/', async (req, res) => {
     let { userId, browserId, year, country = 'NO', availableDays, preference = 'balanced', generateAI = true, lang = 'en' } = req.body;
 
     // Validate and sanitize identifiers
-    // Ensure we never use undefined/null values in queries
-    userId = userId || null;
-    browserId = browserId || null;
+    // Convert empty strings/falsy values to null for consistency
+    // CRITICAL: Never allow null values to be used in queries or documents
+    const normalizeId = (id) => {
+      if (!id) return null;
+      const str = String(id).trim();
+      return str !== '' && str !== 'null' && str !== 'undefined' ? str : null;
+    };
+    userId = normalizeId(userId);
+    browserId = normalizeId(browserId);
 
     // Must have either userId (logged in) or browserId (anonymous)
     if (!userId && !browserId) {
@@ -313,12 +319,17 @@ router.post('/', async (req, res) => {
       planData = generateHolidayPlan(holidays, vacationDays, year, preference, { isPremium, lang });
     }
 
-    // Never query with userId: null - use browserId instead for anonymous users
+    // Build query - CRITICAL: Only include fields with actual values, never null
+    // This prevents MongoDB from trying to match/upsert with null values which conflict with unique indexes
     const query = { year };
     if (userId) {
       query.userId = userId;
-    } else {
+    } else if (browserId) {
+      // Only add browserId to query if it has a value
       query.browserId = browserId;
+    } else {
+      // This should never happen due to validation above, but double-check
+      return res.status(400).json({ error: 'Either userId or browserId must be provided' });
     }
     
     console.log(`Looking for plan with query:`, query);
@@ -340,17 +351,21 @@ router.post('/', async (req, res) => {
     }
     
     // Set userId or browserId on creation (via setOnInsert)
-    // CRITICAL: Never set userId: null - omit the field entirely for anonymous users
+    // CRITICAL: Never set userId: null or browserId: null - only include fields with actual values
     const setOnInsert = { year };
     if (userId) {
       setOnInsert.userId = userId;
-      // Ensure browserId is unset if we're using userId
-      updateDoc.$unset = { browserId: '' };
+      // Ensure browserId is unset if we're using userId (in case of migration)
+      if (!updateDoc.$unset) updateDoc.$unset = {};
+      updateDoc.$unset.browserId = '';
     } else if (browserId) {
+      // Only set browserId if it has a value
       setOnInsert.browserId = browserId;
-      // Ensure userId is unset if we're using browserId
-      updateDoc.$unset = { userId: '' };
+      // Ensure userId is unset if we're using browserId (never set userId: null)
+      if (!updateDoc.$unset) updateDoc.$unset = {};
+      updateDoc.$unset.userId = '';
     } else {
+      // This should never happen due to validation above
       return res.status(400).json({ error: 'Either userId or browserId must be provided' });
     }
     updateDoc.$setOnInsert = setOnInsert;
@@ -377,6 +392,35 @@ router.post('/', async (req, res) => {
       }
     }
     
+    // CRITICAL: Before upserting, check for orphaned documents with userId: null
+    // This can happen if documents were created before the fix
+    if (!userId && browserId) {
+      const orphanedPlan = await HolidayPlan.findOne({ 
+        year, 
+        $or: [
+          { userId: null },
+          { userId: { $exists: false } }
+        ]
+      });
+      if (orphanedPlan) {
+        console.log(`Found orphaned plan ${orphanedPlan._id} with userId: null, updating to use browserId`);
+        // Update the orphaned plan to use browserId instead
+        orphanedPlan.browserId = browserId;
+        orphanedPlan.userId = undefined; // Remove userId field entirely
+        orphanedPlan.suggestions = planData.suggestions;
+        orphanedPlan.totalDaysOff = planData.totalDaysOff;
+        orphanedPlan.usedDays = planData.usedDays;
+        orphanedPlan.availableDays = vacationDays;
+        orphanedPlan.countryCode = country;
+        orphanedPlan.preference = preference;
+        if (generateAI) {
+          orphanedPlan.isModifiedByUser = false;
+        }
+        await orphanedPlan.save();
+        return res.json(orphanedPlan);
+      }
+    }
+    
     const plan = await HolidayPlan.findOneAndUpdate(
       query,
       updateDoc,
@@ -391,7 +435,14 @@ router.post('/', async (req, res) => {
     res.json(plan);
   } catch (err) {
     console.error('Error creating/updating plan:', err);
-    console.error('Request details:', { userId, browserId, year, country });
+    // Capture variables before they might be out of scope
+    const errorDetails = { 
+      userId: req.body?.userId || null, 
+      browserId: req.body?.browserId || null, 
+      year: req.body?.year || null, 
+      country: req.body?.country || null 
+    };
+    console.error('Request details:', errorDetails);
     
     res.status(500).json({ message: 'Failed to create plan', error: err.message });
   }
