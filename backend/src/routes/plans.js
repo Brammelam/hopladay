@@ -313,9 +313,8 @@ router.post('/', async (req, res) => {
       planData = generateHolidayPlan(holidays, vacationDays, year, preference, { isPremium, lang });
     }
 
-    // Build query - CRITICAL: only include fields that have actual values
-    const query = {};
-    query.year = year;
+    // Never query with userId: null - use browserId instead for anonymous users
+    const query = { year };
     if (userId) {
       query.userId = userId;
     } else {
@@ -341,11 +340,16 @@ router.post('/', async (req, res) => {
     }
     
     // Set userId or browserId on creation (via setOnInsert)
+    // CRITICAL: Never set userId: null - omit the field entirely for anonymous users
     const setOnInsert = { year };
     if (userId) {
       setOnInsert.userId = userId;
+      // Ensure browserId is unset if we're using userId
+      updateDoc.$unset = { browserId: '' };
     } else if (browserId) {
       setOnInsert.browserId = browserId;
+      // Ensure userId is unset if we're using browserId
+      updateDoc.$unset = { userId: '' };
     } else {
       return res.status(400).json({ error: 'Either userId or browserId must be provided' });
     }
