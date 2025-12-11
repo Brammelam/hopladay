@@ -487,8 +487,12 @@ router.post("/:planId/manual-days", async (req, res) => {
     const plan = await HolidayPlan.findById(planId);
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
-    const user = await User.findById(plan.userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    // Support anonymous users - only lookup user if userId exists
+    let user = null;
+    if (plan.userId) {
+      user = await User.findById(plan.userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+    }
 
     const holidays = await getHolidaysForYear(plan.year, plan.countryCode);
     const holidaySet = new Set(
@@ -600,7 +604,8 @@ router.post("/:planId/manual-days", async (req, res) => {
 
     const usage = calculatePlanUsage(plan.suggestions, holidays);
     
-    const availableDays = plan.availableDays || user.availableDays;
+    // Use plan.availableDays if set, otherwise fall back to user.availableDays (for logged-in users)
+    const availableDays = plan.availableDays || (user ? user.availableDays : 25);
     if (usage.usedDays > availableDays) {
       // Rollback - remove the suggestions we just added
       plan.suggestions = plan.suggestions.filter(s => !s.isManual || s._id);
@@ -856,12 +861,16 @@ router.post("/:planId/regenerate", async (req, res) => {
     const plan = await HolidayPlan.findById(planId);
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
-    const user = await User.findById(plan.userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const isPremium = user.isPremium || false;
+    // Support anonymous users - only lookup user if userId exists
+    let user = null;
+    let isPremium = false;
+    if (plan.userId) {
+      user = await User.findById(plan.userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      isPremium = user.isPremium || false;
+    }
     
-    // Validate strategy: free users can only use "balanced"
+    // Validate strategy: free users (including anonymous) can only use "balanced"
     if (!isPremium && preference !== 'balanced') {
       return res.status(403).json({ 
         error: 'Premium feature', 
@@ -870,7 +879,8 @@ router.post("/:planId/regenerate", async (req, res) => {
     }
 
     const holidays = await getHolidaysForYear(plan.year, plan.countryCode);
-    const availableDays = plan.availableDays || user.availableDays;
+    // Use plan.availableDays if set, otherwise fall back to user.availableDays (for logged-in users)
+    const availableDays = plan.availableDays || (user ? user.availableDays : 25);
 
     console.log(`\n=== REGENERATE WITH NEW STRATEGY ===`);
     console.log(`New strategy: ${preference}`);
@@ -978,11 +988,16 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
     const plan = await HolidayPlan.findById(planId);
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
-    const user = await User.findById(plan.userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    // Support anonymous users - only lookup user if userId exists
+    let user = null;
+    if (plan.userId) {
+      user = await User.findById(plan.userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+    }
 
     const holidays = await getHolidaysForYear(plan.year, plan.countryCode);
-    const availableDays = plan.availableDays || user.availableDays;
+    // Use plan.availableDays if set, otherwise fall back to user.availableDays (for logged-in users)
+    const availableDays = plan.availableDays || (user ? user.availableDays : 25);
     const currentlyUsed = plan.usedDays || 0;
     const remaining = availableDays - currentlyUsed;
 
@@ -1036,7 +1051,8 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
     console.log(`Passing ${holidays.length} real holidays + ${blockedDays.length} blocked days to planner`);
 
     // Generate plan for remaining days (planner will avoid blocked days)
-    const isPremium = user.isPremium || false;
+    // Anonymous users are treated as non-premium
+    const isPremium = user ? (user.isPremium || false) : false;
     const optimizedPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium, lang });
 
     optimizedPlan.suggestions.forEach((s, i) => {
