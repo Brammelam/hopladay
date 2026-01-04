@@ -823,10 +823,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  openAuthModal(mode: 'signin' | 'register' = 'signin'): void {
+  openAuthModal(mode: 'signin' | 'register' = 'signin', email?: string): void {
     this.authMode = mode;
     this.showAuthModal = true;
-    this.authEmail = '';
+    this.authEmail = email || '';
   }
 
   closeAuthModal(): void {
@@ -981,6 +981,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.isProcessingPayment = false;
           return;
         }
+        
+        // Check if user is already premium - redirect to login without revealing premium status
+        // This prevents the backend error and avoids revealing premium status for security
+        if (user.isPremium === true) {
+          this.isProcessingPayment = false;
+          this.closePremiumModal();
+          this.toast('This email is already registered. Please sign in.', 'info');
+          // Open auth modal with the email pre-filled
+          this.openAuthModal('signin', this.premiumEmail);
+          return;
+        }
+        
         this.userId = user._id;
         // Update user in service
         this.userService.setCurrentUser(user);
