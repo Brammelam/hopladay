@@ -237,7 +237,8 @@
     "learnMorePayments": "Meer informatie over veilige betalingen →",
     "alreadyPremium": "Je bent al een Premium-gebruiker!",
     "sessionNotReady": "Gebruikerssessie niet klaar. Probeer het opnieuw.",
-    "welcomePremium": "Welkom bij Premium! Je account is geüpgraded."
+    "welcomePremium": "Welkom bij Premium! Je account is geüpgraded.",
+    "createAccountForPurchase": "We maken een account voor je aan om je aankoop op te slaan"
   },
   "auth": {
     "signIn": "Inloggen",

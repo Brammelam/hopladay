@@ -493,6 +493,7 @@
               [attr.aria-label]="'dashboard.exportOptions' | translate"
             >
               <button
+                *ngIf="isPremium"
                 type="button"
                 (click)="exportToICS()"
                 [attr.aria-label]="'dashboard.exportToCalendar' | translate"
@@ -506,6 +507,7 @@
                 </div>
               </button>
               <button
+                *ngIf="isPremium"
                 type="button"
                 (click)="exportToPDF()"
                 [attr.aria-label]="'dashboard.exportToPDF' | translate"
@@ -841,6 +843,25 @@
           </div>
         </div>
 
+        <!-- Email input for anonymous users -->
+        <div *ngIf="!isUserClaimed()" class="mb-6 pt-4 border-t border-gray-200">
+          <label class="block text-sm font-medium text-gray-900 mb-2">
+            {{ 'auth.email' | translate }}
+          </label>
+          <input
+            type="email"
+            [(ngModel)]="premiumEmail"
+            [disabled]="isProcessingPayment"
+            [attr.placeholder]="'auth.emailPlaceholder' | translate"
+            class="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors"
+            (keyup.enter)="upgradeToPremium()"
+            autofocus
+          />
+          <p class="mt-2 text-xs text-gray-600">
+            {{ 'premium.createAccountForPurchase' | translate }}
+          </p>
+        </div>
+
         <!-- CTA -->
         <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
           <button
@@ -853,7 +874,7 @@
           <button
             type="button"
             (click)="upgradeToPremium()"
-            [disabled]="isProcessingPayment"
+            [disabled]="isProcessingPayment || (!isUserClaimed() && !premiumEmail)"
             class="flex-1 px-6 py-2.5 text-sm bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
           >
             <span *ngIf="!isProcessingPayment">{{ 'premium.upgradeNow' | translate }}</span>

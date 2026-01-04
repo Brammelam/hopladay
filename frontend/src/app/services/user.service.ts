@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, take, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ApiService } from './api';
 
 export interface User {
   _id: string;
@@ -16,14 +16,13 @@ export interface User {
 }
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private baseUrl = environment.apiUrl;
   private readonly BROWSER_ID_KEY = 'hopladay_browser_id';
   private readonly USER_KEY = 'hopladay_user';
-  
+  private baseUrl = environment.apiUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(this.restoreUser());
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private api: ApiService) {}
 
   private restoreUser(): User | null {
     try {
@@ -69,19 +68,24 @@ export class UserService {
     });
   }
 
-  /** 
-   * DEPRECATED: Anonymous users are no longer tracked
-   * Plans are created with browserId directly, no user record needed
-   * Users are only created when they log in via magic link
-   */
-  initializeUser(availableDays: number = 25): Observable<User | null> {
-    // Just return null - we don't create anonymous users anymore
-    return of(null);
-  }
-
   setCurrentUser(user: User): void {
-    this.saveUser(user);
+    // CRITICAL: Do not store isPremium in localStorage - always fetch from backend
+    // Store user without isPremium to prevent client-side manipulation
+    const userToStore: Partial<User> = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      browserId: user.browserId,
+      availableDays: user.availableDays,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      // Explicitly exclude isPremium from localStorage
+    };
 
+    // Always update in-memory state with full user object (including isPremium)
+    this.currentUserSubject.next(user);
+
+    // Save browserId if provided
     try {
       if (user.browserId && user.browserId !== this.getBrowserId()) {
         localStorage.setItem(this.BROWSER_ID_KEY, user.browserId);
@@ -89,22 +93,44 @@ export class UserService {
     } catch (err) {
       console.warn('Failed to sync browserId to localStorage:', err);
     }
+
+    // Only persist authenticated users (with email) - without isPremium
+    if (user.email) {
+      try {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(userToStore));
+      } catch (err) {
+        console.warn('Failed to save user to localStorage:', err);
+      }
+    }
   }
 
-  private saveUser(user: User) {
-    // Always update in-memory state
-    this.currentUserSubject.next(user);
-
-    // Only persist authenticated users
-    if (!user.email) {
-      return;
+  /**
+   * Initialize user session - always returns userId
+   * Calls /api/users/init with browserId (if not logged in) or email (if logged in)
+   * Returns Observable<User> with userId
+   */
+  initUser(email?: string | null): Observable<User> {
+    // If user already exists in localStorage with email, use that
+    const currentUser = this.getCurrentUser();
+    if (currentUser && currentUser.email && email && currentUser.email === email) {
+      return new Observable(observer => {
+        observer.next(currentUser);
+        observer.complete();
+      });
     }
 
-    try {
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-    } catch (err) {
-      console.warn('Failed to save user to localStorage:', err);
-    }
+    // If email provided, use email; otherwise use browserId
+    const browserId = email ? null : this.getBrowserId();
+    
+    return this.api.initUser(browserId, email || null).pipe(
+      tap((user: User) => {
+        // Store user after initialization (only if different from current)
+        const existingUser = this.getCurrentUser();
+        if (!existingUser || existingUser._id !== user._id) {
+          this.setCurrentUser(user);
+        }
+      })
+    );
   }
 
   getCurrentUser(): User | null {
@@ -124,6 +150,10 @@ export class UserService {
     this.currentUserSubject.next(null);
     try {
       localStorage.removeItem(this.USER_KEY);
+      // Generate a new browserId on logout to create a fresh anonymous session
+      // This prevents restoring a user by browserId after logout
+      const newBrowserId = this.generateUUID();
+      localStorage.setItem(this.BROWSER_ID_KEY, newBrowserId);
     } catch (err) {
       console.warn('Failed to clear user from localStorage:', err);
     }

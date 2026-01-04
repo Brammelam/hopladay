@@ -42,6 +42,17 @@ import { TranslatePipe } from '../shared/translate.pipe';
         <div class="p-6">
           <!-- Tabs -->
           <div class="flex gap-2 p-1 bg-gray-100 rounded-md mb-6">
+          <button
+              type="button"
+              (click)="switchMethod.emit('email')"
+              [class.bg-white]="method === 'email'"
+              [class.text-gray-900]="method === 'email'"
+              [class.text-gray-600]="method !== 'email'"
+              [class.shadow-sm]="method === 'email'"
+              class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+            >
+              {{ 'auth.emailLink' | translate }}
+            </button>
             <button
               type="button"
               (click)="switchMethod.emit('passkey')"
@@ -53,17 +64,7 @@ import { TranslatePipe } from '../shared/translate.pipe';
             >
               {{ 'auth.passkey' | translate }}
             </button>
-            <button
-              type="button"
-              (click)="switchMethod.emit('email')"
-              [class.bg-white]="method === 'email'"
-              [class.text-gray-900]="method === 'email'"
-              [class.text-gray-600]="method !== 'email'"
-              [class.shadow-sm]="method === 'email'"
-              class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
-            >
-              {{ 'auth.emailLink' | translate }}
-            </button>
+            
           </div>
 
           <!-- Method Info -->
@@ -238,7 +239,7 @@ import { TranslatePipe } from '../shared/translate.pipe';
 export class AuthModalComponent {
   @Input() show = false;
   @Input() mode: 'signin' | 'register' = 'signin';
-  @Input() method: 'passkey' | 'email' = 'passkey';
+  @Input() method: 'email' | 'passkey' = 'email';
   @Input() email = '';
   @Input() isLoading = false;
   @Input() magicLinkSent = false;
@@ -247,7 +248,7 @@ export class AuthModalComponent {
   @Output() submit = new EventEmitter<void>();
   @Output() close = new EventEmitter<void>();
   @Output() switchMode = new EventEmitter<void>();
-  @Output() switchMethod = new EventEmitter<'passkey' | 'email'>();
+  @Output() switchMethod = new EventEmitter<'email' | 'passkey'>();
   @Output() reset = new EventEmitter<void>();
   @Output() emailChange = new EventEmitter<string>();
 }

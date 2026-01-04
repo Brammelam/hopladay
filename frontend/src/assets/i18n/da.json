@@ -237,7 +237,8 @@
     "learnMorePayments": "Læs mere om sikre betalinger →",
     "alreadyPremium": "Du er allerede en Premium-bruger!",
     "sessionNotReady": "Brugersession ikke klar. Prøv venligst igen.",
-    "welcomePremium": "Velkommen til Premium! Din konto er blevet opgraderet."
+    "welcomePremium": "Velkommen til Premium! Din konto er blevet opgraderet.",
+    "createAccountForPurchase": "Vi opretter en konto til dig for at gemme dit køb"
   },
   "auth": {
     "signIn": "Log ind",

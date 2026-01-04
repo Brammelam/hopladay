@@ -12,6 +12,19 @@ export class ApiService {
   constructor(private http: HttpClient) {}
 
   /**
+   * Initialize user session - always returns userId
+   * Body: { browserId?, email?, name?, availableDays? }
+   */
+  initUser(browserId?: string | null, email?: string | null, name?: string, availableDays?: number): Observable<any> {
+    const body: any = {};
+    if (browserId) body.browserId = browserId;
+    if (email) body.email = email;
+    if (name) body.name = name;
+    if (availableDays) body.availableDays = availableDays;
+    return this.http.post(`${this.baseUrl}/users/init`, body);
+  }
+
+  /**
    * Fetch holidays for a given year/country — with caching.
    */
   getHolidays(year: number, country = 'NO'): Observable<any[]> {
@@ -26,44 +39,27 @@ export class ApiService {
   }
 
   /**
-   * Create a new user — DEPRECATED, use UserService instead
-   * @deprecated Use UserService.initializeUser() or UserService.claimWithEmail()
-   */
-  createUser(user: { name: string; email: string; availableDays: number }): Observable<any> {
-    return this.http.post(`${this.baseUrl}/users`, user);
-  }
-
-  /**
    * Generate or fetch a vacation optimization plan for a given user/year.
-   * If userId is provided, plan is saved to user account.
-   * If userId is null, browserId is used for anonymous session persistence.
+   * userId is required - always use userId (no browserId)
    */
   createPlan(
-    userId: string | null,
+    userId: string,
     year: number,
     country: string,
     availableDays: number,
     preference: string,
     generateAI: boolean = true,
-    lang: string = 'en',
-    browserId?: string | null
+    lang: string = 'en'
   ): Observable<any> {
-    const body: any = { 
-      year, 
-      country, 
-      availableDays, 
-      preference, 
-      generateAI, 
-      lang 
-    };
-
-    if (userId) {
-      body.userId = userId;
-    } else if (browserId) {
-      body.browserId = browserId;
-    }
-
-    return this.http.post(`${this.baseUrl}/plans`, body);
+    return this.http.post(`${this.baseUrl}/plans`, {
+      userId,
+      year,
+      country,
+      availableDays,
+      preference,
+      generateAI,
+      lang
+    });
   }
 
   /**
@@ -151,7 +147,15 @@ export class ApiService {
   }
 
   /**
+   * Get user by ID (fetches latest premium status from backend)
+   */
+  getUserById(userId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/users/${userId}`);
+  }
+
+  /**
    * Create Stripe checkout session for premium upgrade
+   * userId is required
    */
   createCheckoutSession(userId: string, successUrl?: string, cancelUrl?: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/payment/create-checkout-session`, {

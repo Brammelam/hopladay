@@ -237,7 +237,8 @@
     "learnMorePayments": "Mehr über sichere Zahlungen erfahren →",
     "alreadyPremium": "Sie sind bereits ein Premium-Benutzer!",
     "sessionNotReady": "Benutzersitzung nicht bereit. Bitte versuchen Sie es erneut.",
-    "welcomePremium": "Willkommen bei Premium! Ihr Konto wurde aktualisiert."
+    "welcomePremium": "Willkommen bei Premium! Ihr Konto wurde aktualisiert.",
+    "createAccountForPurchase": "Wir erstellen ein Konto für Sie, um Ihren Kauf zu speichern"
   },
   "auth": {
     "signIn": "Anmelden",

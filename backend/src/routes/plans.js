@@ -281,35 +281,20 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
  */
 router.post('/', async (req, res) => {
   try {
-    let { userId, browserId, year, country = 'NO', availableDays, preference = 'balanced', generateAI = true, lang = 'en' } = req.body;
+    const { userId, year, country = 'NO', availableDays, preference = 'balanced', generateAI = true, lang = 'en' } = req.body;
 
-    // Validate and sanitize identifiers
-    // Convert empty strings/falsy values to null for consistency
-    // CRITICAL: Never allow null values to be used in queries or documents
-    const normalizeId = (id) => {
-      if (!id) return null;
-      const str = String(id).trim();
-      return str !== '' && str !== 'null' && str !== 'undefined' ? str : null;
-    };
-    userId = normalizeId(userId);
-    browserId = normalizeId(browserId);
-
-    // Must have either userId (logged in) or browserId (anonymous)
-    if (!userId && !browserId) {
-      return res.status(400).json({ error: 'Either userId or browserId is required' });
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
     }
 
-    let user = null;
-    let vacationDays = availableDays || 25;
-    let isPremium = false;
-
-    if (userId) {
-      // Logged in user
-      user = await User.findById(userId);
-      if (!user) return res.status(404).json({ message: 'User not found' });
-      vacationDays = availableDays ?? user.availableDays;
-      isPremium = user.isPremium || false;
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    const vacationDays = availableDays ?? user.availableDays;
+    const isPremium = user.isPremium || false;
 
     // Generate plan data
     let planData = { suggestions: [], totalDaysOff: 0, usedDays: 0 };
@@ -319,20 +304,8 @@ router.post('/', async (req, res) => {
       planData = generateHolidayPlan(holidays, vacationDays, year, preference, { isPremium, lang });
     }
 
-    // Build query - CRITICAL: Only include fields with actual values, never null
-    // This prevents MongoDB from trying to match/upsert with null values which conflict with unique indexes
-    const query = { year };
-    if (userId) {
-      query.userId = userId;
-    } else if (browserId) {
-      // Only add browserId to query if it has a value
-      query.browserId = browserId;
-    } else {
-      // This should never happen due to validation above, but double-check
-      return res.status(400).json({ error: 'Either userId or browserId must be provided' });
-    }
-    
-    console.log(`Looking for plan with query:`, query);
+    // Simple query - always use userId
+    const query = { userId, year };
     
     const updateDoc = {
       $set: {
@@ -342,6 +315,10 @@ router.post('/', async (req, res) => {
         availableDays: vacationDays,
         countryCode: country,
         preference: preference,
+      },
+      $setOnInsert: {
+        userId,
+        year
       }
     };
     
@@ -350,100 +327,21 @@ router.post('/', async (req, res) => {
       updateDoc.$set.isModifiedByUser = false;
     }
     
-    // Set userId or browserId on creation (via setOnInsert)
-    // CRITICAL: Never set userId: null or browserId: null - only include fields with actual values
-    const setOnInsert = { year };
-    if (userId) {
-      setOnInsert.userId = userId;
-      // Ensure browserId is unset if we're using userId (in case of migration)
-      if (!updateDoc.$unset) updateDoc.$unset = {};
-      updateDoc.$unset.browserId = '';
-    } else if (browserId) {
-      // Only set browserId if it has a value
-      setOnInsert.browserId = browserId;
-      // Ensure userId is unset if we're using browserId (never set userId: null)
-      if (!updateDoc.$unset) updateDoc.$unset = {};
-      updateDoc.$unset.userId = '';
-    } else {
-      // This should never happen due to validation above
-      return res.status(400).json({ error: 'Either userId or browserId must be provided' });
-    }
-    updateDoc.$setOnInsert = setOnInsert;
-    
-    // Handle migration from browserId to userId if user just logged in
-    if (userId && browserId) {
-      // Check if there's an anonymous plan to migrate
-      const anonymousPlan = await HolidayPlan.findOne({ browserId, year });
-      if (anonymousPlan) {
-        console.log(`Migrating anonymous plan to user ${userId}`);
-        anonymousPlan.userId = userId;
-        anonymousPlan.browserId = undefined;
-        anonymousPlan.suggestions = planData.suggestions;
-        anonymousPlan.totalDaysOff = planData.totalDaysOff;
-        anonymousPlan.usedDays = planData.usedDays;
-        anonymousPlan.availableDays = vacationDays;
-        anonymousPlan.countryCode = country;
-        anonymousPlan.preference = preference;
-        if (generateAI) {
-          anonymousPlan.isModifiedByUser = false;
-        }
-        await anonymousPlan.save();
-        return res.json(anonymousPlan);
-      }
-    }
-    
-    // CRITICAL: Before upserting, check for orphaned documents with userId: null
-    // This can happen if documents were created before the fix
-    if (!userId && browserId) {
-      const orphanedPlan = await HolidayPlan.findOne({ 
-        year, 
-        $or: [
-          { userId: null },
-          { userId: { $exists: false } }
-        ]
-      });
-      if (orphanedPlan) {
-        console.log(`Found orphaned plan ${orphanedPlan._id} with userId: null, updating to use browserId`);
-        // Update the orphaned plan to use browserId instead
-        orphanedPlan.browserId = browserId;
-        orphanedPlan.userId = undefined; // Remove userId field entirely
-        orphanedPlan.suggestions = planData.suggestions;
-        orphanedPlan.totalDaysOff = planData.totalDaysOff;
-        orphanedPlan.usedDays = planData.usedDays;
-        orphanedPlan.availableDays = vacationDays;
-        orphanedPlan.countryCode = country;
-        orphanedPlan.preference = preference;
-        if (generateAI) {
-          orphanedPlan.isModifiedByUser = false;
-        }
-        await orphanedPlan.save();
-        return res.json(orphanedPlan);
-      }
-    }
-    
     const plan = await HolidayPlan.findOneAndUpdate(
       query,
       updateDoc,
       { 
-        new: true,           // Return updated document
-        upsert: true,        // Create if doesn't exist
-        runValidators: true  // Run schema validators
+        new: true,
+        upsert: true,
+        runValidators: true
       }
     );
     
-    console.log(`Plan ${plan._id} ${plan.createdAt === plan.updatedAt ? 'created' : 'updated'}`);
+    console.log(`Plan ${plan._id} ${plan.createdAt?.getTime() === plan.updatedAt?.getTime() ? 'created' : 'updated'}`);
     res.json(plan);
   } catch (err) {
     console.error('Error creating/updating plan:', err);
-    // Capture variables before they might be out of scope
-    const errorDetails = { 
-      userId: req.body?.userId || null, 
-      browserId: req.body?.browserId || null, 
-      year: req.body?.year || null, 
-      country: req.body?.country || null 
-    };
-    console.error('Request details:', errorDetails);
-    
+    console.error('Request details:', { userId: req.body?.userId, year: req.body?.year, country: req.body?.country });
     res.status(500).json({ message: 'Failed to create plan', error: err.message });
   }
 });
@@ -487,12 +385,9 @@ router.post("/:planId/manual-days", async (req, res) => {
     const plan = await HolidayPlan.findById(planId);
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
-    // Support anonymous users - only lookup user if userId exists
-    let user = null;
-    if (plan.userId) {
-      user = await User.findById(plan.userId);
-      if (!user) return res.status(404).json({ error: "User not found" });
-    }
+    // Find user for the plan
+    const user = await User.findById(plan.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const holidays = await getHolidaysForYear(plan.year, plan.countryCode);
     const holidaySet = new Set(
@@ -604,8 +499,8 @@ router.post("/:planId/manual-days", async (req, res) => {
 
     const usage = calculatePlanUsage(plan.suggestions, holidays);
     
-    // Use plan.availableDays if set, otherwise fall back to user.availableDays (for logged-in users)
-    const availableDays = plan.availableDays || (user ? user.availableDays : 25);
+    // Use plan.availableDays if set, otherwise fall back to user.availableDays
+    const availableDays = plan.availableDays || user.availableDays;
     if (usage.usedDays > availableDays) {
       // Rollback - remove the suggestions we just added
       plan.suggestions = plan.suggestions.filter(s => !s.isManual || s._id);
@@ -861,16 +756,13 @@ router.post("/:planId/regenerate", async (req, res) => {
     const plan = await HolidayPlan.findById(planId);
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
-    // Support anonymous users - only lookup user if userId exists
-    let user = null;
-    let isPremium = false;
-    if (plan.userId) {
-      user = await User.findById(plan.userId);
-      if (!user) return res.status(404).json({ error: "User not found" });
-      isPremium = user.isPremium || false;
-    }
+    // Find user for the plan
+    const user = await User.findById(plan.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
     
-    // Validate strategy: free users (including anonymous) can only use "balanced"
+    const isPremium = user.isPremium || false;
+    
+    // Validate strategy: free users can only use "balanced"
     if (!isPremium && preference !== 'balanced') {
       return res.status(403).json({ 
         error: 'Premium feature', 
@@ -879,8 +771,8 @@ router.post("/:planId/regenerate", async (req, res) => {
     }
 
     const holidays = await getHolidaysForYear(plan.year, plan.countryCode);
-    // Use plan.availableDays if set, otherwise fall back to user.availableDays (for logged-in users)
-    const availableDays = plan.availableDays || (user ? user.availableDays : 25);
+    // Use plan.availableDays if set, otherwise fall back to user.availableDays
+    const availableDays = plan.availableDays || user.availableDays;
 
     console.log(`\n=== REGENERATE WITH NEW STRATEGY ===`);
     console.log(`New strategy: ${preference}`);
@@ -988,16 +880,13 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
     const plan = await HolidayPlan.findById(planId);
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
-    // Support anonymous users - only lookup user if userId exists
-    let user = null;
-    if (plan.userId) {
-      user = await User.findById(plan.userId);
-      if (!user) return res.status(404).json({ error: "User not found" });
-    }
+    // Find user for the plan
+    const user = await User.findById(plan.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const holidays = await getHolidaysForYear(plan.year, plan.countryCode);
-    // Use plan.availableDays if set, otherwise fall back to user.availableDays (for logged-in users)
-    const availableDays = plan.availableDays || (user ? user.availableDays : 25);
+    // Use plan.availableDays if set, otherwise fall back to user.availableDays
+    const availableDays = plan.availableDays || user.availableDays;
     const currentlyUsed = plan.usedDays || 0;
     const remaining = availableDays - currentlyUsed;
 
@@ -1051,8 +940,7 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
     console.log(`Passing ${holidays.length} real holidays + ${blockedDays.length} blocked days to planner`);
 
     // Generate plan for remaining days (planner will avoid blocked days)
-    // Anonymous users are treated as non-premium
-    const isPremium = user ? (user.isPremium || false) : false;
+    const isPremium = user.isPremium || false;
     const optimizedPlan = generateHolidayPlan(holidaysWithBlocked, remaining, plan.year, preference, { isPremium, lang });
 
     optimizedPlan.suggestions.forEach((s, i) => {

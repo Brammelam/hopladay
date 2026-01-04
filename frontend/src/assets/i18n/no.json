@@ -219,7 +219,7 @@
   },
   "premium": {
     "upgradeToPremium": "Oppgrader til Premium",
-    "price": "50 kr",
+    "price": "49 kr",
     "priceDescription": "Lås opp alle Premium-funksjoner. For alltid.",
     "premiumFeatures": "Premium-funksjoner:",
     "advancedStrategies": "Avanserte planleggingsstrategier",
@@ -231,13 +231,14 @@
     "exportCalendar": "Eksporter til kalender og PDF",
     "exportCalendarDesc": "Last ned planen din som .ics eller PDF-filer",
     "maybeLater": "Kanskje senere",
-    "upgradeNow": "Oppgrader nå - 50 kr",
+    "upgradeNow": "Oppgrader nå - 49 kr",
     "processing": "Behandler...",
     "securePayment": "Sikker betaling via Stripe. Avbryt når som helst.",
     "learnMorePayments": "Lær mer om sikre betalinger →",
     "alreadyPremium": "Du er allerede en Premium-bruker!",
     "sessionNotReady": "Brukersesjon ikke klar. Vennligst prøv igjen.",
-    "welcomePremium": "Velkommen til Premium! Kontoen din har blitt oppgradert."
+    "welcomePremium": "Velkommen til Premium! Kontoen din har blitt oppgradert.",
+    "createAccountForPurchase": "Vi oppretter en konto for deg for å lagre kjøpet ditt"
   },
   "auth": {
     "signIn": "Logg inn",

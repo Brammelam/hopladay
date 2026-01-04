@@ -6,8 +6,11 @@ const router = express.Router();
 
 /**
  * POST /api/users/init
- * Initialize user session (by browserId or email)
+ * Initialize user session - always creates/returns a user with userId
  * Body: { browserId?, email?, name?, availableDays? }
+ * - If email provided: finds or creates user by email (for login)
+ * - If browserId provided: finds or creates user by browserId (for anonymous)
+ * - Returns user object with _id (userId)
  */
 router.post("/init", async (req, res) => {
   try {
@@ -16,10 +19,10 @@ router.post("/init", async (req, res) => {
     let user;
 
     if (email) {
-      // Find or create by email
+      // Find or create by email (logged in user)
       user = await findOrCreateUserByEmail(email, { name, availableDays });
     } else if (browserId) {
-      // Find or create by browserId
+      // Find or create by browserId (anonymous user)
       user = await findOrCreateUserByBrowserId(browserId, { name, availableDays });
     } else {
       return res.status(400).json({ error: "browserId or email is required" });

@@ -19,8 +19,7 @@ const manualDaySchema = new mongoose.Schema({
 });
 
 const planSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: false }, // Optional - can use browserId instead
-  browserId: { type: String, required: false }, // For anonymous sessions
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Always required - single user ID
   year: { type: Number, required: true },
   countryCode: { type: String, default: "NO" },
   availableDays: Number,
@@ -36,16 +35,7 @@ planSchema.index(
   { userId: 1, year: 1 }, 
   { 
     unique: true, 
-    name: 'userId_year_unique',
-    partialFilterExpression: { userId: { $type: 'objectId' } } 
-  }
-);
-planSchema.index(
-  { browserId: 1, year: 1 }, 
-  { 
-    unique: true,
-    name: 'browserId_year_unique',
-    partialFilterExpression: { browserId: { $type: 'string' } } 
+    name: 'userId_year_unique'
   }
 );
 

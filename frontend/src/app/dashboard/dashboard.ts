@@ -68,7 +68,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   authMode: 'signin' | 'register' = 'signin';
-  authMethod: 'passkey' | 'email' = 'passkey';
+  authMethod: 'passkey' | 'email' = 'email';
   authEmail = '';
   magicLinkSent = false;
   magicLinkUrl = '';
@@ -80,6 +80,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showPremiumModal = false;
   isProcessingPayment = false;
   premiumModalOpenedFromStrategySelector = false;
+  premiumEmail = ''; // Email for anonymous users purchasing premium
   
   // Tab state for plan view
   activeTab: 'calendar' | 'suggestions' = 'calendar';
@@ -164,10 +165,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Subscribe to auth state changes
     this.userSubscription = this.userService.currentUser$.subscribe((user) => {
-      if (user) {
+      if (user && user._id) {
         this.userId = user._id;
-        this.isPremium = user.isPremium || false;
+        // Only set premium if user is logged in (has email) AND explicitly premium
+        // Anonymous users (no email) are NEVER premium
+        if (user.email) {
+          this.isPremium = user.isPremium === true;
+        } else {
+          // Anonymous users are never premium
+          this.isPremium = false;
+        }
         this.isUserReady = true;
+        this.cdr.detectChanges();
+      } else if (!user) {
+        // User logged out - reset all state
+        this.userId = '';
+        this.isPremium = false;
+        this.isUserReady = false;
         this.cdr.detectChanges();
       }
     });
@@ -184,12 +198,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private initializeUser(): void {
     const currentUser = this.userService.getCurrentUser();
 
+    // If we have a logged-in user, use it
     if (currentUser && currentUser.email) {
       this.userId = currentUser._id;
       this.isUserReady = true;
       this.loadUserPlans(currentUser._id);
       this.loadSavedPlans();
-      this.isPremium = currentUser.isPremium || false;
+      // Always fetch premium status from backend (not from localStorage)
+      this.fetchPremiumStatus(currentUser._id);
       this.cdr.detectChanges();
       return;
     }
@@ -205,11 +221,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.isUserReady = true;
           this.loadUserPlans(user._id);
           this.loadSavedPlans();
-          this.isPremium = user.isPremium || false;
+          // Always fetch premium status from backend (not from localStorage)
+          this.fetchPremiumStatus(user._id);
           this.cdr.detectChanges();
         } else {
-          this.isUserReady = true; // Allow plan generation without user
-          this.cdr.detectChanges();
+          // Initialize anonymous user
+          this.initializeAnonymousUser();
         }
       }, 500);
       return;
@@ -226,11 +243,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.isUserReady = true;
             this.loadUserPlans(user._id);
             this.loadSavedPlans();
-            this.isPremium = user.isPremium || false;
+            // Always fetch premium status from backend (not from localStorage)
+            this.fetchPremiumStatus(user._id);
             this.cdr.detectChanges();
           } else {
-            this.isUserReady = true; // Allow plan generation without user
-            this.cdr.detectChanges();
+            // Initialize anonymous user
+            this.initializeAnonymousUser();
           }
         }, 1000);
         return;
@@ -239,9 +257,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
       console.warn('Failed to check localStorage for auth in progress:', err);
     }
 
-    // No authenticated user - allow transient plan generation
-    this.isUserReady = true; // Allow plan generation without user
+    // No authenticated user - initialize anonymous user
+    this.initializeAnonymousUser();
+  }
+
+  private initializeAnonymousUser(): void {
+    // Always initialize anonymous user to get userId
+    // First, ensure isPremium is false (anonymous users are never premium)
+    this.isPremium = false;
     this.cdr.detectChanges();
+    
+    this.userService.initUser().subscribe({
+      next: (user) => {
+        this.userId = user._id;
+        // Anonymous users are NEVER premium - always false regardless of backend value
+        // This ensures anonymous users can never access premium features
+        this.isPremium = false;
+        this.isUserReady = true;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to initialize anonymous user:', err);
+        // Still allow UI to work even if init fails - default to non-premium
+        this.isPremium = false;
+        this.isUserReady = true;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private prefetchHolidays(): void {
@@ -313,7 +355,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
   onManualPlan() {
     if (!this.validateInputs()) return;
     // Create empty plan for manual planning - no AI preference needed
-    this.requestPlan(this.userId || null, this.selectedYear, this.selectedCountry, this.availableDays, 'balanced', false);
+    if (!this.isUserReady || !this.userId) {
+      // If user is not ready, initialize first
+      if (!this.userId) {
+        this.userService.initUser().subscribe({
+          next: (user) => {
+            this.userId = user._id;
+            this.isUserReady = true;
+            this.cdr.detectChanges();
+            // Proceed with plan creation after initialization
+            this.requestPlan(this.userId, this.selectedYear, this.selectedCountry, this.availableDays, 'balanced', false);
+          },
+          error: (err) => {
+            console.error('Failed to initialize user for manual plan:', err);
+            this.toast('Failed to initialize session. Please try again.', 'error');
+          }
+        });
+        return;
+      }
+      // User ID exists but not ready - wait a bit
+      this.toast('Please wait for session to initialize', 'info');
+      return;
+    }
+    this.requestPlan(this.userId, this.selectedYear, this.selectedCountry, this.availableDays, 'balanced', false);
   }
 
   // Execute plan generation with selected preference
@@ -331,7 +395,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
     
     if (this.preferenceSelectionFor === 'ai') {
-      this.requestPlan(this.userId || null, this.selectedYear, this.selectedCountry, this.availableDays, this.selectedPreference, true);
+      if (!this.isUserReady || !this.userId) {
+        // If user is not ready, initialize first
+        if (!this.userId) {
+          this.userService.initUser().subscribe({
+            next: (user) => {
+              this.userId = user._id;
+              this.isUserReady = true;
+              this.cdr.detectChanges();
+              // Proceed with plan creation after initialization
+              this.requestPlan(this.userId, this.selectedYear, this.selectedCountry, this.availableDays, this.selectedPreference, true);
+            },
+            error: (err) => {
+              console.error('Failed to initialize user for AI plan:', err);
+              this.toast('Failed to initialize session. Please try again.', 'error');
+            }
+          });
+          return;
+        }
+        // User ID exists but not ready - wait a bit
+        this.toast('Please wait for session to initialize', 'info');
+        return;
+      }
+      this.requestPlan(this.userId, this.selectedYear, this.selectedCountry, this.availableDays, this.selectedPreference, true);
     } else if (this.preferenceSelectionFor === 'optimize') {
       this.executeOptimizeRemaining();
     } else if (this.preferenceSelectionFor === 'regenerate') {
@@ -409,14 +495,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private requestPlan(
-  userId: string | null,
+  userId: string,
   year: number,
   country: string,
   availableDays: number,
   preference: string = 'balanced',
   generateAI = true
 ) {
-  const isTransient = !userId;
   this.isLoading = true;
 
   this.api
@@ -424,8 +509,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     .pipe(
       switchMap((holidayData) => {
         this.holidays = [...holidayData];
-        const browserId = userId ? undefined : this.userService.getBrowserId();
-        return this.api.createPlan(userId, year, country, availableDays, preference, generateAI, this.translationService.currentLang(), browserId);
+        return this.api.createPlan(userId, year, country, availableDays, preference, generateAI, this.translationService.currentLang());
       }),
       catchError((err) => {
         console.error('Failed during plan generation pipeline:', err);
@@ -448,11 +532,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (this.isUserClaimed()) {
           this.loadSavedPlans();
           this.toast(this.translationService.translate('toast.planGenerated', { strategy: this.getPreferenceLabel(plan.preference) }), 'success');
-        } else if (isTransient) {
-          // Show toast prompting user to sign in to save
-          this.toast(this.translationService.translate('toast.planGeneratedTransient', { strategy: this.getPreferenceLabel(plan.preference) }), 'info');
         } else {
-          this.toast(this.translationService.translate('toast.planGenerated', { strategy: this.getPreferenceLabel(plan.preference) }), 'success');
+          // Show toast prompting user to sign in to save (anonymous users)
+          this.toast(this.translationService.translate('toast.planGeneratedTransient', { strategy: this.getPreferenceLabel(plan.preference) }), 'info');
         }
         this.cdr.markForCheck();
       }, 0);
@@ -664,6 +746,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (result?.verified) {
           this.userService.setCurrentUser(result.user as any);
           this.userId = result.user._id;
+          this.loadUserPlans(result.user._id);
+          this.loadSavedPlans();
+          // Fetch premium status from backend to ensure accuracy
+          this.fetchPremiumStatus(result.user._id);
           this.closeAuthModal();
           this.toast(`Plans secured for ${result.user.email}`);
         }
@@ -673,6 +759,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.userService.setCurrentUser(result.user as any);
           this.userId = result.user._id;
           this.loadUserPlans(result.user._id);
+          this.loadSavedPlans();
+          // Fetch premium status from backend to ensure accuracy
+          this.fetchPremiumStatus(result.user._id);
           this.closeAuthModal();
           this.toast(`Welcome back, ${result.user.email || result.user.name}`);
         }
@@ -748,25 +837,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-  // Clear authentication info
-  this.userService.clearCurrentUser(); // if your service has a method for this
+    // Clear authentication info first - this will trigger the subscription to reset state
+    this.userService.clearCurrentUser();
 
-  // Reset local state
-  this.userId = '';
-  this.plan = null;
-  this.savedPlans = [];
-  this.showAuthModal = false;
-  this.magicLinkSent = false;
-  this.authEmail = '';
-  this.authMode = 'signin';
-  this.authMethod = 'passkey';
+    // Clear any auth in progress flags
+    try {
+      localStorage.removeItem('hopladay_auth_in_progress');
+    } catch (err) {
+      console.warn('Failed to clear auth in progress flag:', err);
+    }
 
-  // Let the user know
-      this.toast(this.translationService.translate('toast.loggedOut'));
+    // Reset local state (subscription will also reset userId, isPremium, isUserReady)
+    this.plan = null;
+    this.savedPlans = [];
+    this.showAuthModal = false;
+    this.magicLinkSent = false;
+    this.authEmail = '';
+    this.authMode = 'signin';
+    this.authMethod = 'email';
 
-  // Trigger UI refresh
-  this.cdr.detectChanges();
-}
+    // Let the user know
+    this.toast(this.translationService.translate('toast.loggedOut'));
+
+    // Trigger UI refresh
+    this.cdr.detectChanges();
+
+    // Re-initialize as anonymous user after a brief delay to ensure UI updates
+    setTimeout(() => {
+      this.initializeAnonymousUser();
+    }, 100);
+  }
 
 
   /** ────────────────────────────────
@@ -795,18 +895,53 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.toastService.show(message, type);
   }
 
+  /**
+   * Fetch premium status from backend (never trust localStorage)
+   * Only call this when needed (e.g., after payment), not on every user update
+   */
+  private fetchPremiumStatus(userId: string): void {
+    if (!userId) return;
+    
+    this.api.getUserById(userId).subscribe({
+      next: (user: any) => {
+        // Use strict equality - only true if explicitly true
+        this.isPremium = user.isPremium === true;
+        // Update user service with latest user data (only if different to avoid loops)
+        const currentUser = this.userService.getCurrentUser();
+        if (currentUser && currentUser._id === user._id) {
+          // User exists - only update if premium status changed (don't update if same)
+          if (currentUser.isPremium !== user.isPremium) {
+            this.userService.setCurrentUser(user);
+          }
+        } else {
+          // New user or different user - update
+          this.userService.setCurrentUser(user);
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to fetch premium status:', err);
+        // Default to false if fetch fails
+        this.isPremium = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   /** ────────────────────────────────
    *  PREMIUM / PAYMENT
    *  ─────────────────────────────── */
   
   openPremiumModal(): void {
-    if (!this.isUserReady || !this.userId) {
+    // Only check isUserReady to ensure the component is initialized
+    if (!this.isUserReady) {
       this.toast('Please wait for session to initialize', 'info');
       return;
     }
-    // Only set flag if not already set (preserves state when called from strategy selector)
-    // If called from elsewhere, don't set the flag
+    
+    // Show premium modal to all users (anonymous can enter email inline)
     this.showPremiumModal = true;
+    this.cdr.detectChanges();
   }
 
   closePremiumModal(): void {
@@ -814,6 +949,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     this.showPremiumModal = false;
     this.premiumModalOpenedFromStrategySelector = false;
+    this.premiumEmail = ''; // Clear email on close
     
     // If we came from the strategy selector, reopen it
     if (shouldReturnToStrategySelector) {
@@ -823,18 +959,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   async upgradeToPremium(): Promise<void> {
-    if (!this.userId) {
-      this.toast('User session not ready. Please try again.', 'error');
-      return;
-    }
-
     if (this.isPremium) {
       this.toast('You are already a Premium user!', 'info');
       this.closePremiumModal();
       return;
     }
 
-    this.isProcessingPayment = true;
+    // If anonymous user, we need email to create/find user account
+    if (!this.isUserClaimed()) {
+      if (!this.premiumEmail || !this.premiumEmail.includes('@')) {
+        this.toast('Please enter a valid email address', 'error');
+        return;
+      }
+      
+      // Initialize user with email (creates or finds existing user)
+      this.isProcessingPayment = true;
+      try {
+        const user = await this.userService.initUser(this.premiumEmail).toPromise();
+        if (!user || !user._id) {
+          this.toast('Failed to create account. Please try again.', 'error');
+          this.isProcessingPayment = false;
+          return;
+        }
+        this.userId = user._id;
+        // Update user in service
+        this.userService.setCurrentUser(user);
+      } catch (err) {
+        console.error('Failed to initialize user:', err);
+        this.toast('Failed to create account. Please try again.', 'error');
+        this.isProcessingPayment = false;
+        return;
+      }
+    } else if (!this.userId) {
+      this.toast('Session not ready. Please try again.', 'error');
+      return;
+    }
+
+    // isProcessingPayment already set for anonymous users above
+    if (this.isUserClaimed()) {
+      this.isProcessingPayment = true;
+    }
 
     try {
       const baseUrl = window.location.origin;
@@ -876,7 +1040,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
               // Update user premium status
               if (response.user) {
                 this.userService.setCurrentUser(response.user);
-                this.isPremium = true;
+                // Fetch latest premium status from backend to ensure it's current
+                if (response.user._id) {
+                  this.fetchPremiumStatus(response.user._id);
+                } else {
+                  this.isPremium = response.premium;
+                }
                 this.toast(this.translationService.translate('premium.welcomePremium'), 'success');
                 // Clear query params and navigate to current language route
                 const currentLang = this.translationService.currentLang();
@@ -885,8 +1054,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
               } else {
                 console.warn('Payment successful but no user data returned');
                 this.toast('Payment successful! Refreshing your account...', 'info');
-                // Reload user data
-                this.initializeUser();
+                // Reload user data - will fetch premium status from backend
+                if (this.userId) {
+                  this.fetchPremiumStatus(this.userId);
+                } else {
+                  this.initializeUser();
+                }
               }
             } else {
               if (response.payment_status === 'unpaid') {

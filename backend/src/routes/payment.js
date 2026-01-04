@@ -41,7 +41,9 @@ export function validateStripeConfig() {
 /**
  * POST /api/payment/create-checkout-session
  * Create a Stripe Checkout session for premium upgrade
- * Body: { userId, successUrl?, cancelUrl? }
+ * Body: { userId?, browserId?, successUrl?, cancelUrl? }
+ * - For logged-in users: provide userId
+ * - For anonymous users: provide browserId (will create user account)
  */
 router.post("/create-checkout-session", async (req, res) => {
   try {
@@ -88,9 +90,9 @@ router.post("/create-checkout-session", async (req, res) => {
       mode: "payment", // One-time payment, not subscription
       success_url: successUrl || defaultSuccessUrl,
       cancel_url: cancelUrl || defaultCancelUrl,
-      client_reference_id: userId,
+      client_reference_id: user._id.toString(),
       metadata: {
-        userId: userId.toString(),
+        userId: user._id.toString(),
       },
     });
 
@@ -138,10 +140,17 @@ export const webhookHandler = async (req, res) => {
         if (userId) {
           try {
             const user = await User.findByIdAndUpdate(userId, { isPremium: true }, { new: true });
-            if (user && user.email) {
+            if (user) {
               console.log(`User ${userId} upgraded to premium (one-time payment)`);
-              // Send premium upgrade email
-              emailService.sendPremiumUpgrade(user.email);
+              // Send premium upgrade email (only if user has email - anonymous users won't have email yet)
+              if (user.email) {
+                try {
+                  await emailService.sendPremiumUpgrade(user.email);
+                } catch (emailErr) {
+                  console.error('Failed to send premium upgrade email:', emailErr);
+                  // Don't fail webhook if email fails
+                }
+              }
             }
           } catch (err) {
             console.error(`Failed to update user ${userId} to premium:`, err);
@@ -197,8 +206,15 @@ router.get("/check-session", async (req, res) => {
         if (user) {
           console.log(`User ${userId} upgraded to premium via check-session (one-time payment)`);
 
-          // Send premium upgrade email
-          await emailService.sendPremiumUpgrade(user.email);
+          // Send premium upgrade email (only if user has email - anonymous users won't have email yet)
+          if (user.email) {
+            try {
+              await emailService.sendPremiumUpgrade(user.email);
+            } catch (emailErr) {
+              console.error('Failed to send premium upgrade email:', emailErr);
+              // Don't fail the request if email fails
+            }
+          }
 
           return res.json({ success: true, premium: true, user });
         } else {
