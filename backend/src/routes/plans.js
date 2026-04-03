@@ -1,4 +1,5 @@
 import express from "express";
+import { addDays, differenceInCalendarDays, format } from "date-fns";
 import HolidayPlan from "../models/HolidayPlan.js";
 import User from "../models/User.js";
 import { getHolidaysForYear } from '../services/holidayService.js';
@@ -6,6 +7,20 @@ import { generateHolidayPlan } from "../services/plannerService.js";
 import { parseISODate } from "../utils/dateUtils.js";
 
 const router = express.Router();
+
+/** Local calendar day yyyy-MM-dd (aligned with parseISODate / API holiday dates) */
+function calendarKey(d) {
+  return format(new Date(d), "yyyy-MM-dd");
+}
+
+function startOfLocalDay(d) {
+  const x = new Date(d);
+  return new Date(x.getFullYear(), x.getMonth(), x.getDate());
+}
+
+function buildHolidaySet(holidays) {
+  return new Set(holidays.map((h) => calendarKey(parseISODate(h.date))));
+}
 
 function calculatePlanUsage(suggestions, holidays) {
   let vacationDaysUsed = 0;
@@ -19,65 +34,52 @@ function calculatePlanUsage(suggestions, holidays) {
   return { usedDays: vacationDaysUsed, totalDaysOff };
 }
 
-function addDays(d, days) {
-  const result = new Date(d);
-  result.setDate(result.getDate() + days);
-  return result;
-}
-
 function isWeekend(d) {
   const day = d.getDay();
   return day === 0 || day === 6;
 }
 
 function isOffDay(d, holidaySet) {
-  return isWeekend(d) || holidaySet.has(d.toDateString());
+  return isWeekend(d) || holidaySet.has(calendarKey(d));
 }
 
 function expandManualDay(date, holidaySet, endDateParam, existingBlocks = []) {
-  // Ensure dates are normalized to UTC midnight
-  const toUTCMidnight = (d) => {
-    const date = new Date(d);
-    return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  };
-  
+  let startDate = startOfLocalDay(date);
+  let endDate = endDateParam ? startOfLocalDay(endDateParam) : startOfLocalDay(date);
+
   const isInExistingBlock = (d) => {
-    return existingBlocks.some(block => {
-      const start = new Date(block.startDate);
-      const end = new Date(block.endDate);
-      return d >= start && d <= end;
+    const k = calendarKey(d);
+    return existingBlocks.some((block) => {
+      const a = calendarKey(block.startDate);
+      const b = calendarKey(block.endDate);
+      return k >= a && k <= b;
     });
   };
-  
-  let startDate = toUTCMidnight(date);
-  let endDate = endDateParam ? toUTCMidnight(endDateParam) : toUTCMidnight(date);
 
-  console.log(`Expanding from ${startDate.toISOString()} (${startDate.toDateString()}) to ${endDate.toISOString()} (${endDate.toDateString()})`);
+  console.log(`Expanding from ${calendarKey(startDate)} to ${calendarKey(endDate)}`);
 
-  // Expand backwards from startDate (only through weekends/holidays, not other blocks)
   let prev = addDays(startDate, -1);
   let backwardCount = 0;
   while (isOffDay(prev, holidaySet) && !isInExistingBlock(prev)) {
-    console.log(`  Expanding backward: ${prev.toDateString()} is off day`);
-    startDate = toUTCMidnight(prev);
-    prev = addDays(prev, -1);
+    console.log(`  Expanding backward: ${calendarKey(prev)} is off day`);
+    startDate = startOfLocalDay(prev);
+    prev = addDays(startDate, -1);
     backwardCount++;
     if (backwardCount > 10) break;
   }
   if (isInExistingBlock(prev)) {
-    console.log(`  Stopped backward expansion: ${prev.toDateString()} is in existing block`);
+    console.log(`  Stopped backward expansion: ${calendarKey(prev)} is in existing block`);
   }
 
-  // Expand forwards from endDate (only through weekends/holidays, not other blocks)
   let next = addDays(endDate, 1);
   let forwardCount = 0;
   while (isOffDay(next, holidaySet) && !isInExistingBlock(next)) {
     const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][next.getDay()];
     const isWeekendDay = isWeekend(next);
-    const isHolidayDay = holidaySet.has(next.toDateString());
-    console.log(`  Expanding forward: ${next.toDateString()} (${dayName}) - Weekend: ${isWeekendDay}, Holiday: ${isHolidayDay}`);
-    endDate = toUTCMidnight(next);
-    next = addDays(next, 1);
+    const isHolidayDay = holidaySet.has(calendarKey(next));
+    console.log(`  Expanding forward: ${calendarKey(next)} (${dayName}) - Weekend: ${isWeekendDay}, Holiday: ${isHolidayDay}`);
+    endDate = startOfLocalDay(next);
+    next = addDays(endDate, 1);
     forwardCount++;
     if (forwardCount > 10) {
       console.log('  Breaking expansion - safety limit reached');
@@ -85,23 +87,21 @@ function expandManualDay(date, holidaySet, endDateParam, existingBlocks = []) {
     }
   }
   if (isInExistingBlock(next)) {
-    console.log(`  Stopped forward expansion: ${next.toDateString()} is in existing block`);
+    console.log(`  Stopped forward expansion: ${calendarKey(next)} is in existing block`);
   }
 
-  console.log(`Expanded to ${startDate.toDateString()} to ${endDate.toDateString()}`);
+  console.log(`Expanded to ${calendarKey(startDate)} to ${calendarKey(endDate)}`);
 
-  // Count workdays in the expanded range
   let vacationDaysUsed = 0;
   let current = new Date(startDate);
-  while (current <= endDate) {
+  while (calendarKey(current) <= calendarKey(endDate)) {
     if (!isOffDay(current, holidaySet)) {
       vacationDaysUsed++;
     }
     current = addDays(current, 1);
   }
 
-  // Count total days
-  const totalDaysOff = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+  const totalDaysOff = differenceInCalendarDays(endDate, startDate) + 1;
 
   console.log(`Result: ${vacationDaysUsed} vacation days, ${totalDaysOff} total days off`);
 
@@ -147,31 +147,25 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
     console.log(`  Current: ${current.startDate.toDateString()} - ${current.endDate.toDateString()} (${current.isManual ? 'MANUAL' : 'AI'})`);
     console.log(`  Next: ${next.startDate.toDateString()} - ${next.endDate.toDateString()} (${next.isManual ? 'MANUAL' : 'AI'})`);
 
-    const currentStart = current.startDate;
-    const currentEnd = current.endDate;
-    const nextStart = next.startDate;
-    const nextEnd = next.endDate;
+    const cs = startOfLocalDay(current.startDate);
+    const ce = startOfLocalDay(current.endDate);
+    const ns = startOfLocalDay(next.startDate);
+    const ne = startOfLocalDay(next.endDate);
 
-    // Check if blocks overlap
-    const overlaps = !(currentEnd < nextStart || nextEnd < currentStart);
-    
-    // Check if blocks are directly adjacent (next day)
-    const dayAfterCurrent = addDays(currentEnd, 1);
-    const directlyAdjacent = dayAfterCurrent.toDateString() === nextStart.toDateString();
-    
-    // Check if only off days (weekends/holidays) between blocks
+    const overlaps = ns.getTime() <= ce.getTime() && ne.getTime() >= cs.getTime();
+
+    const directlyAdjacent = !overlaps && differenceInCalendarDays(ns, ce) === 1;
+
     let onlyOffDaysBetween = false;
-    if (!overlaps && !directlyAdjacent) {
+    if (!overlaps && !directlyAdjacent && differenceInCalendarDays(ns, ce) > 1) {
       onlyOffDaysBetween = true;
-      if (dayAfterCurrent < nextStart) {
-        let checkDay = new Date(dayAfterCurrent);
-        while (checkDay < nextStart) {
-          if (!isOffDay(checkDay, holidaySet)) {
-            onlyOffDaysBetween = false;
-            break;
-          }
-          checkDay = addDays(checkDay, 1);
+      let checkDay = addDays(ce, 1);
+      while (calendarKey(checkDay) < calendarKey(ns)) {
+        if (!isOffDay(checkDay, holidaySet)) {
+          onlyOffDaysBetween = false;
+          break;
         }
+        checkDay = addDays(checkDay, 1);
       }
     }
 
@@ -180,22 +174,19 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
     if (overlaps || directlyAdjacent || onlyOffDaysBetween) {
       console.log(`  → MERGING (overlaps: ${overlaps}, onlyOffDaysBetween: ${onlyOffDaysBetween})`);
       
-      // Merge blocks - ensure proper Date objects
-      const currentStart = new Date(current.startDate);
-      const combinedStart = currentStart < nextStart ? currentStart : nextStart;
-      const combinedEnd = currentEnd > nextEnd ? currentEnd : nextEnd;
+      const combinedStart = cs.getTime() <= ns.getTime() ? cs : ns;
+      const combinedEnd = ce.getTime() >= ne.getTime() ? ce : ne;
 
-      // Count workdays and total days in the merged range
       let vacationDaysUsed = 0;
       let d = new Date(combinedStart);
-      while (d <= combinedEnd) {
+      while (calendarKey(d) <= calendarKey(combinedEnd)) {
         if (!isOffDay(d, holidaySet)) {
           vacationDaysUsed++;
         }
         d = addDays(d, 1);
       }
 
-      const totalDaysOff = Math.floor((combinedEnd - combinedStart) / (1000 * 60 * 60 * 24)) + 1;
+      const totalDaysOff = differenceInCalendarDays(combinedEnd, combinedStart) + 1;
       
       // Mark as manual if either was manual
       const isManualMerge = current.isManual || next.isManual;
@@ -224,18 +215,25 @@ function mergeAdjacentBlocks(suggestions, holidaySet) {
         description = `Extended: +${aiContribution} day${aiContribution > 1 ? 's' : ''} → ${totalDaysOff} days total`;
         reason = `We added ${aiContribution} vacation day${aiContribution > 1 ? 's' : ''} to extend your manual selection (${aiGain} extra days)`;
       } else {
-        // Both manual or both AI - use simple ROI
-        const simpleRoi = totalDaysOff / vacationDaysUsed;
-        roi = simpleRoi.toFixed(1);
-        efficiency = simpleRoi >= 4 ? 'high' : simpleRoi >= 3 ? 'good' : 'normal';
-        
-        // Preserve description from higher ROI block
-        const currentRoi = parseFloat(current.roi) || (current.totalDaysOff / current.vacationDaysUsed);
-        const nextRoi = parseFloat(next.roi) || (next.totalDaysOff / next.vacationDaysUsed);
-        const keepFrom = currentRoi >= nextRoi ? current : next;
-        
-        description = keepFrom.description || `Use ${vacationDaysUsed} vacation day${vacationDaysUsed > 1 ? 's' : ''} for ${totalDaysOff} days off`;
-        reason = keepFrom.reason || `Combined vacation block for ${totalDaysOff} days off`;
+        // Both manual or both AI: always describe the merged range (never keep a
+        // single-segment description like "1 day → 3 days off" after combining blocks).
+        const simpleRoi =
+          vacationDaysUsed > 0 ? totalDaysOff / vacationDaysUsed : 0;
+        roi = vacationDaysUsed > 0 ? simpleRoi.toFixed(1) : '0.0';
+        efficiency =
+          simpleRoi >= 4 ? 'high' : simpleRoi >= 3 ? 'good' : 'normal';
+
+        if (current.isManual && next.isManual) {
+          description = `Manual: ${vacationDaysUsed} day${
+            vacationDaysUsed > 1 ? 's' : ''
+          } → ${totalDaysOff} days off`;
+          reason = 'Manually selected vacation period';
+        } else {
+          description = `Use ${vacationDaysUsed} vacation day${
+            vacationDaysUsed > 1 ? 's' : ''
+          } for ${totalDaysOff} days off`;
+          reason = `Combined vacation block for ${totalDaysOff} days off`;
+        }
       }
       
       current = {
@@ -390,15 +388,7 @@ router.post("/:planId/manual-days", async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const holidays = await getHolidaysForYear(plan.year, plan.countryCode);
-    const holidaySet = new Set(
-      holidays.map((h) => parseISODate(h.date).toDateString())
-    );
-
-    const addDays = (d, days) => {
-      const result = new Date(d);
-      result.setDate(result.getDate() + days);
-      return result;
-    };
+    const holidaySet = buildHolidaySet(holidays);
 
     // Create expanded suggestions from manual days
     const newManualBlocks = [];
@@ -432,9 +422,9 @@ router.post("/:planId/manual-days", async (req, res) => {
         
         // Check all workdays in the suggestion
         let checkDate = new Date(start);
-        while (checkDate <= end) {
-          if (!isOffDay(checkDate, holidaySet) && checkDate.toDateString() === dayDate.toDateString()) {
-            console.log(`  ${dayDate.toDateString()} workday is already in ${s.isManual ? 'MANUAL' : 'AI'} block ${start.toDateString()}-${end.toDateString()}`);
+        while (calendarKey(checkDate) <= calendarKey(end)) {
+          if (!isOffDay(checkDate, holidaySet) && calendarKey(checkDate) === calendarKey(dayDate)) {
+            console.log(`  ${calendarKey(dayDate)} workday is already in ${s.isManual ? 'MANUAL' : 'AI'} block ${calendarKey(start)}-${calendarKey(end)}`);
             return true;
           }
           checkDate = addDays(checkDate, 1);
@@ -556,9 +546,7 @@ router.delete("/:planId/suggestions/:suggestionId", async (req, res) => {
     plan.suggestions = plan.suggestions.filter((s) => s._id.toString() !== suggestionId);
 
     const holidays = await getHolidaysForYear(plan.year, plan.countryCode);
-    const holidaySet = new Set(
-      holidays.map((h) => parseISODate(h.date).toDateString())
-    );
+    const holidaySet = buildHolidaySet(holidays);
     
     // Merge adjacent blocks after removal
     plan.suggestions = mergeAdjacentBlocks(plan.suggestions, holidaySet);
@@ -597,9 +585,7 @@ router.delete("/:planId/suggestions/:suggestionId/days/:date", async (req, res) 
     const targetDate = parseISODate(date);
 
     const holidays = await getHolidaysForYear(plan.year, plan.countryCode);
-    const holidaySet = new Set(
-      holidays.map((h) => parseISODate(h.date).toDateString())
-    );
+    const holidaySet = buildHolidaySet(holidays);
 
     console.log(`\n=== REMOVING DAY FROM BRIDGE ===`);
     console.log(`Target: ${targetDate.toDateString()}`);
@@ -616,8 +602,8 @@ router.delete("/:planId/suggestions/:suggestionId/days/:date", async (req, res) 
     const remainingWorkdays = [];
     
     let current = new Date(start);
-    while (current <= end) {
-      if (!isOffDay(current, holidaySet) && current.toDateString() !== targetDate.toDateString()) {
+    while (calendarKey(current) <= calendarKey(end)) {
+      if (!isOffDay(current, holidaySet) && calendarKey(current) !== calendarKey(targetDate)) {
         remainingWorkdays.push(new Date(current));
       }
       current = addDays(current, 1);
@@ -643,7 +629,7 @@ router.delete("/:planId/suggestions/:suggestionId/days/:date", async (req, res) 
         // Check if only off days between previous and current
         let onlyOffDays = true;
         let checkDay = addDays(prevDay, 1);
-        while (checkDay < currDay) {
+        while (calendarKey(checkDay) < calendarKey(currDay)) {
           if (!isOffDay(checkDay, holidaySet)) {
             onlyOffDays = false;
             break;
@@ -791,7 +777,7 @@ router.post("/:planId/regenerate", async (req, res) => {
       plan.preference = preference;
       plan.usedDays = manualDaysUsed;
       
-      const holidaySet = new Set(holidays.map(h => parseISODate(h.date).toDateString()));
+      const holidaySet = buildHolidaySet(holidays);
       const usage = calculatePlanUsage(plan.suggestions, holidays);
       plan.totalDaysOff = usage.totalDaysOff;
       
@@ -799,7 +785,7 @@ router.post("/:planId/regenerate", async (req, res) => {
       return res.json(plan);
     }
 
-    const holidaySet = new Set(holidays.map(h => parseISODate(h.date).toDateString()));
+    const holidaySet = buildHolidaySet(holidays);
     
     // Collect already-allocated workdays from manual selections
     const allocatedWorkdays = new Set();
@@ -808,28 +794,21 @@ router.post("/:planId/regenerate", async (req, res) => {
       const existEnd = new Date(existing.endDate);
       let checkDate = new Date(existStart);
       
-      while (checkDate <= existEnd) {
+      while (calendarKey(checkDate) <= calendarKey(existEnd)) {
         if (!isOffDay(checkDate, holidaySet)) {
-          allocatedWorkdays.add(checkDate.toDateString());
+          allocatedWorkdays.add(calendarKey(checkDate));
         }
         checkDate = addDays(checkDate, 1);
       }
     });
 
     // Create fake "holidays" for allocated workdays
-    const blockedDays = Array.from(allocatedWorkdays).map(dateStr => {
-      const date = new Date(dateStr);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      
-      return {
-        date: `${year}-${month}-${day}`,
-        name: 'Blocked (manual day)',
-        countryCode: plan.countryCode,
-        year: plan.year
-      };
-    });
+    const blockedDays = Array.from(allocatedWorkdays).map((key) => ({
+      date: key,
+      name: 'Blocked (manual day)',
+      countryCode: plan.countryCode,
+      year: plan.year
+    }));
 
     const holidaysWithBlocked = [...holidays, ...blockedDays];
 
@@ -898,9 +877,7 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
     }
 
     const existingSuggestions = plan.suggestions || [];
-    const holidaySet = new Set(
-      holidays.map((h) => parseISODate(h.date).toDateString())
-    );
+    const holidaySet = buildHolidaySet(holidays);
     
     // Collect all already-allocated workdays and treat them as "blocked days"
     const allocatedWorkdays = new Set();
@@ -909,9 +886,9 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
       const existEnd = new Date(existing.endDate);
       let checkDate = new Date(existStart);
       
-      while (checkDate <= existEnd) {
+      while (calendarKey(checkDate) <= calendarKey(existEnd)) {
         if (!isOffDay(checkDate, holidaySet)) {
-          allocatedWorkdays.add(checkDate.toDateString());
+          allocatedWorkdays.add(calendarKey(checkDate));
         }
         checkDate = addDays(checkDate, 1);
       }
@@ -920,19 +897,12 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
     console.log(`Already allocated workdays: ${allocatedWorkdays.size}`);
 
     // Create fake "holidays" for allocated workdays so planner avoids them
-    const blockedDays = Array.from(allocatedWorkdays).map(dateStr => {
-      const date = new Date(dateStr);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      
-      return {
-        date: `${year}-${month}-${day}`,
-        name: 'Blocked (already allocated)',
-        countryCode: plan.countryCode,
-        year: plan.year
-      };
-    });
+    const blockedDays = Array.from(allocatedWorkdays).map((key) => ({
+      date: key,
+      name: 'Blocked (already allocated)',
+      countryCode: plan.countryCode,
+      year: plan.year
+    }));
 
     // Combine real holidays with blocked days
     const holidaysWithBlocked = [...holidays, ...blockedDays];

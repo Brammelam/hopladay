@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { catchError, finalize, of, Subscription, switchMap } from 'rxjs';
+import { catchError, distinctUntilChanged, finalize, of, Subscription, switchMap } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { HolidayInputComponent } from '../holiday-input/holiday-input';
 import { HolidayCalendarComponent } from '../holiday-calendar/holiday-calendar';
@@ -145,6 +145,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
       description: 'Hopladay is a vacation planner that combines public holidays, weekends, and your available days off to generate optimal vacation plans. Turn 3 vacation days into 7-10 days off. Free vacation optimizer with multi-country support for Norway, Sweden, Denmark, and other European countries.',
       keywords: 'holiday planner, vacation app, vacation planner, maximize vacation days, optimize holidays, vacation scheduler, holiday calendar, time off planner, vacation planning tool, holiday optimizer, vacation days calculator, combine public holidays with weekends, Norwegian public holidays, vacation days calculator'
     }, this.translationService.currentLang());
+
+    // Subscribe before initializeUser so BehaviorSubject replay loads plan for claimed users
+    this.userSubscription = this.userService.currentUser$
+      .pipe(
+        distinctUntilChanged(
+          (a, b) => a?._id === b?._id && (a?.email || '') === (b?.email || '')
+        )
+      )
+      .subscribe((user) => {
+        if (user && user._id) {
+          this.userId = user._id;
+          if (user.email) {
+            this.isPremium = user.isPremium === true;
+            this.isUserReady = true;
+            this.loadUserPlans(user._id);
+            this.loadSavedPlans();
+            this.fetchPremiumStatus(user._id);
+          } else {
+            this.isPremium = false;
+            this.isUserReady = true;
+          }
+          this.cdr.detectChanges();
+        } else if (!user) {
+          this.userId = '';
+          this.isPremium = false;
+          this.isUserReady = false;
+          this.cdr.detectChanges();
+        }
+      });
+
     this.initializeUser();
     this.prefetchHolidays();
     window.addEventListener('scroll', this.scrollHandler);
@@ -162,29 +192,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
-
-    // Subscribe to auth state changes
-    this.userSubscription = this.userService.currentUser$.subscribe((user) => {
-      if (user && user._id) {
-        this.userId = user._id;
-        // Only set premium if user is logged in (has email) AND explicitly premium
-        // Anonymous users (no email) are NEVER premium
-        if (user.email) {
-          this.isPremium = user.isPremium === true;
-        } else {
-          // Anonymous users are never premium
-          this.isPremium = false;
-        }
-        this.isUserReady = true;
-        this.cdr.detectChanges();
-      } else if (!user) {
-        // User logged out - reset all state
-        this.userId = '';
-        this.isPremium = false;
-        this.isUserReady = false;
-        this.cdr.detectChanges();
-      }
-    });
   }
 
   ngOnDestroy(): void {
@@ -198,15 +205,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private initializeUser(): void {
     const currentUser = this.userService.getCurrentUser();
 
-    // If we have a logged-in user, use it
+    // Claimed user: plan/saved lists/premium are loaded from currentUser$ subscription
     if (currentUser && currentUser.email) {
-      this.userId = currentUser._id;
-      this.isUserReady = true;
-      this.loadUserPlans(currentUser._id);
-      this.loadSavedPlans();
-      // Always fetch premium status from backend (not from localStorage)
-      this.fetchPremiumStatus(currentUser._id);
-      this.cdr.detectChanges();
       return;
     }
 
@@ -217,15 +217,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       setTimeout(() => {
         const user = this.userService.getCurrentUser();
         if (user && user.email) {
-          this.userId = user._id;
-          this.isUserReady = true;
-          this.loadUserPlans(user._id);
-          this.loadSavedPlans();
-          // Always fetch premium status from backend (not from localStorage)
-          this.fetchPremiumStatus(user._id);
           this.cdr.detectChanges();
         } else {
-          // Initialize anonymous user
           this.initializeAnonymousUser();
         }
       }, 500);
@@ -239,15 +232,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           const user = this.userService.getCurrentUser();
           if (user && user.email) {
-            this.userId = user._id;
-            this.isUserReady = true;
-            this.loadUserPlans(user._id);
-            this.loadSavedPlans();
-            // Always fetch premium status from backend (not from localStorage)
-            this.fetchPremiumStatus(user._id);
             this.cdr.detectChanges();
           } else {
-            // Initialize anonymous user
             this.initializeAnonymousUser();
           }
         }, 1000);
@@ -591,14 +577,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
    *  PLAN MANAGEMENT
    *  ─────────────────────────────── */
   loadUserPlans(userId: string): void {
-    this.loadUserPlanForYearCountry(userId, this.selectedYear, this.selectedCountry);
+    this.loadUserPlanForYear(userId, this.selectedYear);
   }
 
-  private loadUserPlanForYearCountry(userId: string, year: number, country: string): void {
+  /** One plan per user per year on the server — omit country so default NO never 404s a DK/SE plan */
+  private loadUserPlanForYear(userId: string, year: number): void {
     this.isLoading = true;
-    this.api.getPlanByYear(userId, year, country).subscribe({
+    this.api.getPlanByYear(userId, year).subscribe({
       next: (plan) => {
         this.plan = { ...plan };
+        this.selectedYear = plan.year ?? this.selectedYear;
+        this.selectedCountry = plan.countryCode || this.selectedCountry;
         this.availableDays = plan.availableDays || this.availableDays;
         this.selectedPreference = plan.preference || this.selectedPreference;
 
@@ -746,10 +735,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (result?.verified) {
           this.userService.setCurrentUser(result.user as any);
           this.userId = result.user._id;
-          this.loadUserPlans(result.user._id);
-          this.loadSavedPlans();
-          // Fetch premium status from backend to ensure accuracy
-          this.fetchPremiumStatus(result.user._id);
           this.closeAuthModal();
           this.toast(`Plans secured for ${result.user.email}`);
         }
@@ -758,10 +743,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (result?.verified) {
           this.userService.setCurrentUser(result.user as any);
           this.userId = result.user._id;
-          this.loadUserPlans(result.user._id);
-          this.loadSavedPlans();
-          // Fetch premium status from backend to ensure accuracy
-          this.fetchPremiumStatus(result.user._id);
           this.closeAuthModal();
           this.toast(`Welcome back, ${result.user.email || result.user.name}`);
         }

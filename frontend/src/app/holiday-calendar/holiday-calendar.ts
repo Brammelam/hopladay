@@ -110,17 +110,21 @@ export class HolidayCalendarComponent implements OnInit, OnChanges {
     const isVacationDay = this.isVacationDay(date);
     const isInVacationBlock = this.isInVacationBlock(date);
 
-    // Today
-    if (isSameDay(date, this.today)) {
+    const isToday = isSameDay(date, this.today);
+    const inCurrentWeek = isSameWeek(date, this.today, { weekStartsOn: 1 });
+
+    // Today + public holiday: show holiday (red) with a visible "today" ring
+    if (isToday && isHoliday) {
+      const clickable = this.editable ? 'cursor-pointer' : '';
+      return `bg-red-500 text-white border-red-500 ring-2 ring-blue-600 ring-inset font-semibold hover:bg-red-600 ${clickable}`;
+    }
+
+    // Today (weekday / non-holiday)
+    if (isToday) {
       return 'border-blue-600 bg-blue-50 text-blue-800 font-semibold';
     }
 
-    // Current week
-    if (isSameWeek(date, this.today, { weekStartsOn: 1 })) {
-      return 'bg-blue-100 border-blue-200';
-    }
-    
-    // Public holiday
+    // Public holiday (must beat current-week band so red days stay red)
     if (isHoliday) {
       const clickable = this.editable ? 'cursor-pointer' : '';
       return `bg-red-500 text-white border-red-500 hover:bg-red-600 ${clickable}`;
@@ -146,6 +150,11 @@ export class HolidayCalendarComponent implements OnInit, OnChanges {
     // Weekend
     if (isWeekend(date)) {
       return 'bg-gray-200 text-gray-700 border-gray-300';
+    }
+
+    // Current week (after holiday / vacation styling)
+    if (inCurrentWeek) {
+      return 'bg-blue-100 border-blue-200';
     }
 
     // Regular day - clickable if editable and has remaining days
