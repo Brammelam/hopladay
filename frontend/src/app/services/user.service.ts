@@ -24,7 +24,14 @@ export class UserService {
 
   constructor(private http: HttpClient, private api: ApiService) {}
 
+  private hasLocalStorage(): boolean {
+    return typeof localStorage !== 'undefined';
+  }
+
   private restoreUser(): User | null {
+    if (!this.hasLocalStorage()) {
+      return null;
+    }
     try {
       const stored = localStorage.getItem(this.USER_KEY);
       if (!stored) {
@@ -43,6 +50,9 @@ export class UserService {
 
   /** PUBLIC so verify component can call it */
   getBrowserId(): string {
+    if (!this.hasLocalStorage()) {
+      return this.generateUUID();
+    }
     try {
       let browserId = localStorage.getItem(this.BROWSER_ID_KEY);
       if (!browserId) {
@@ -86,16 +96,18 @@ export class UserService {
     this.currentUserSubject.next(user);
 
     // Save browserId if provided
-    try {
-      if (user.browserId && user.browserId !== this.getBrowserId()) {
-        localStorage.setItem(this.BROWSER_ID_KEY, user.browserId);
+    if (this.hasLocalStorage()) {
+      try {
+        if (user.browserId && user.browserId !== this.getBrowserId()) {
+          localStorage.setItem(this.BROWSER_ID_KEY, user.browserId);
+        }
+      } catch (err) {
+        console.warn('Failed to sync browserId to localStorage:', err);
       }
-    } catch (err) {
-      console.warn('Failed to sync browserId to localStorage:', err);
     }
 
     // Only persist authenticated users (with email) - without isPremium
-    if (user.email) {
+    if (user.email && this.hasLocalStorage()) {
       try {
         localStorage.setItem(this.USER_KEY, JSON.stringify(userToStore));
       } catch (err) {
@@ -148,6 +160,9 @@ export class UserService {
 
   clearCurrentUser() {
     this.currentUserSubject.next(null);
+    if (!this.hasLocalStorage()) {
+      return;
+    }
     try {
       localStorage.removeItem(this.USER_KEY);
       // Generate a new browserId on logout to create a fresh anonymous session

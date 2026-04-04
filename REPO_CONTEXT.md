@@ -8,7 +8,7 @@ Full-stack product: **Angular** frontend (`frontend/`) with SSR/prerender script
 
 ## Stack
 
-- `frontend/` — Angular (see `package.json` scripts: `ng serve`, `build:ssr`, `serve:ssr`)
+- `frontend/` — Angular 20 application builder: production `ng build` emits browser + Node server + static prerender (routes in `frontend/src/prerender-routes.txt`). Scripts: `build` / `build:ssr` / `build:prerender` (production build), `serve:ssr` → `node dist/frontend/server/server.mjs`
 - `backend/` — Express 5, ESM (`src/app.js`), `npm run dev` via nodemon
 - `hopladay.code-workspace` — multi-root workspace file for editors
 

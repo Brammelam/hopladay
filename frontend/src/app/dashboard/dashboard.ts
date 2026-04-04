@@ -1,6 +1,13 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  OnDestroy,
+  PLATFORM_ID,
+  inject,
+} from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { catchError, distinctUntilChanged, finalize, of, Subscription, switchMap } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
@@ -36,6 +43,8 @@ import { LanguageSwitcherComponent } from '../shared/language-switcher';
   ]
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  private readonly platformId = inject(PLATFORM_ID);
+
   holidays: any[] = [];
   plan: any = null;
   userId = '';
@@ -87,7 +96,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   
   switchTab(tab: 'calendar' | 'suggestions'): void {
     this.activeTab = tab;
-    // Scroll to top of plan section when switching tabs
+    if (!isPlatformBrowser(this.platformId) || typeof document === 'undefined') {
+      return;
+    }
     const planSection = document.querySelector('[aria-labelledby="plan-heading"]');
     if (planSection) {
       planSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -119,18 +130,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const isBrowser = isPlatformBrowser(this.platformId);
+
     // Check if there's a token in query params (from magic link)
     // If so, redirect to auth verify route
     // Use multiple methods for iOS compatibility
     let token = this.route.snapshot.queryParamMap.get('token');
-    
+
     // Fallback: Parse directly from URL (iOS Safari sometimes has issues with Angular router)
-    if (!token && typeof window !== 'undefined') {
+    if (!token && isBrowser) {
       const urlParams = new URLSearchParams(window.location.search);
       token = urlParams.get('token');
     }
-    
-    if (token) {
+
+    if (token && isBrowser) {
       const currentLang = this.translationService.currentLang();
       // Use window.location for iOS compatibility instead of router.navigate
       // This ensures the token is preserved during redirect
@@ -181,6 +194,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
 
     this.initializeUser();
+
+    if (!isBrowser) {
+      return;
+    }
+
     this.prefetchHolidays();
     window.addEventListener('scroll', this.scrollHandler);
     this.checkPaymentStatus();
@@ -200,7 +218,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('scroll', this.scrollHandler);
+    if (isPlatformBrowser(this.platformId)) {
+      window.removeEventListener('scroll', this.scrollHandler);
+    }
     this.userSubscription?.unsubscribe();
   }
 
@@ -208,6 +228,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
    *  INITIALIZATION
    *  ─────────────────────────────── */
   private initializeUser(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      this.isPremium = false;
+      this.isUserReady = true;
+      return;
+    }
+
     const currentUser = this.userService.getCurrentUser();
 
     // Claimed user: plan/saved lists/premium are loaded from currentUser$ subscription

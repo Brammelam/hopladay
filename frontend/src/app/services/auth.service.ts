@@ -65,8 +65,12 @@ export class AuthService {
    * Check if passkeys are supported in this browser
    */
   isPasskeySupported(): boolean {
-    return window.PublicKeyCredential !== undefined && 
-           navigator.credentials !== undefined;
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return false;
+    }
+    return (
+      window.PublicKeyCredential !== undefined && navigator.credentials !== undefined
+    );
   }
 
   /**
