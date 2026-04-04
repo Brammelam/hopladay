@@ -66,14 +66,36 @@ export class TranslationService {
     });
   }
 
+  /**
+   * Path used for language detection. Prefer the router URL when it already has a :lang segment,
+   * because `window.location.pathname` can still be `/` for a tick after the router redirects to `/en`,
+   * which caused a redirect loop (stored lang → navigateByUrl('/en') on every NavigationEnd).
+   */
+  private getPathForLangDetection(): string {
+    const routerPath = (this.router.url || '').split('?')[0].split('#')[0];
+    const browserPath =
+      typeof window !== 'undefined' ? window.location.pathname : '';
+
+    const hasLangPrefix = (p: string): boolean =>
+      /^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/.test(p);
+
+    if (hasLangPrefix(routerPath)) {
+      return routerPath;
+    }
+    if (hasLangPrefix(browserPath)) {
+      return browserPath;
+    }
+    return routerPath || browserPath || '/';
+  }
+
   private detectLanguage(): void {
-    // Use window.location.pathname to get the actual browser path (more reliable than router.url on initial load)
-    const browserPath = typeof window !== 'undefined' ? window.location.pathname : this.router.url;
-    const routerPath = this.router.url;
-    const path = browserPath || routerPath;
+    const path = this.getPathForLangDetection();
     
     // Don't redirect on auth/verify route - let it handle its own language
-    if (path.includes('/auth/verify') || (typeof window !== 'undefined' && window.location.pathname.includes('/auth/verify'))) {
+    if (
+      path.includes('/auth/verify') ||
+      (typeof window !== 'undefined' && window.location.pathname.includes('/auth/verify'))
+    ) {
       const langMatch = path.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/);
       if (langMatch) {
         const lang = langMatch[1] as Language;
@@ -115,15 +137,16 @@ export class TranslationService {
   }
 
   private redirectToLanguage(lang: Language): void {
-    // Use window.location.pathname to get the actual browser path
-    const browserPath = typeof window !== 'undefined' ? window.location.pathname : this.router.url;
-    const currentPath = browserPath || this.router.url;
-    
+    const currentPath = this.getPathForLangDetection();
+
     // Never redirect on auth/verify route - let it handle its own language
-    if (currentPath.includes('/auth/verify') || (typeof window !== 'undefined' && window.location.pathname.includes('/auth/verify'))) {
+    if (
+      currentPath.includes('/auth/verify') ||
+      (typeof window !== 'undefined' && window.location.pathname.includes('/auth/verify'))
+    ) {
       return;
     }
-    
+
     if (!currentPath.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/)) {
       const newPath = `/${lang}${currentPath === '/' ? '' : currentPath}`;
       this.router.navigateByUrl(newPath, { replaceUrl: true });
