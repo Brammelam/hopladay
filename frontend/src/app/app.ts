@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { RouterOutlet, Router, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
 import { ToastComponent } from './shared/toast';
 import { TranslationService, Language } from './services/translation.service';
@@ -13,7 +13,6 @@ import { TranslationService, Language } from './services/translation.service';
 export class App implements OnInit {
   private translationService = inject(TranslationService);
   private router = inject(Router);
-  private route = inject(ActivatedRoute);
 
   ngOnInit(): void {
     this.router.events
@@ -26,8 +25,7 @@ export class App implements OnInit {
           this.translationService.setLanguage(lang);
         }
       });
-    
-    // Also check initial route
+
     const url = this.router.url;
     const langMatch = url.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/);
     if (langMatch) {

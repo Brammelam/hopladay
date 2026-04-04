@@ -1,6 +1,4 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
 
 export type Language = 'en' | 'no' | 'nl' | 'de' | 'fr' | 'es' | 'sv' | 'da';
 
@@ -18,11 +16,14 @@ export class TranslationService {
   readonly currentLang = this.currentLanguage.asReadonly();
   readonly isNorwegian = computed(() => this.currentLanguage() === 'no');
 
-  constructor(private router: Router) {
-    this.detectLanguage();
-    this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => this.detectLanguage());
+  constructor() {
+    if (typeof window !== 'undefined') {
+      const match = window.location.pathname.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/);
+      if (match) {
+        this.currentLanguage.set(match[1] as Language);
+        this.updateHtmlLang(match[1] as Language);
+      }
+    }
   }
 
   setLanguage(lang: Language): void {
@@ -64,124 +65,6 @@ export class TranslationService {
     return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
       return params[key]?.toString() || match;
     });
-  }
-
-  /** Single leading slash, no trailing slash (except root stays `/`). */
-  private normalizeAppPath(raw: string): string {
-    let s = (raw || '').split('?')[0].split('#')[0].trim();
-    if (!s) {
-      return '/';
-    }
-    if (!s.startsWith('/')) {
-      s = `/${s}`;
-    }
-    s = s.replace(/\/{2,}/g, '/');
-    if (s.length > 1 && s.endsWith('/')) {
-      s = s.slice(0, -1);
-    }
-    return s;
-  }
-
-  /**
-   * Path used for language detection. Prefer the router URL when it already has a :lang segment,
-   * because `window.location.pathname` can still be `/` for a tick after the router redirects to `/en`,
-   * which caused a redirect loop (stored lang → navigateByUrl('/en') on every NavigationEnd).
-   *
-   * `Router.url` is sometimes serialized without a leading slash (e.g. `en`); normalize so we do not
-   * miss the lang prefix and call `redirectToLanguage` while already on `/en`.
-   */
-  private getPathForLangDetection(): string {
-    const routerRaw = (this.router.url || '').split('?')[0].split('#')[0];
-    const browserRaw =
-      typeof window !== 'undefined' ? window.location.pathname : '';
-
-    const routerPath = this.normalizeAppPath(routerRaw);
-    const browserPath = this.normalizeAppPath(browserRaw);
-
-    const hasLangPrefix = (p: string): boolean =>
-      /^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/.test(p);
-
-    if (hasLangPrefix(routerPath)) {
-      return routerPath;
-    }
-    if (hasLangPrefix(browserPath)) {
-      return browserPath;
-    }
-    if (routerPath !== '/') {
-      return routerPath;
-    }
-    if (browserPath !== '/') {
-      return browserPath;
-    }
-    return '/';
-  }
-
-  private detectLanguage(): void {
-    const path = this.getPathForLangDetection();
-    
-    // Don't redirect on auth/verify route - let it handle its own language
-    if (
-      path.includes('/auth/verify') ||
-      (typeof window !== 'undefined' && window.location.pathname.includes('/auth/verify'))
-    ) {
-      const langMatch = path.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/);
-      if (langMatch) {
-        const lang = langMatch[1] as Language;
-        this.setLanguage(lang);
-      } else {
-        this.setLanguage('en');
-      }
-      return;
-    }
-    
-    const langMatch = path.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/);
-    
-    // If language is already in the URL, use it
-    if (langMatch) {
-      const lang = langMatch[1] as Language;
-      this.setLanguage(lang);
-      return;
-    }
-
-    // Only redirect based on stored preference, not browser language
-    // This prevents SEO issues from automatic redirects
-    // Default to 'en' if no stored preference
-    const stored = typeof window !== 'undefined' && window.localStorage 
-      ? localStorage.getItem('hopladay_lang') as Language 
-      : null;
-    
-    if (stored && ['en', 'no', 'nl', 'de', 'fr', 'es', 'sv', 'da'].includes(stored)) {
-      this.setLanguage(stored as Language);
-      // Only redirect if we're not already on a language route
-      // This prevents redirect loops
-      if (!path.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/)) {
-        this.redirectToLanguage(stored as Language);
-      }
-      return;
-    }
-
-    // Default to English - no redirect needed as router handles it
-    this.setLanguage('en');
-  }
-
-  private redirectToLanguage(lang: Language): void {
-    const currentPath = this.getPathForLangDetection();
-
-    // Never redirect on auth/verify route - let it handle its own language
-    if (
-      currentPath.includes('/auth/verify') ||
-      (typeof window !== 'undefined' && window.location.pathname.includes('/auth/verify'))
-    ) {
-      return;
-    }
-
-    if (!currentPath.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/)) {
-      const newPath = `/${lang}${currentPath === '/' ? '' : currentPath}`;
-      if (this.normalizeAppPath(newPath) === this.normalizeAppPath(currentPath)) {
-        return;
-      }
-      this.router.navigateByUrl(newPath, { replaceUrl: true });
-    }
   }
 
   private updateHtmlLang(lang: Language): void {

@@ -1,4 +1,22 @@
-import { Routes } from '@angular/router';
+import { inject, PLATFORM_ID } from '@angular/core';
+import { Routes, CanMatchFn } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
+
+const SUPPORTED_LANGUAGES = ['en', 'no', 'nl', 'de', 'fr', 'es', 'sv', 'da'] as const;
+
+const langMatch: CanMatchFn = (_route, segments) =>
+  segments.length > 0 && SUPPORTED_LANGUAGES.includes(segments[0].path as typeof SUPPORTED_LANGUAGES[number]);
+
+function getStoredOrDefaultLang(): string {
+  const platformId = inject(PLATFORM_ID);
+  if (isPlatformBrowser(platformId)) {
+    const stored = localStorage.getItem('hopladay_lang');
+    if (stored && (SUPPORTED_LANGUAGES as readonly string[]).includes(stored)) {
+      return stored;
+    }
+  }
+  return 'en';
+}
 
 const appRoutes: Routes = [
   {
@@ -38,15 +56,16 @@ const appRoutes: Routes = [
 export const routes: Routes = [
   {
     path: ':lang',
+    canMatch: [langMatch],
     children: appRoutes
   },
   {
     path: '',
-    redirectTo: 'en',
-    pathMatch: 'full'
+    pathMatch: 'full',
+    redirectTo: getStoredOrDefaultLang
   },
   {
     path: '**',
-    redirectTo: 'en'
+    redirectTo: getStoredOrDefaultLang
   }
 ];
