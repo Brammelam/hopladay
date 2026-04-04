@@ -66,15 +66,37 @@ export class TranslationService {
     });
   }
 
+  /** Single leading slash, no trailing slash (except root stays `/`). */
+  private normalizeAppPath(raw: string): string {
+    let s = (raw || '').split('?')[0].split('#')[0].trim();
+    if (!s) {
+      return '/';
+    }
+    if (!s.startsWith('/')) {
+      s = `/${s}`;
+    }
+    s = s.replace(/\/{2,}/g, '/');
+    if (s.length > 1 && s.endsWith('/')) {
+      s = s.slice(0, -1);
+    }
+    return s;
+  }
+
   /**
    * Path used for language detection. Prefer the router URL when it already has a :lang segment,
    * because `window.location.pathname` can still be `/` for a tick after the router redirects to `/en`,
    * which caused a redirect loop (stored lang → navigateByUrl('/en') on every NavigationEnd).
+   *
+   * `Router.url` is sometimes serialized without a leading slash (e.g. `en`); normalize so we do not
+   * miss the lang prefix and call `redirectToLanguage` while already on `/en`.
    */
   private getPathForLangDetection(): string {
-    const routerPath = (this.router.url || '').split('?')[0].split('#')[0];
-    const browserPath =
+    const routerRaw = (this.router.url || '').split('?')[0].split('#')[0];
+    const browserRaw =
       typeof window !== 'undefined' ? window.location.pathname : '';
+
+    const routerPath = this.normalizeAppPath(routerRaw);
+    const browserPath = this.normalizeAppPath(browserRaw);
 
     const hasLangPrefix = (p: string): boolean =>
       /^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/.test(p);
@@ -85,7 +107,13 @@ export class TranslationService {
     if (hasLangPrefix(browserPath)) {
       return browserPath;
     }
-    return routerPath || browserPath || '/';
+    if (routerPath !== '/') {
+      return routerPath;
+    }
+    if (browserPath !== '/') {
+      return browserPath;
+    }
+    return '/';
   }
 
   private detectLanguage(): void {
@@ -149,6 +177,9 @@ export class TranslationService {
 
     if (!currentPath.match(/^\/(en|no|nl|de|fr|es|sv|da)(\/|$)/)) {
       const newPath = `/${lang}${currentPath === '/' ? '' : currentPath}`;
+      if (this.normalizeAppPath(newPath) === this.normalizeAppPath(currentPath)) {
+        return;
+      }
       this.router.navigateByUrl(newPath, { replaceUrl: true });
     }
   }
