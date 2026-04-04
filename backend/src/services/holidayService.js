@@ -2,6 +2,32 @@ import axios from "axios";
 import Holiday from "../models/Holiday.js";
 import { parseISODate, formatDate } from "../utils/dateUtils.js";
 
+/** Nager sometimes returns multiple rows for the same date (e.g. overlapping names); unique index is per date. */
+function dedupeHolidaysByDate(rows) {
+  const byDate = new Map();
+  for (const h of rows) {
+    const date = h.date.split("T")[0];
+    const prev = byDate.get(date);
+    if (!prev) {
+      byDate.set(date, {
+        date,
+        localName: h.localName || h.name,
+        name: h.name,
+        countryCode: h.countryCode,
+        year: h.year,
+      });
+      continue;
+    }
+    const a = prev.localName || prev.name;
+    const b = h.localName || h.name;
+    if (b && a !== b) {
+      prev.localName = `${a} / ${b}`;
+      prev.name = `${prev.name} / ${h.name}`;
+    }
+  }
+  return [...byDate.values()];
+}
+
 /**
  * Fetch public holidays for a given year and country.
  * Always compares Nager.Date API to Mongo cache and refreshes when date sets differ
@@ -43,13 +69,15 @@ export async function getHolidaysForYear(year, countryCode = "NO") {
     );
   }
 
-  const normalizedFromApi = apiRows.map((h) => ({
-    date: h.date.split("T")[0],
-    localName: h.localName || h.name,
-    name: h.name,
-    countryCode,
-    year: Number(year),
-  }));
+  const normalizedFromApi = dedupeHolidaysByDate(
+    apiRows.map((h) => ({
+      date: h.date.split("T")[0],
+      localName: h.localName || h.name,
+      name: h.name,
+      countryCode,
+      year: Number(year),
+    }))
+  );
 
   const apiKeyStr = normalizedFromApi
     .map((h) => h.date)
