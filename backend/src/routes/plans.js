@@ -987,5 +987,22 @@ router.get("/:userId/:year", async (req, res) => {
   }
 });
 
+/**
+ * DELETE /api/plans/:planId
+ * Permanently delete a holiday plan document (by plan Mongo _id).
+ */
+router.delete("/:planId", async (req, res) => {
+  try {
+    const { planId } = req.params;
+    const deleted = await HolidayPlan.findByIdAndDelete(planId);
+    if (!deleted) {
+      return res.status(404).json({ error: "Plan not found" });
+    }
+    res.json({ deleted: true, planId });
+  } catch (err) {
+    console.error("Error deleting plan:", err);
+    res.status(500).json({ error: "Failed to delete plan", message: err.message });
+  }
+});
 
 export default router;

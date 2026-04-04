@@ -89,6 +89,9 @@
     "editPlanAria": "Redigera plan",
     "savedPlansMenu": "Sparade planer-meny",
     "loadPlanFor": "Ladda plan för",
+    "deletePlan": "Ta bort",
+    "deletePlanAria": "Ta bort sparad plan för",
+    "confirmDeletePlan": "Ta bort sparad plan för {{country}} {{year}}? Detta kan inte ångras.",
     "currentPlan": "Nuvarande plan",
     "startManualPlanning": "Starta manuell planering",
     "generateAutomaticPlan": "Generera automatisk plan",
@@ -293,7 +296,9 @@
     "failedToOptimize": "Kunde inte optimera återstående dagar.",
     "loggedOut": "Du har loggat ut.",
     "exportPremiumOnly": "Exportfunktionalitet är endast tillgänglig för Premium-användare. Uppgradera för att låsa upp kalenderexport!",
-    "exportPremiumPDF": "Exportfunktionalitet är endast tillgänglig för Premium-användare. Uppgradera för att låsa upp PDF-export!"
+    "exportPremiumPDF": "Exportfunktionalitet är endast tillgänglig för Premium-användare. Uppgradera för att låsa upp PDF-export!",
+    "planDeleted": "Planen har tagits bort.",
+    "planDeleteFailed": "Kunde inte ta bort planen. Försök igen."
   },
   "paymentInfo": {
     "backToDashboard": "Tillbaka till instrumentpanelen",

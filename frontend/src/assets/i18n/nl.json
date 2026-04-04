@@ -89,6 +89,9 @@
     "editPlanAria": "Plan bewerken",
     "savedPlansMenu": "Opgeslagen plannen-menu",
     "loadPlanFor": "Plan laden voor",
+    "deletePlan": "Verwijderen",
+    "deletePlanAria": "Opgeslagen plan verwijderen voor",
+    "confirmDeletePlan": "Opgeslagen plan voor {{country}} {{year}} verwijderen? Dit kan niet ongedaan worden gemaakt.",
     "currentPlan": "Huidig plan",
     "startManualPlanning": "Start handmatige planning",
     "generateAutomaticPlan": "Genereer automatisch plan",
@@ -293,7 +296,9 @@
     "failedToOptimize": "Kan resterende dagen niet optimaliseren.",
     "loggedOut": "Je bent uitgelogd.",
     "exportPremiumOnly": "Exportfunctionaliteit is alleen beschikbaar voor Premium-gebruikers. Upgrade om kalenderexport te ontgrendelen!",
-    "exportPremiumPDF": "Exportfunctionaliteit is alleen beschikbaar voor Premium-gebruikers. Upgrade om PDF-export te ontgrendelen!"
+    "exportPremiumPDF": "Exportfunctionaliteit is alleen beschikbaar voor Premium-gebruikers. Upgrade om PDF-export te ontgrendelen!",
+    "planDeleted": "Plan verwijderd.",
+    "planDeleteFailed": "Plan kon niet worden verwijderd. Probeer opnieuw."
   },
   "paymentInfo": {
     "backToDashboard": "Terug naar dashboard",

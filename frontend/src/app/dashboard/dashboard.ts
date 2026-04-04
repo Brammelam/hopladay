@@ -705,6 +705,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  deleteSavedPlan(savedPlan: any, event?: Event): void {
+    event?.stopPropagation();
+    if (!savedPlan?._id || !this.userId) return;
+
+    const country = this.getCountryName(savedPlan.countryCode);
+    const msg = this.translationService.translate('dashboard.confirmDeletePlan', {
+      country,
+      year: String(savedPlan.year),
+    });
+    if (!globalThis.confirm(msg)) return;
+
+    this.api.deletePlan(savedPlan._id).subscribe({
+      next: () => {
+        if (this.plan?._id === savedPlan._id) {
+          this.plan = null;
+          this.editMode = false;
+        }
+        this.loadSavedPlans();
+        this.toast(this.translationService.translate('toast.planDeleted'), 'success');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to delete plan:', err);
+        this.toast(
+          this.translationService.translate('toast.planDeleteFailed'),
+          'error'
+        );
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   /** ────────────────────────────────
    *  AUTHENTICATION
    *  ─────────────────────────────── */

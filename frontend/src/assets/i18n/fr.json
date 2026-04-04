@@ -89,6 +89,9 @@
     "editPlanAria": "Modifier le plan",
     "savedPlansMenu": "Menu des plans enregistrés",
     "loadPlanFor": "Charger le plan pour",
+    "deletePlan": "Supprimer",
+    "deletePlanAria": "Supprimer le plan enregistré pour",
+    "confirmDeletePlan": "Supprimer le plan enregistré pour {{country}} {{year}} ? Cette action est irréversible.",
     "currentPlan": "Plan actuel",
     "startManualPlanning": "Démarrer la planification manuelle",
     "generateAutomaticPlan": "Générer un plan automatique",
@@ -293,7 +296,9 @@
     "failedToOptimize": "Échec de l'optimisation des jours restants.",
     "loggedOut": "Vous avez été déconnecté.",
     "exportPremiumOnly": "La fonctionnalité d'export est disponible uniquement pour les utilisateurs Premium. Passez à Premium pour débloquer les exports de calendrier !",
-    "exportPremiumPDF": "La fonctionnalité d'export est disponible uniquement pour les utilisateurs Premium. Passez à Premium pour débloquer les exports PDF !"
+    "exportPremiumPDF": "La fonctionnalité d'export est disponible uniquement pour les utilisateurs Premium. Passez à Premium pour débloquer les exports PDF !",
+    "planDeleted": "Plan supprimé.",
+    "planDeleteFailed": "Impossible de supprimer le plan. Réessayez."
   },
   "paymentInfo": {
     "backToDashboard": "Retour au tableau de bord",

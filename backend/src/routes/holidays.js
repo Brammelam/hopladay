@@ -26,8 +26,13 @@ router.get('/:year', async (req, res) => {
 router.delete("/:year", async (req, res) => {
   try {
     const { year } = req.params;
-    const count = await clearCachedHolidays(year);
-    res.json({ message: `Cleared ${count} holidays for ${year}` });
+    const { country } = req.query;
+    const count = await clearCachedHolidays(Number(year), country || null);
+    res.json({
+      message: country
+        ? `Cleared ${count} holidays for ${year} (${country})`
+        : `Cleared ${count} holidays for ${year}`,
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to clear holidays" });
   }

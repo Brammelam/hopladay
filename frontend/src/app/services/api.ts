@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { tap, map, switchMap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private baseUrl = environment.apiUrl;
-  private holidayCache = new Map<string, any[]>(); // cache holidays per "country-year"
 
   constructor(private http: HttpClient) {}
 
@@ -25,17 +24,12 @@ export class ApiService {
   }
 
   /**
-   * Fetch holidays for a given year/country — with caching.
+   * Fetch holidays for a given year/country (server reconciles with Nager.Date; no stale client cache).
    */
   getHolidays(year: number, country = 'NO'): Observable<any[]> {
-    const key = `${country}-${year}`;
-    if (this.holidayCache.has(key)) {
-      return of(this.holidayCache.get(key)!);
-    }
-
-    return this.http
-      .get<any[]>(`${this.baseUrl}/holidays/${year}?country=${country}`)
-      .pipe(tap((data) => this.holidayCache.set(key, data)));
+    return this.http.get<any[]>(
+      `${this.baseUrl}/holidays/${year}?country=${country}`
+    );
   }
 
   /**
@@ -74,6 +68,15 @@ export class ApiService {
    */
   getAllPlans(userId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/plans/${userId}`);
+  }
+
+  /**
+   * Permanently delete a plan by its Mongo _id
+   */
+  deletePlan(planId: string): Observable<{ deleted: boolean; planId: string }> {
+    return this.http.delete<{ deleted: boolean; planId: string }>(
+      `${this.baseUrl}/plans/${planId}`
+    );
   }
 
   /**

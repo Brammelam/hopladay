@@ -89,6 +89,9 @@
     "editPlanAria": "Edit plan",
     "savedPlansMenu": "Saved plans menu",
     "loadPlanFor": "Load plan for",
+    "deletePlan": "Delete",
+    "deletePlanAria": "Delete saved plan for",
+    "confirmDeletePlan": "Delete saved plan for {{country}} {{year}}? This cannot be undone.",
     "currentPlan": "Current plan",
     "startManualPlanning": "Start manual planning",
     "generateAutomaticPlan": "Generate automatic plan",
@@ -293,7 +296,9 @@
     "failedToOptimize": "Failed to optimize remaining days.",
     "loggedOut": "You have been logged out.",
     "exportPremiumOnly": "Export functionality is available for Premium users only. Upgrade to unlock calendar exports!",
-    "exportPremiumPDF": "Export functionality is available for Premium users only. Upgrade to unlock PDF exports!"
+    "exportPremiumPDF": "Export functionality is available for Premium users only. Upgrade to unlock PDF exports!",
+    "planDeleted": "Plan deleted.",
+    "planDeleteFailed": "Could not delete the plan. Please try again."
   },
   "paymentInfo": {
     "backToDashboard": "Back to dashboard",

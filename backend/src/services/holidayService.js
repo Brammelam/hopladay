@@ -3,72 +3,103 @@ import Holiday from "../models/Holiday.js";
 import { parseISODate, formatDate } from "../utils/dateUtils.js";
 
 /**
- * Fetch public holidays for a given year and cache them in MongoDB.
- * Always normalizes date strings to prevent timezone drift.
+ * Fetch public holidays for a given year and country.
+ * Always compares Nager.Date API to Mongo cache and refreshes when date sets differ
+ * (fixes partial/stale caches, e.g. incomplete 2027 Norway after a failed insert).
  *
- * @param {number} year - Year to fetch holidays for (e.g. 2025)
- * @returns {Promise<Array>} List of holiday documents
+ * @param {number} year
+ * @param {string} countryCode
+ * @returns {Promise<Array>}
  */
-export async function getHolidaysForYear(year, countryCode = 'NO') {
+export async function getHolidaysForYear(year, countryCode = "NO") {
+  let apiRows = null;
   try {
-    // 1 Check cache first (by year AND country)
-    const existing = await Holiday.find({ year, countryCode });
-    if (existing.length > 0) {
-      console.log(
-        ` Returning ${existing.length} cached holidays for ${countryCode} ${year}`
-      );
-      // Normalize old data in case it was saved before date normalization was implemented
-      // Ensure localName is included for native language support (no translation needed)
-      return existing.map((h) => ({
-        ...h.toObject(),
-        date: formatDate(parseISODate(h.date)),
-        localName: h.localName || h.name, // Prefer localName for native language
-        name: h.name, // Keep name as fallback
-      }));
-    }
-
-    // 2 Fetch from Nager.Date API
-    console.log(`🌐 Fetching holidays from Nager.Date API for ${countryCode} ${year}...`);
     const response = await axios.get(
       `https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`
     );
-    const data = response.data;
-
-    if (!Array.isArray(data) || data.length === 0) {
-      throw new Error("No holiday data returned from API");
-    }
-
-    // 3 Normalize and prepare for DB
-    // localName is in the native language of the country (no translation needed)
-    const holidays = data.map((h) => ({
-      date: h.date.split("T")[0], // safely extract YYYY-MM-DD
-      localName: h.localName || h.name, // Prefer localName for native language support
-      name: h.name, // Keep English name as fallback
-      countryCode,
-      year: Number(year),
-    }));
-
-    // 4 Save to MongoDB
-    await Holiday.insertMany(holidays);
-    console.log(`💾 Saved ${holidays.length} holidays for ${countryCode} ${year} to DB.`);
-
-    return holidays;
+    apiRows = response.data;
   } catch (err) {
-    console.error(" Error fetching holidays:", err.message);
-    throw new Error("Failed to fetch holidays");
+    console.error(" Error fetching holidays from API:", err.message);
   }
+
+  const existing = await Holiday.find({ year, countryCode });
+
+  if (!Array.isArray(apiRows) || apiRows.length === 0) {
+    if (existing.length > 0) {
+      console.log(
+        ` API unavailable or empty; using ${existing.length} cached holidays for ${countryCode} ${year}`
+      );
+      return existing.map((h) => ({
+        ...h.toObject(),
+        date: formatDate(parseISODate(h.date)),
+        localName: h.localName || h.name,
+        name: h.name,
+      }));
+    }
+    throw new Error(
+      apiRows && apiRows.length === 0
+        ? "No holiday data returned from API"
+        : "Failed to fetch holidays"
+    );
+  }
+
+  const normalizedFromApi = apiRows.map((h) => ({
+    date: h.date.split("T")[0],
+    localName: h.localName || h.name,
+    name: h.name,
+    countryCode,
+    year: Number(year),
+  }));
+
+  const apiKeyStr = normalizedFromApi
+    .map((h) => h.date)
+    .sort()
+    .join("|");
+  const cacheKeyStr = existing
+    .map((h) => formatDate(parseISODate(h.date)))
+    .sort()
+    .join("|");
+
+  if (
+    apiKeyStr === cacheKeyStr &&
+    existing.length === normalizedFromApi.length
+  ) {
+    return existing.map((h) => ({
+      ...h.toObject(),
+      date: formatDate(parseISODate(h.date)),
+      localName: h.localName || h.name,
+      name: h.name,
+    }));
+  }
+
+  await Holiday.deleteMany({ year, countryCode });
+  await Holiday.insertMany(normalizedFromApi);
+  console.log(
+    `💾 Synced ${normalizedFromApi.length} holidays for ${countryCode} ${year} (cache replaced; was ${existing.length} rows).`
+  );
+
+  return normalizedFromApi.map((h) => ({
+    ...h,
+    localName: h.localName || h.name,
+    name: h.name,
+  }));
 }
 
 /**
- * Clear cached holidays for a given year.
- * Useful if API data changes or for debugging.
+ * Clear cached holidays. Pass countryCode to clear one country only; omit to clear all countries for that year.
  *
  * @param {number} year
+ * @param {string|null} countryCode
  */
-export async function clearCachedHolidays(year) {
+export async function clearCachedHolidays(year, countryCode = null) {
   try {
-    const result = await Holiday.deleteMany({ year });
-    console.log(`🧹 Cleared ${result.deletedCount} holidays for ${year}`);
+    const filter = countryCode ? { year, countryCode } : { year };
+    const result = await Holiday.deleteMany(filter);
+    console.log(
+      `🧹 Cleared ${result.deletedCount} holidays for ${year}${
+        countryCode ? ` (${countryCode})` : " (all countries)"
+      }`
+    );
     return result.deletedCount;
   } catch (err) {
     console.error(" Failed to clear holidays:", err.message);

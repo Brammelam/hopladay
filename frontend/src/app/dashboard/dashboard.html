@@ -107,20 +107,23 @@
               </div>
 
               <div *ngIf="savedPlans.length > 0" class="py-2" role="group">
-                <button
+                <div
                   *ngFor="let savedPlan of savedPlans; trackBy: trackByPlanId"
-                  type="button"
-                  (click)="loadPlan(savedPlan)"
-                  [attr.aria-label]="('dashboard.loadPlanFor' | translate) + ' ' + getCountryName(savedPlan.countryCode) + ' ' + savedPlan.year"
-                  [attr.aria-current]="savedPlan._id === plan?._id ? 'true' : null"
-                  [class.bg-blue-50]="savedPlan._id === plan?._id"
-                  [class.border-l-4]="savedPlan._id === plan?._id"
-                  [class.border-blue-500]="savedPlan._id === plan?._id"
-                  class="w-full min-h-[44px] px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors border-b border-gray-100 last:border-0"
-                  role="menuitem"
+                  class="flex items-stretch border-b border-gray-100 last:border-0"
+                  role="none"
                 >
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="flex-1">
+                  <button
+                    type="button"
+                    (click)="loadPlan(savedPlan)"
+                    [attr.aria-label]="('dashboard.loadPlanFor' | translate) + ' ' + getCountryName(savedPlan.countryCode) + ' ' + savedPlan.year"
+                    [attr.aria-current]="savedPlan._id === plan?._id ? 'true' : null"
+                    [class.bg-blue-50]="savedPlan._id === plan?._id"
+                    [class.border-l-4]="savedPlan._id === plan?._id"
+                    [class.border-blue-500]="savedPlan._id === plan?._id"
+                    class="flex-1 min-h-[44px] px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors flex items-center justify-between gap-3 min-w-0"
+                    role="menuitem"
+                  >
+                    <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2 mb-1">
                         <span class="font-semibold text-gray-900">{{ getCountryName(savedPlan.countryCode) }} {{ savedPlan.year }}</span>
                         <span
@@ -138,8 +141,17 @@
                       </div>
                     </div>
                     <lucide-angular name="chevron-right" class="w-5 h-5 text-gray-400 flex-shrink-0" aria-hidden="true"></lucide-angular>
-                  </div>
-                </button>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="deleteSavedPlan(savedPlan, $event)"
+                    [attr.aria-label]="('dashboard.deletePlanAria' | translate) + ' ' + getCountryName(savedPlan.countryCode) + ' ' + savedPlan.year"
+                    class="min-h-[44px] min-w-[44px] px-2 inline-flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 shrink-0 border-l border-gray-100"
+                    role="menuitem"
+                  >
+                    <lucide-angular name="x" class="w-5 h-5" aria-hidden="true"></lucide-angular>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
