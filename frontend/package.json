@@ -10,7 +10,7 @@
     "serve:ssr": "node dist/frontend/server/server.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "build-prod": "ng build --configuration production"
+    "build-prod": "ng build --configuration production && cp dist/frontend/browser/index.csr.html dist/frontend/browser/index.html"
   },
   "prettier": {
     "printWidth": 100,
