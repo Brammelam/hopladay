@@ -14,6 +14,16 @@ const app = express();
 
 const angularApp = new AngularNodeAppEngine();
 
+const SUPPORTED_LANGUAGES = ['en', 'no', 'nl', 'de', 'fr', 'es', 'sv', 'da'];
+
+app.get('/', (req: Request, res: Response) => {
+  const cookieMatch = (req.headers.cookie || '').match(/hopladay_lang=(\w+)/);
+  const lang = cookieMatch?.[1] && SUPPORTED_LANGUAGES.includes(cookieMatch[1])
+    ? cookieMatch[1]
+    : 'en';
+  res.redirect(302, `/${lang}`);
+});
+
 app.use(express.static(browserDistFolder, {
   maxAge: '1y',
   index: false,

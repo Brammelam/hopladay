@@ -29,8 +29,11 @@ export class TranslationService {
   setLanguage(lang: Language): void {
     this.currentLanguage.set(lang);
     this.updateHtmlLang(lang);
-    if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem('hopladay_lang', lang);
+    if (typeof window !== 'undefined') {
+      if (window.localStorage) {
+        localStorage.setItem('hopladay_lang', lang);
+      }
+      document.cookie = `hopladay_lang=${lang};path=/;max-age=31536000;SameSite=Lax`;
     }
   }
 
