@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../services/api';
 import { TranslationService } from '../services/translation.service';
+import { SEOService } from '../services/seo.service';
 
 @Component({
   selector: 'app-unsubscribe',
@@ -22,11 +23,24 @@ export class UnsubscribeComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private api: ApiService
+    private api: ApiService,
+    private seoService: SEOService,
   ) {}
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
+    const lang = this.route.snapshot.paramMap.get('lang') || this.translationService.currentLang();
+    const ts = this.translationService;
+    this.seoService.updateSEO(
+      {
+        noindex: true,
+        title: ts.translate('seo.unsubscribeTitle'),
+        description: ts.translate('seo.unsubscribeDescription'),
+        url: `https://hopladay.com/${lang}/unsubscribe`,
+      },
+      lang,
+    );
+
+    this.route.queryParams.subscribe((params) => {
       this.email = params['email'] || '';
       this.token = params['token'] || '';
       

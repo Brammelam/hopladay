@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { UserService } from '../services/user.service';
 import { TranslationService } from '../services/translation.service';
+import { SEOService } from '../services/seo.service';
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 
@@ -93,10 +94,23 @@ export class AuthVerifyComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private authService: AuthService,
-    private userService: UserService
+    private userService: UserService,
+    private seoService: SEOService,
   ) {}
 
   ngOnInit(): void {
+    const lang = this.route.snapshot.paramMap.get('lang') || this.translationService.currentLang();
+    const ts = this.translationService;
+    this.seoService.updateSEO(
+      {
+        noindex: true,
+        title: ts.translate('seo.authVerifyTitle'),
+        description: ts.translate('seo.authVerifyDescription'),
+        url: `https://hopladay.com/${lang}/auth/verify`,
+      },
+      lang,
+    );
+
     // Get both route params (lang) and query params (token) together
     this.subscription = this.route.paramMap.pipe(take(1)).subscribe((routeParams) => {
       const lang = routeParams.get('lang') || 'en';

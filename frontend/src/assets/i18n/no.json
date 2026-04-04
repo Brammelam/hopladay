@@ -17,6 +17,24 @@
     "days": "dager",
     "day": "dag"
   },
+  "seo": {
+    "dashboardTitle": "Hopladay – smart ferieplanlegger og fridagsoptimalisering",
+    "dashboardDescription": "Gjør noen feriedager om til lange pauser. Planlegg rundt offentlige helligdager, helger og feriedager for Norge, Sverige, Danmark og mer—gratis ferieplanlegger.",
+    "dashboardKeywords": "ferieplanlegger, fridagsoptimalisering, feriedager, norske helligdager, brodager, maksimer fridager, langhelg",
+    "faqTitle": "FAQ – Hopladay ferieplanlegger",
+    "faqDescription": "Svar om å maksimere feriedager, kombinere norske og europeiske helligdager med helger, gratis vs Premium, refusjon og hvordan Hopladay fungerer.",
+    "faqKeywords": "Hopladay FAQ, feriedager, offentlige helligdager Norge, ferietips, brodager",
+    "refundsTitle": "Refusjonsregler – Hopladay Premium",
+    "refundsDescription": "Refusjonspolicy for Hopladay Premium, pengene-tilbake-garanti og hvordan du ber om refusjon eller kontakter fakturastøtte.",
+    "refundsKeywords": "Hopladay refusjon, Premium-abonnement, pengene tilbake",
+    "paymentTitle": "Sikre betalinger – Hopladay (Stripe)",
+    "paymentDescription": "Hvordan Hopladay bruker Stripe for PCI-kompatible betalinger. Kortdata håndteres av Stripe; vi lagrer ikke fullstendige betalingsdetaljer på våre servere.",
+    "paymentKeywords": "Hopladay betaling, Stripe, sikker utsjekk, PCI",
+    "authVerifyTitle": "Logg inn – Hopladay",
+    "authVerifyDescription": "Bekreft e-postlenken for å få tilgang til dine lagrede Hopladay-ferieplaner.",
+    "unsubscribeTitle": "E-postinnstillinger – Hopladay",
+    "unsubscribeDescription": "Administrer markedsførings-e-post fra Hopladay."
+  },
   "app": {
     "title": "Hopladay",
     "tagline": "Planlegg fridagene dine som en proff",

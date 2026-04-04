@@ -139,12 +139,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.seoService.updateSEO({
-      url: `https://hopladay.com/${this.translationService.currentLang()}`,
-      title: 'Hopladay - Maximize your days off',
-      description: 'Hopladay is a vacation planner that combines public holidays, weekends, and your available days off to generate optimal vacation plans. Turn 3 vacation days into 7-10 days off. Free vacation optimizer with multi-country support for Norway, Sweden, Denmark, and other European countries.',
-      keywords: 'holiday planner, vacation app, vacation planner, maximize vacation days, optimize holidays, vacation scheduler, holiday calendar, time off planner, vacation planning tool, holiday optimizer, vacation days calculator, combine public holidays with weekends, Norwegian public holidays, vacation days calculator'
-    }, this.translationService.currentLang());
+    const lang = this.translationService.currentLang();
+    const ts = this.translationService;
+    this.seoService.updateSEO(
+      {
+        url: `https://hopladay.com/${lang}`,
+        title: ts.translate('seo.dashboardTitle'),
+        description: ts.translate('seo.dashboardDescription'),
+        keywords: ts.translate('seo.dashboardKeywords'),
+      },
+      lang,
+    );
 
     // Subscribe before initializeUser so BehaviorSubject replay loads plan for claimed users
     this.userSubscription = this.userService.currentUser$

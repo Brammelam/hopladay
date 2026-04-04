@@ -17,6 +17,24 @@
     "days": "jours",
     "day": "jour"
   },
+  "seo": {
+    "dashboardTitle": "Hopladay – Smart vacation planner & holiday optimizer",
+    "dashboardDescription": "Turn a few vacation days into long breaks. Plan around public holidays, weekends, and your PTO for Norway, Sweden, Denmark, and more—free vacation planning app.",
+    "dashboardKeywords": "vacation planner, holiday optimizer, PTO planner, Norwegian holidays, bridge days, maximize time off, long weekend planner",
+    "faqTitle": "FAQ – Hopladay vacation planner & holiday optimizer",
+    "faqDescription": "Answers about maximizing PTO, combining Norwegian and European public holidays with weekends, free vs Premium, refunds, and how Hopladay works.",
+    "faqKeywords": "Hopladay FAQ, vacation days, public holidays Norway, PTO tips, holiday bridge",
+    "refundsTitle": "Refund policy – Hopladay Premium",
+    "refundsDescription": "Hopladay Premium refund policy, money-back guarantee, and how to request a refund or contact billing support.",
+    "refundsKeywords": "Hopladay refund, Premium subscription, money back guarantee",
+    "paymentTitle": "Secure payments – Hopladay (Stripe)",
+    "paymentDescription": "How Hopladay uses Stripe for PCI-compliant checkout. Card data is handled by Stripe; we do not store your full payment details on our servers.",
+    "paymentKeywords": "Hopladay payment, Stripe, secure checkout, PCI",
+    "authVerifyTitle": "Sign in – Hopladay",
+    "authVerifyDescription": "Confirm your email sign-in link to access your saved Hopladay vacation plans.",
+    "unsubscribeTitle": "Email preferences – Hopladay",
+    "unsubscribeDescription": "Manage marketing email preferences for Hopladay."
+  },
   "app": {
     "title": "Hopladay",
     "tagline": "Planifiez vos jours de congé comme un pro",

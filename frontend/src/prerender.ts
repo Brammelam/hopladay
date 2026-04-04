@@ -13,22 +13,18 @@ const indexHtml = readFileSync(
 
 const prerenderer = getPrerenderer(new URL('./main.server.mjs', import.meta.url));
 
-const routes = [
-  '/',
-  '/en',
-  '/no',
-  '/nl',
-  '/en/payment/info',
-  '/no/payment/info',
-  '/nl/payment/info',
-  '/en/refunds',
-  '/no/refunds',
-  '/nl/refunds',
-];
+const langs = ['en', 'no', 'nl', 'de', 'fr', 'es', 'sv', 'da'] as const;
+const pages = ['', '/faq', '/payment/info', '/refunds'] as const;
+
+const routes: string[] = ['/'];
+for (const lang of langs) {
+  for (const page of pages) {
+    routes.push(`/${lang}${page}`);
+  }
+}
 
 await prerenderer.prerender({
   indexHtml,
   routes,
   outputPath: browserDistFolder,
 });
-

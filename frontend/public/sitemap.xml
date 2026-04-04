@@ -7,7 +7,7 @@
   <!-- English Routes -->
   <url>
     <loc>https://hopladay.com/en</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
@@ -22,7 +22,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/en/faq</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/faq"/>
@@ -36,7 +36,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/en/payment/info</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
@@ -50,7 +50,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/en/refunds</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>
@@ -65,7 +65,7 @@
   <!-- Norwegian Routes -->
   <url>
     <loc>https://hopladay.com/no</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
@@ -80,7 +80,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/no/faq</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/faq"/>
@@ -94,7 +94,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/no/payment/info</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
@@ -108,7 +108,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/no/refunds</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>
@@ -123,7 +123,7 @@
   <!-- Dutch Routes -->
   <url>
     <loc>https://hopladay.com/nl</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
@@ -138,7 +138,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/nl/faq</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/faq"/>
@@ -152,7 +152,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/nl/payment/info</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
@@ -166,7 +166,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/nl/refunds</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>
@@ -181,7 +181,7 @@
   <!-- German Routes -->
   <url>
     <loc>https://hopladay.com/de</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
@@ -196,7 +196,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/de/faq</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/faq"/>
@@ -210,7 +210,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/de/payment/info</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
@@ -224,7 +224,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/de/refunds</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>
@@ -239,7 +239,7 @@
   <!-- French Routes -->
   <url>
     <loc>https://hopladay.com/fr</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
@@ -254,7 +254,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/fr/faq</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/faq"/>
@@ -268,7 +268,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/fr/payment/info</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
@@ -282,7 +282,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/fr/refunds</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>
@@ -297,7 +297,7 @@
   <!-- Spanish Routes -->
   <url>
     <loc>https://hopladay.com/es</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
@@ -312,7 +312,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/es/faq</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/faq"/>
@@ -326,7 +326,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/es/payment/info</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
@@ -340,7 +340,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/es/refunds</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>
@@ -355,7 +355,7 @@
   <!-- Swedish Routes -->
   <url>
     <loc>https://hopladay.com/sv</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
@@ -370,7 +370,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/sv/faq</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/faq"/>
@@ -384,7 +384,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/sv/payment/info</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
@@ -398,7 +398,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/sv/refunds</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>
@@ -413,7 +413,7 @@
   <!-- Danish Routes -->
   <url>
     <loc>https://hopladay.com/da</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en"/>
@@ -428,7 +428,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/da/faq</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/faq"/>
@@ -442,7 +442,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/da/payment/info</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/payment/info"/>
@@ -456,7 +456,7 @@
   </url>
   <url>
     <loc>https://hopladay.com/da/refunds</loc>
-    <lastmod>2025-12-02</lastmod>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hopladay.com/en/refunds"/>

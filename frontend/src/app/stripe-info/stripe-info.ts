@@ -20,11 +20,17 @@ export class StripeInfoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.seoService.updateSEO({
-      title: 'Payment Information - Secure Checkout',
-      description: 'Hopladay uses Stripe for secure payment processing. Your payment information is encrypted and secure.',
-      url: 'https://hopladay.com/payment/info'
-    });
+    const currentLang = this.translationService.currentLang();
+    const ts = this.translationService;
+    this.seoService.updateSEO(
+      {
+        title: ts.translate('seo.paymentTitle'),
+        description: ts.translate('seo.paymentDescription'),
+        keywords: ts.translate('seo.paymentKeywords'),
+        url: `https://hopladay.com/${currentLang}/payment/info`,
+      },
+      currentLang,
+    );
   }
 
   goBack(): void {
