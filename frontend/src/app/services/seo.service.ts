@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 
 /** URL path segments; hreflang hrefs use these (matches sitemap & routes). */
@@ -34,11 +35,12 @@ export interface SEOData {
   providedIn: 'root',
 })
 export class SEOService {
+  private document = inject(DOCUMENT);
   private defaultTitle = 'Hopladay – Smart vacation planner & holiday optimizer';
   private defaultDescription =
     'Turn a few vacation days into long breaks. Plan around public holidays, weekends, and your PTO for Norway, Sweden, Denmark, and more—free vacation planning app.';
-  private defaultImage = 'https://hopladay.com/og-image.png';
-  private baseUrl = 'https://hopladay.com';
+  private defaultImage = 'https://www.hopladay.com/og-image.png';
+  private baseUrl = 'https://www.hopladay.com';
 
   constructor(
     private title: Title,
@@ -88,26 +90,26 @@ export class SEOService {
     this.meta.updateTag({ name: 'twitter:description', content: description });
     this.meta.updateTag({ name: 'twitter:image', content: image });
 
-    if (typeof document !== 'undefined') {
-      document
+    if (this.document) {
+      this.document
         .querySelectorAll('meta[property="og:locale:alternate"]')
         .forEach((el) => el.remove());
       SITE_LANGS.forEach((code) => {
         if (code === lang) return;
-        const alt = document.createElement('meta');
+        const alt = this.document.createElement('meta');
         alt.setAttribute('property', 'og:locale:alternate');
         alt.setAttribute('content', OG_LOCALE[code]);
-        document.head.appendChild(alt);
+        this.document.head.appendChild(alt);
       });
 
-      let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+      let link = this.document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
       if (link) {
         link.setAttribute('href', url);
       } else {
-        link = document.createElement('link');
+        link = this.document.createElement('link');
         link.setAttribute('rel', 'canonical');
         link.setAttribute('href', url);
-        document.head.appendChild(link);
+        this.document.head.appendChild(link);
       }
 
       this.updateHreflangTags(lang, url);
@@ -128,41 +130,39 @@ export class SEOService {
 
     const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
 
-    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((el) => el.remove());
+    this.document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((el) => el.remove());
 
     SITE_LANGS.forEach((code) => {
       const langUrl = `${baseUrl}/${code}${pathWithoutLang}`;
-      const link = document.createElement('link');
+      const link = this.document.createElement('link');
       link.setAttribute('rel', 'alternate');
       link.setAttribute('hreflang', code);
       link.setAttribute('href', langUrl);
-      document.head.appendChild(link);
+      this.document.head.appendChild(link);
     });
 
     const defaultUrl = `${baseUrl}/en${pathWithoutLang}`;
-    const defaultLink = document.createElement('link');
+    const defaultLink = this.document.createElement('link');
     defaultLink.setAttribute('rel', 'alternate');
     defaultLink.setAttribute('hreflang', 'x-default');
     defaultLink.setAttribute('href', defaultUrl);
-    document.head.appendChild(defaultLink);
+    this.document.head.appendChild(defaultLink);
   }
 
   /**
-   * Inject or replace a JSON-LD script in document head (SSR-safe guard).
+   * Inject or replace JSON-LD in the current browser or server document.
    */
   setJsonLd(id: string, data: Record<string, unknown>): void {
-    if (typeof document === 'undefined') return;
     this.removeJsonLd(id);
-    const script = document.createElement('script');
+    const script = this.document.createElement('script');
     script.id = id;
     script.type = 'application/ld+json';
     script.textContent = JSON.stringify(data);
-    document.head.appendChild(script);
+    this.document.head.appendChild(script);
   }
 
   removeJsonLd(id: string): void {
-    if (typeof document === 'undefined') return;
-    document.getElementById(id)?.remove();
+    this.document.getElementById(id)?.remove();
   }
 
   setDefaultSEO(): void {

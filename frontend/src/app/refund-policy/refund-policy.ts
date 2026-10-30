@@ -40,7 +40,7 @@ export class RefundPolicyComponent implements OnInit {
         title: ts.translate('seo.refundsTitle'),
         description: ts.translate('seo.refundsDescription'),
         keywords: ts.translate('seo.refundsKeywords'),
-        url: `https://hopladay.com/${currentLang}/refunds`,
+        url: `https://www.hopladay.com/${currentLang}/refunds`,
       },
       currentLang,
     );

@@ -1,18 +1,23 @@
+import { provideZonelessChangeDetection } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AuthModal } from './auth-modal';
+import { AuthModalComponent } from './auth-modal';
 
-describe('AuthModal', () => {
-  let component: AuthModal;
-  let fixture: ComponentFixture<AuthModal>;
+describe('AuthModalComponent', () => {
+  let component: AuthModalComponent;
+  let fixture: ComponentFixture<AuthModalComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AuthModal]
+      providers: [provideZonelessChangeDetection(), provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      imports: [AuthModalComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(AuthModal);
+    fixture = TestBed.createComponent(AuthModalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

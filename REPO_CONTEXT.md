@@ -8,7 +8,7 @@ Full-stack product: **Angular** frontend (`frontend/`) with SSR/prerender script
 
 ## Stack
 
-- `frontend/` — Angular 20 application builder: production `ng build` emits browser + Node server + static prerender (routes in `frontend/src/prerender-routes.txt`). Scripts: `build` / `build:ssr` / `build:prerender` (production build), `serve:ssr` → `node dist/frontend/server/server.mjs`
+- `frontend/` — Angular 20 application builder: production `ng build` emits browser + Node server + static prerender (render modes and public routes in `frontend/src/app/app.routes.server.ts`). Scripts: `build` / `build:ssr` / `build:prerender` (production build), `serve:ssr` → `node dist/frontend/server/server.mjs`
 - `backend/` — Express 5, ESM (`src/app.js`), `npm run dev` via nodemon
 - `hopladay.code-workspace` — multi-root workspace file for editors
 
@@ -25,3 +25,11 @@ Full-stack product: **Angular** frontend (`frontend/`) with SSR/prerender script
 ## Related docs
 
 - `frontend/README.md` if present; add root README when available.
+
+## Public previews and discovery
+
+- Production frontend build aliases run `npm run build`: preserve the prerendered English root and verify public HTML via `frontend/scripts/verify-public-html.mjs`. Do not replace it with `index.csr.html`.
+- Anonymous GET `/api/v1/plan-preview`: `backend/src/routes/preview.js` + `services/previewService.js`; uses the existing planner with `isPremium:false`, nationwide Public holidays only, and no database writes.
+- `/:lang/preview` is separate from the account dashboard and cannot replace saved plans.
+- Public reference: `frontend/public/api-docs.html`, `openapi.json`, `llms.txt`. Release checks and hosting rules: `docs/llm-preview-release.md`.
+- Tests: `npm --prefix backend test`; `npm --prefix frontend test -- --watch=false --browsers=ChromeHeadless`.

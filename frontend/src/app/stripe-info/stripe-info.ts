@@ -27,7 +27,7 @@ export class StripeInfoComponent implements OnInit {
         title: ts.translate('seo.paymentTitle'),
         description: ts.translate('seo.paymentDescription'),
         keywords: ts.translate('seo.paymentKeywords'),
-        url: `https://hopladay.com/${currentLang}/payment/info`,
+        url: `https://www.hopladay.com/${currentLang}/payment/info`,
       },
       currentLang,
     );

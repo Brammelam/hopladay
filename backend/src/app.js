@@ -6,6 +6,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 
+import previewRouter from "./routes/preview.js";
 import holidaysRouter from "./routes/holidays.js";
 import usersRouter from "./routes/users.js";
 import plansRouter from "./routes/plans.js";
@@ -30,6 +31,7 @@ app.post("/api/payment/webhook", express.raw({ type: "application/json" }), webh
 app.use(express.json());
 
 // Routes
+app.use("/api/v1", previewRouter);
 app.use("/api/holidays", holidaysRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/plans", plansRouter);

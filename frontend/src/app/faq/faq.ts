@@ -27,7 +27,7 @@ export class FAQComponent implements OnInit, OnDestroy {
         title: ts.translate('seo.faqTitle'),
         description: ts.translate('seo.faqDescription'),
         keywords: ts.translate('seo.faqKeywords'),
-        url: `https://hopladay.com/${currentLang}/faq`,
+        url: `https://www.hopladay.com/${currentLang}/faq`,
       },
       currentLang,
     );

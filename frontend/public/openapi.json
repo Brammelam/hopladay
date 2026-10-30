@@ -1,0 +1,839 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Hopladay Public Preview API",
+    "version": "1.0.0",
+    "description": "Anonymous free-tier vacation suggestions for Monday–Friday workweeks using nationwide Public holidays only. Heuristic one-workday bridges, not a guaranteed global optimum. No account or saved-plan writes. Every query parameter must be a scalar supplied at most once; unknown parameters are rejected. Premium strategies and exports remain restricted. See https://www.hopladay.com/api-docs.html."
+  },
+  "servers": [
+    {
+      "url": "https://hopladay-backend.onrender.com/api/v1",
+      "description": "Production backend"
+    }
+  ],
+  "security": [],
+  "paths": {
+    "/plan-preview": {
+      "get": {
+        "operationId": "previewVacationPlan",
+        "summary": "Calculate a read-only free balanced vacation preview",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "",
+              "enum": [
+                "NO",
+                "SE",
+                "DK",
+                "FI",
+                "NL",
+                "IS",
+                "DE",
+                "BE",
+                "FR",
+                "ES",
+                "PT",
+                "IT",
+                "CH",
+                "AT",
+                "IE",
+                "GB",
+                "US",
+                "CA",
+                "AU",
+                "NZ",
+                "PL",
+                "CZ",
+                "SK",
+                "HU",
+                "SI",
+                "HR",
+                "EE",
+                "LV",
+                "LT",
+                "RO",
+                "BG",
+                "GR",
+                "TR",
+                "RU",
+                "UA",
+                "BR",
+                "MX",
+                "AR",
+                "CL",
+                "JP",
+                "CN",
+                "KR",
+                "ZA"
+              ]
+            },
+            "example": "NO",
+            "description": "Nationwide holiday jurisdiction. Regional holidays are excluded."
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 2024,
+              "description": "",
+              "maximum": 2030
+            },
+            "example": 2027,
+            "description": "Calendar year to plan."
+          },
+          {
+            "name": "availableDays",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "",
+              "maximum": 365
+            },
+            "example": 20,
+            "description": "Vacation allowance; zero is valid."
+          },
+          {
+            "name": "preference",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "",
+              "enum": [
+                "balanced"
+              ],
+              "default": "balanced"
+            },
+            "example": "balanced",
+            "description": "Only balanced is public. Premium strategies are rejected, never downgraded silently."
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "",
+              "enum": [
+                "en",
+                "no",
+                "nl",
+                "de",
+                "fr",
+                "es",
+                "sv",
+                "da"
+              ],
+              "default": "en"
+            },
+            "example": "en",
+            "description": "Localized return path. Current free descriptions, preview screen and API reference are English."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Anonymous free preview. No account or saved-plan writes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preview"
+                },
+                "example": {
+                  "version": "1",
+                  "tier": "free",
+                  "input": {
+                    "country": "NO",
+                    "year": 2027,
+                    "availableDays": 20,
+                    "preference": "balanced",
+                    "lang": "en"
+                  },
+                  "usedDays": 16,
+                  "remainingDays": 4,
+                  "totalDaysOff": 54,
+                  "suggestions": [
+                    {
+                      "startDate": "2027-03-24",
+                      "endDate": "2027-03-29",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 6,
+                      "leaveDates": [
+                        "2027-03-24"
+                      ],
+                      "description": "1 vacation day → 6 days off"
+                    },
+                    {
+                      "startDate": "2027-01-01",
+                      "endDate": "2027-01-04",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 4,
+                      "leaveDates": [
+                        "2027-01-04"
+                      ],
+                      "description": "1 vacation day → 4 days off"
+                    },
+                    {
+                      "startDate": "2027-05-06",
+                      "endDate": "2027-05-09",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 4,
+                      "leaveDates": [
+                        "2027-05-07"
+                      ],
+                      "description": "1 vacation day → 4 days off"
+                    },
+                    {
+                      "startDate": "2027-05-14",
+                      "endDate": "2027-05-17",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 4,
+                      "leaveDates": [
+                        "2027-05-14"
+                      ],
+                      "description": "1 vacation day → 4 days off"
+                    },
+                    {
+                      "startDate": "2027-01-22",
+                      "endDate": "2027-01-24",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-01-22"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-02-12",
+                      "endDate": "2027-02-14",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-02-12"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-03-05",
+                      "endDate": "2027-03-07",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-03-05"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-04-16",
+                      "endDate": "2027-04-18",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-04-16"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-06-04",
+                      "endDate": "2027-06-06",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-06-04"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-06-25",
+                      "endDate": "2027-06-27",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-06-25"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-07-23",
+                      "endDate": "2027-07-25",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-07-23"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-08-20",
+                      "endDate": "2027-08-22",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-08-20"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-09-17",
+                      "endDate": "2027-09-19",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-09-17"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-10-15",
+                      "endDate": "2027-10-17",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-10-15"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-11-12",
+                      "endDate": "2027-11-14",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-11-12"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    },
+                    {
+                      "startDate": "2027-12-10",
+                      "endDate": "2027-12-12",
+                      "vacationDaysUsed": 1,
+                      "totalDaysOff": 3,
+                      "leaveDates": [
+                        "2027-12-10"
+                      ],
+                      "description": "1 vacation day → 3 days off"
+                    }
+                  ],
+                  "holidays": [
+                    {
+                      "date": "2027-01-01",
+                      "name": "New Year's Day",
+                      "localName": "Første nyttårsdag",
+                      "countryCode": "NO",
+                      "year": 2027
+                    },
+                    {
+                      "date": "2027-03-25",
+                      "name": "Maundy Thursday",
+                      "localName": "Skjærtorsdag",
+                      "countryCode": "NO",
+                      "year": 2027
+                    },
+                    {
+                      "date": "2027-03-26",
+                      "name": "Good Friday",
+                      "localName": "Langfredag",
+                      "countryCode": "NO",
+                      "year": 2027
+                    },
+                    {
+                      "date": "2027-03-28",
+                      "name": "Easter Sunday",
+                      "localName": "Første påskedag",
+                      "countryCode": "NO",
+                      "year": 2027
+                    },
+                    {
+                      "date": "2027-03-29",
+                      "name": "Easter Monday",
+                      "localName": "Andre påskedag",
+                      "countryCode": "NO",
+                      "year": 2027
+                    },
+                    {
+                      "date": "2027-05-01",
+                      "name": "Labour Day",
+                      "localName": "Første mai",
+                      "countryCode": "NO",
+                      "year": 2027
+                    },
+                    {
+                      "date": "2027-05-06",
+                      "name": "Ascension Day",
+                      "localName": "Kristi himmelfartsdag",
+                      "countryCode": "NO",
+                      "year": 2027
+                    },
+                    {
+                      "date": "2027-05-16",
+                      "name": "Pentecost",
+                      "localName": "Første pinsedag",
+                      "countryCode": "NO",
+                      "year": 2027
+                    },
+                    {
+                      "date": "2027-05-17",
+                      "name": "Whit Monday",
+                      "localName": "Andre pinsedag",
+                      "countryCode": "NO",
+                      "year": 2027
+                    },
+                    {
+                      "date": "2027-12-25",
+                      "name": "Christmas Day",
+                      "localName": "Første juledag",
+                      "countryCode": "NO",
+                      "year": 2027
+                    },
+                    {
+                      "date": "2027-12-26",
+                      "name": "St. Stephen's Day",
+                      "localName": "Andre juledag",
+                      "countryCode": "NO",
+                      "year": 2027
+                    }
+                  ],
+                  "source": {
+                    "name": "Nager.Date",
+                    "url": "https://date.nager.at/api/v3/PublicHolidays/2027/NO",
+                    "retrievedAt": "2026-10-30T22:31:43.179Z",
+                    "scope": "nationwide-public-holidays"
+                  },
+                  "assumptions": {
+                    "workweek": [
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday"
+                    ],
+                    "dateFormat": "YYYY-MM-DD",
+                    "rangeEndsInclusive": true,
+                    "totalDaysOff": "Sum of calendar days in suggested breaks, including their weekends and public holidays; not all days off in the year.",
+                    "strategy": "Free balanced planner: one-workday bridges. May leave allowance unused; heuristic suggestions, not a guaranteed global optimum.",
+                    "coverage": "Nationwide Public holidays only. Regional, employer-specific and nonstandard work schedules are not included. Verify holiday entitlement with your employer."
+                  },
+                  "previewUrl": "https://www.hopladay.com/en/preview?country=NO&year=2027&availableDays=20&preference=balanced&lang=en"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, unsupported, repeated or unknown query parameter; including Premium strategy requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "30 requests per client or 300 total requests in a fixed 60-second process window.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Holiday upstream timed out or did not return valid nationwide Public holiday data. No stale fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Preview": {
+        "type": "object",
+        "required": [
+          "version",
+          "tier",
+          "input",
+          "usedDays",
+          "remainingDays",
+          "totalDaysOff",
+          "suggestions",
+          "holidays",
+          "source",
+          "assumptions",
+          "previewUrl"
+        ],
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "1"
+            ]
+          },
+          "tier": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "free"
+            ]
+          },
+          "input": {
+            "type": "object",
+            "required": [
+              "country",
+              "year",
+              "availableDays",
+              "preference",
+              "lang"
+            ],
+            "properties": {
+              "country": {
+                "type": "string",
+                "description": "",
+                "enum": [
+                  "NO",
+                  "SE",
+                  "DK",
+                  "FI",
+                  "NL",
+                  "IS",
+                  "DE",
+                  "BE",
+                  "FR",
+                  "ES",
+                  "PT",
+                  "IT",
+                  "CH",
+                  "AT",
+                  "IE",
+                  "GB",
+                  "US",
+                  "CA",
+                  "AU",
+                  "NZ",
+                  "PL",
+                  "CZ",
+                  "SK",
+                  "HU",
+                  "SI",
+                  "HR",
+                  "EE",
+                  "LV",
+                  "LT",
+                  "RO",
+                  "BG",
+                  "GR",
+                  "TR",
+                  "RU",
+                  "UA",
+                  "BR",
+                  "MX",
+                  "AR",
+                  "CL",
+                  "JP",
+                  "CN",
+                  "KR",
+                  "ZA"
+                ]
+              },
+              "year": {
+                "type": "integer",
+                "minimum": 2024,
+                "description": "",
+                "maximum": 2030
+              },
+              "availableDays": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "",
+                "maximum": 365
+              },
+              "preference": {
+                "type": "string",
+                "description": "",
+                "enum": [
+                  "balanced"
+                ],
+                "default": "balanced"
+              },
+              "lang": {
+                "type": "string",
+                "description": "",
+                "enum": [
+                  "en",
+                  "no",
+                  "nl",
+                  "de",
+                  "fr",
+                  "es",
+                  "sv",
+                  "da"
+                ],
+                "default": "en"
+              }
+            },
+            "additionalProperties": false
+          },
+          "usedDays": {
+            "type": "integer",
+            "minimum": 0,
+            "description": ""
+          },
+          "remainingDays": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Budget minus usedDays; the free heuristic can leave days unused."
+          },
+          "totalDaysOff": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Sum of suggested breaks only; not all days off in the year."
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "startDate",
+                "endDate",
+                "vacationDaysUsed",
+                "totalDaysOff",
+                "leaveDates",
+                "description"
+              ],
+              "properties": {
+                "startDate": {
+                  "type": "string",
+                  "description": "Local calendar date; no timezone conversion.",
+                  "format": "date"
+                },
+                "endDate": {
+                  "type": "string",
+                  "description": "Local calendar date; no timezone conversion.",
+                  "format": "date"
+                },
+                "vacationDaysUsed": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Workdays charged to the allowance."
+                },
+                "totalDaysOff": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Inclusive calendar days in this break."
+                },
+                "leaveDates": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Local calendar date; no timezone conversion.",
+                    "format": "date"
+                  },
+                  "description": "Exact workdays to request off; excludes weekends and nationwide Public holidays."
+                },
+                "description": {
+                  "type": "string",
+                  "description": ""
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "holidays": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "date",
+                "name",
+                "localName",
+                "countryCode",
+                "year"
+              ],
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Local calendar date; no timezone conversion.",
+                  "format": "date"
+                },
+                "name": {
+                  "type": "string",
+                  "description": ""
+                },
+                "localName": {
+                  "type": "string",
+                  "description": ""
+                },
+                "countryCode": {
+                  "type": "string",
+                  "description": ""
+                },
+                "year": {
+                  "type": "integer",
+                  "minimum": 2024,
+                  "description": "",
+                  "maximum": 2030
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "source": {
+            "type": "object",
+            "required": [
+              "name",
+              "url",
+              "retrievedAt",
+              "scope"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "",
+                "enum": [
+                  "Nager.Date"
+                ]
+              },
+              "url": {
+                "type": "string",
+                "description": "",
+                "format": "uri"
+              },
+              "retrievedAt": {
+                "type": "string",
+                "description": "When this process fetched and validated the holiday data; not the provider publication date.",
+                "format": "date-time"
+              },
+              "scope": {
+                "type": "string",
+                "description": "",
+                "enum": [
+                  "nationwide-public-holidays"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "assumptions": {
+            "type": "object",
+            "required": [
+              "workweek",
+              "dateFormat",
+              "rangeEndsInclusive",
+              "totalDaysOff",
+              "strategy",
+              "coverage"
+            ],
+            "properties": {
+              "workweek": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": ""
+                },
+                "minItems": 5,
+                "maxItems": 5
+              },
+              "dateFormat": {
+                "type": "string",
+                "description": "",
+                "enum": [
+                  "YYYY-MM-DD"
+                ]
+              },
+              "rangeEndsInclusive": {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              },
+              "totalDaysOff": {
+                "type": "string",
+                "description": ""
+              },
+              "strategy": {
+                "type": "string",
+                "description": ""
+              },
+              "coverage": {
+                "type": "string",
+                "description": ""
+              }
+            },
+            "additionalProperties": false
+          },
+          "previewUrl": {
+            "type": "string",
+            "description": "Read-only ready-filled website link. Recalculates from current data; not a saved plan.",
+            "format": "uri"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "",
+                "enum": [
+                  "INVALID_INPUT",
+                  "RATE_LIMITED",
+                  "HOLIDAY_DATA_UNAVAILABLE"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "description": ""
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

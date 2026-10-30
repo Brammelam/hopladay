@@ -156,7 +156,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const ts = this.translationService;
     this.seoService.updateSEO(
       {
-        url: `https://hopladay.com/${lang}`,
+        url: `https://www.hopladay.com/${lang}`,
         title: ts.translate('seo.dashboardTitle'),
         description: ts.translate('seo.dashboardDescription'),
         keywords: ts.translate('seo.dashboardKeywords'),

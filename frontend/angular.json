@@ -66,13 +66,10 @@
                 "fonts": true
               },
               "server": "src/main.server.ts",
-              "prerender": {
-                "routesFile": "src/prerender-routes.txt",
-                "discoverRoutes": false
-              },
               "ssr": {
                 "entry": "src/server.ts"
-              }
+              },
+              "outputMode": "server"
             },
             "development": {
               "optimization": false,

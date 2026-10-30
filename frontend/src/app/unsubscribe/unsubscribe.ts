@@ -35,7 +35,7 @@ export class UnsubscribeComponent implements OnInit {
         noindex: true,
         title: ts.translate('seo.unsubscribeTitle'),
         description: ts.translate('seo.unsubscribeDescription'),
-        url: `https://hopladay.com/${lang}/unsubscribe`,
+        url: `https://www.hopladay.com/${lang}/unsubscribe`,
       },
       lang,
     );

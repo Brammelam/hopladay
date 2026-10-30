@@ -106,7 +106,7 @@ export class AuthVerifyComponent implements OnInit, OnDestroy {
         noindex: true,
         title: ts.translate('seo.authVerifyTitle'),
         description: ts.translate('seo.authVerifyDescription'),
-        url: `https://hopladay.com/${lang}/auth/verify`,
+        url: `https://www.hopladay.com/${lang}/auth/verify`,
       },
       lang,
     );

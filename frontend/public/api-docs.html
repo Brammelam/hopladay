@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hopladay public preview API — inputs, outputs and examples</title>
+<meta name="description" content="Calculate anonymous free vacation previews with Hopladay. Documented inputs, exact leave dates, source data, assumptions, request limits and ready-filled website links.">
+<link rel="canonical" href="https://www.hopladay.com/api-docs.html">
+<link rel="alternate" type="application/json" href="/openapi.json" title="OpenAPI specification">
+<style>body{margin:0;background:#f9fafb;color:#111827;font:1rem/1.65 system-ui,sans-serif}main{max-width:72ch;margin:auto;padding:2rem 1rem 4rem}h1,h2,h3{line-height:1.25}h1{font-size:2rem}h2{font-size:1.5rem;margin-top:2.5rem}h3{font-size:1.125rem}a{color:#1d4ed8;text-underline-offset:.2em}a:focus-visible{outline:2px solid;outline-offset:4px}pre{padding:1rem;background:#fff;border:1px solid #d1d5db;overflow:auto}code{overflow-wrap:anywhere}dt{font-weight:600;margin-top:1rem}dd{margin:.25rem 0 1rem}nav{display:flex;gap:1rem;flex-wrap:wrap}</style></head><body><main>
+<nav aria-label="Public resources"><a href="/en">Hopladay</a><a href="/en/preview">Free preview</a><a href="/openapi.json">OpenAPI JSON</a><a href="/llms.txt">llms.txt</a></nav>
+<h1>Public vacation preview API</h1>
+<p>Hopladay helps people choose vacation dates around public holidays and weekends. This anonymous endpoint returns the same free balanced strategy as the planner, using nationwide holidays only. It does not create accounts or change saved plans. Advanced strategies and exports remain Premium features.</p>
+<h2>Make a request</h2>
+<p>No API key, user ID, cookies, email or payment is required. Use HTTP GET:</p>
+<pre><code>https://hopladay-backend.onrender.com/api/v1/plan-preview?country=NO&amp;year=2027&amp;availableDays=20&amp;preference=balanced&amp;lang=en</code></pre>
+<p><a href="https://hopladay-backend.onrender.com/api/v1/plan-preview?country=NO&amp;year=2027&amp;availableDays=20&amp;preference=balanced&amp;lang=en">Open the JSON response</a> or <a href="/en/preview?country=NO&amp;year=2027&amp;availableDays=20&amp;preference=balanced&amp;lang=en">open these inputs in the website</a>.</p>
+<h2>Inputs</h2><dl>
+<dt>country — required</dt><dd>Uppercase two-letter code from the supported list below. This specifies the national holiday jurisdiction, not the travel destination.</dd>
+<dt>year — required</dt><dd>Integer from 2024 to 2030.</dd>
+<dt>availableDays — required</dt><dd>Integer from 0 to 365. Zero returns an empty set of suggestions.</dd>
+<dt>preference — optional</dt><dd>Only <code>balanced</code>, the default. Advanced strategy requests return 400; the API never grants Premium via a query parameter.</dd>
+<dt>lang — optional</dt><dd>One of <code>en, no, nl, de, fr, es, sv, da</code>; default <code>en</code>. Chooses the localized return path. Free response descriptions, the new preview screen and this reference are currently English.</dd>
+</dl><p>Supply each parameter once. Unknown parameters, arrays, decimals, negative allowances and unsupported values return 400.</p>
+<h2 id="countries">Supported country codes</h2><p>NO, SE, DK, FI, NL, IS, DE, BE, FR, ES, PT, IT, CH, AT, IE, GB, US, CA, AU, NZ, PL, CZ, SK, HU, SI, HR, EE, LV, LT, RO, BG, GR, TR, RU, UA, BR, MX, AR, CL, JP, CN, KR, ZA. Regional subdivisions and custom work schedules are not supported. A listed country can return 503 if its provider data is unavailable or contains no nationwide Public holidays.</p>
+<h2>Understand the response</h2><dl>
+<dt>input, version, tier</dt><dd>Normalized inputs, contract version <code>1</code>, and tier <code>free</code>.</dd>
+<dt>suggestions</dt><dd>Breaks sorted by the existing planner's return-on-leave ranking. <code>startDate</code> and <code>endDate</code> are inclusive local dates in <code>YYYY-MM-DD</code> format; do not convert them between time zones. <code>leaveDates</code> contains the exact workdays to request off. <code>vacationDaysUsed</code> counts those workdays; <code>totalDaysOff</code> counts the whole break.</dd>
+<dt>usedDays, remainingDays, totalDaysOff</dt><dd>Vacation allowance used, unused allowance, and calendar days within the suggested breaks. The last value excludes unrelated weekends and holidays elsewhere in the year. Do not call it the total annual time off.</dd>
+<dt>holidays, source, assumptions</dt><dd>The nationwide Public holiday dates used, the Nager.Date source URL and retrieval time, and the calculation assumptions. Retrieval time describes the local fetch, not the provider's publication time. Validated holiday data is cached for up to 24 hours per process.</dd>
+<dt>previewUrl</dt><dd>A ready-filled, read-only website link. Return it to the user. It recalculates from current holiday data and is not an immutable saved plan. Opening it does not replace a saved plan.</dd>
+</dl><h3>Example break</h3><p>This break was calculated from Norway's 2027 nationwide holiday data on 2026-10-30T22:31:43.179Z. The full response includes the other suggested breaks and metadata.</p>
+<pre><code>{
+  &quot;startDate&quot;: &quot;2027-03-24&quot;,
+  &quot;endDate&quot;: &quot;2027-03-29&quot;,
+  &quot;vacationDaysUsed&quot;: 1,
+  &quot;totalDaysOff&quot;: 6,
+  &quot;leaveDates&quot;: [
+    &quot;2027-03-24&quot;
+  ],
+  &quot;description&quot;: &quot;1 vacation day → 6 days off&quot;
+}</code></pre>
+<h2>Assumptions and limits</h2><p>The free strategy suggests one-workday bridges for a Monday–Friday workweek. It can leave vacation allowance unused and does not guarantee a global optimum. Only nationwide holidays with provider type <code>Public</code> are included. Regional holidays, employer-specific entitlement, observances and custom workweeks are excluded. Check entitlement with your employer.</p>
+<p>Saved plans may differ because of regional holiday data, manual edits or Premium strategies. The public preview intentionally does not expose private saved-plan endpoints, account details or premium exports.</p>
+<h2>Errors and request limits</h2><ul>
+<li><strong>400 INVALID_INPUT:</strong> fix the query; see <code>error.message</code>.</li>
+<li><strong>429 RATE_LIMITED:</strong> wait for <code>Retry-After</code> seconds.</li>
+<li><strong>503 HOLIDAY_DATA_UNAVAILABLE:</strong> upstream timeout or invalid/unavailable national holiday data. Retry after the indicated delay. Expired data is not silently reused.</li>
+</ul><p>Errors use <code>{"error":{"code":"…","message":"…"}}</code>. Limits are 30 requests per client and 300 total requests in each fixed 60-second process window. The provider timeout is 8 seconds. Limits and caches are local to each process; production edge controls should enforce a fleet-wide budget if needed. Shared proxy addresses can share a client limit.</p>
+<h2>Assistant integration</h2><p>Use the <a href="/openapi.json">OpenAPI contract</a> to configure an HTTP tool. Publishing the specification does not automatically make every assistant call the API. Assistants need browsing or an explicitly configured tool. Cite Hopladay, preserve the returned assumptions and source, and include <code>previewUrl</code> with the answer.</p>
+</main></body></html>

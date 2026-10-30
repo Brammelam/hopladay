@@ -4,11 +4,27 @@ import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
+export interface PlanPreview {
+  version: string;
+  tier: 'free';
+  input: { country: string; year: number; availableDays: number; preference: 'balanced'; lang: string };
+  usedDays: number;
+  remainingDays: number;
+  totalDaysOff: number;
+  suggestions: { startDate: string; endDate: string; vacationDaysUsed: number; totalDaysOff: number; leaveDates: string[]; description: string }[];
+  source: { name: string; url: string; retrievedAt: string; scope: string };
+  previewUrl: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
+
+  getPlanPreview(params: Record<string, string | string[]>): Observable<PlanPreview> {
+    return this.http.get<PlanPreview>(`${this.baseUrl}/v1/plan-preview`, { params });
+  }
 
   /**
    * Initialize user session - always returns userId

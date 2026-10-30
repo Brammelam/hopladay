@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 
 export type Language = 'en' | 'no' | 'nl' | 'de' | 'fr' | 'es' | 'sv' | 'da';
 
@@ -10,6 +11,7 @@ interface Translations {
   providedIn: 'root'
 })
 export class TranslationService {
+  private document = inject(DOCUMENT);
   private translations: Map<Language, Translations> = new Map();
   private currentLanguage = signal<Language>('en');
   
@@ -71,9 +73,7 @@ export class TranslationService {
   }
 
   private updateHtmlLang(lang: Language): void {
-    if (typeof document !== 'undefined') {
-      document.documentElement.lang = lang;
-    }
+    this.document.documentElement.lang = lang;
   }
 
   getLanguageFromPath(path: string): Language {
