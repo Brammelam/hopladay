@@ -1,18 +1,23 @@
+import { provideZonelessChangeDetection } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { HolidayCalendar } from './holiday-calendar';
+import { HolidayCalendarComponent } from './holiday-calendar';
 
-describe('HolidayCalendar', () => {
-  let component: HolidayCalendar;
-  let fixture: ComponentFixture<HolidayCalendar>;
+describe('HolidayCalendarComponent', () => {
+  let component: HolidayCalendarComponent;
+  let fixture: ComponentFixture<HolidayCalendarComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HolidayCalendar]
+      providers: [provideZonelessChangeDetection(), provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      imports: [HolidayCalendarComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(HolidayCalendar);
+    fixture = TestBed.createComponent(HolidayCalendarComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

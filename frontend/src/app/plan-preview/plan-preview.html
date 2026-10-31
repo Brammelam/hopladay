@@ -1,0 +1,44 @@
+<main lang="en" class="min-h-screen bg-gray-50 px-4 py-10 text-gray-900">
+  <div class="mx-auto max-w-3xl space-y-8">
+    <a [routerLink]="['/' + lang]" class="inline-block min-h-11 py-2 underline underline-offset-4 focus-visible:outline-2">Back to Hopladay</a>
+    <header class="space-y-3">
+      <p class="text-sm font-medium text-gray-600">Hopladay · Free planner</p>
+      <h1 class="text-3xl font-semibold tracking-tight">Preview your days off</h1>
+      <p class="max-w-prose text-gray-700">Find one-workday bridges between public holidays and weekends. This preview needs no account and does not change your saved plans.</p>
+      <p class="max-w-prose text-sm text-gray-600">For a Monday–Friday workweek and nationwide public holidays. Regional holidays and employer rules are excluded. Advanced strategies and exports remain Premium features.</p>
+    </header>
+    <form ngNativeValidate (ngSubmit)="calculate()" class="grid gap-4 rounded-lg border border-gray-200 bg-white p-6 sm:grid-cols-3" aria-label="Preview inputs">
+      <label class="space-y-2 text-sm font-medium">Country code
+        <input name="country" [(ngModel)]="country" required pattern="[A-Za-z]{2}" maxlength="2" autocomplete="off" aria-describedby="country-help" class="block min-h-11 w-full rounded-md border border-gray-300 px-3 focus-visible:outline-2" />
+      </label>
+      <label class="space-y-2 text-sm font-medium">Year
+        <input name="year" type="number" [(ngModel)]="year" required min="2024" max="2030" step="1" class="block min-h-11 w-full rounded-md border border-gray-300 px-3 focus-visible:outline-2" />
+      </label>
+      <label class="space-y-2 text-sm font-medium">Vacation days
+        <input name="availableDays" type="number" [(ngModel)]="availableDays" required min="0" max="365" step="1" class="block min-h-11 w-full rounded-md border border-gray-300 px-3 focus-visible:outline-2" />
+      </label>
+      <p id="country-help" class="text-sm text-gray-600 sm:col-span-3">Use a two-letter code such as NO (Norway), SE (Sweden), or DK (Denmark). <a href="/api-docs.html#countries" class="underline underline-offset-4">All supported countries</a>.</p>
+      <button type="submit" [disabled]="loading()" class="min-h-11 rounded-md bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 sm:col-span-3">{{ loading() ? 'Calculating…' : 'Preview plan' }}</button>
+    </form>
+    <p *ngIf="loading()" role="status">Calculating your free preview…</p>
+    <p *ngIf="error()" role="alert" class="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">{{ error() }}</p>
+    <section *ngIf="result() as plan" aria-labelledby="preview-results" class="space-y-6" aria-live="polite">
+      <div>
+        <h2 id="preview-results" class="text-2xl font-semibold">{{ plan.input.country }} · {{ plan.input.year }}</h2>
+        <p class="mt-2">{{ plan.usedDays }} vacation days used · {{ plan.totalDaysOff }} days off within suggested breaks · {{ plan.remainingDays }} vacation days remaining</p>
+        <p class="mt-2 text-sm text-gray-600">Free balanced suggestions may leave days unused. These are heuristic suggestions, not a guaranteed best plan.</p>
+      </div>
+      <p *ngIf="!plan.suggestions.length">No one-day bridges fit these inputs. Try another year or country, or use the main planner for manual planning.</p>
+      <ol class="space-y-4">
+        <li *ngFor="let suggestion of plan.suggestions" class="rounded-lg border border-gray-200 bg-white p-5">
+          <h3 class="font-semibold"><time>{{ suggestion.startDate }}</time> to <time>{{ suggestion.endDate }}</time></h3>
+          <p class="mt-2">{{ suggestion.vacationDaysUsed }} vacation {{ suggestion.vacationDaysUsed === 1 ? 'day' : 'days' }} → {{ suggestion.totalDaysOff }} days off (both end dates included)</p>
+          <p class="mt-2 text-sm text-gray-700">Request these workdays off: <span *ngFor="let date of suggestion.leaveDates; let last = last"><time>{{ date }}</time>{{ last ? '' : ', ' }}</span></p>
+        </li>
+      </ol>
+      <p class="text-sm text-gray-600">Source: <a [href]="plan.source.url" class="underline underline-offset-4" rel="external">{{ plan.source.name }} nationwide public holidays</a>. Retrieved {{ plan.source.retrievedAt | date:'medium':'UTC' }} UTC. Check holiday entitlement with your employer.</p>
+      <a [href]="plan.previewUrl" class="inline-block min-h-11 break-all py-2 underline underline-offset-4">Link to this preview</a>
+    </section>
+    <footer class="border-t border-gray-200 pt-6 text-sm text-gray-600">Building an assistant? Read the <a href="/api-docs.html" class="underline underline-offset-4">public API documentation</a> or <a href="/openapi.json" class="underline underline-offset-4">OpenAPI specification</a>.</footer>
+  </div>
+</main>

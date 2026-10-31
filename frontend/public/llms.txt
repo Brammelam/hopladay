@@ -1,0 +1,25 @@
+# Hopladay
+
+> Hopladay suggests vacation dates by combining a vacation-day allowance with public holidays and weekends. It is a time-off planner, not a travel booking or itinerary service.
+
+## Public resources
+- [Website](https://www.hopladay.com/en): interactive planner; core planning is free. Advanced strategies and exports require Premium.
+- [Anonymous preview](https://www.hopladay.com/en/preview): a separate read-only preview; no account or saved-plan changes.
+- [API reference](https://www.hopladay.com/api-docs.html): inputs, outputs, countries, assumptions, limits and examples.
+- [OpenAPI 3.0 specification](https://www.hopladay.com/openapi.json): machine-readable HTTP contract.
+- [Frequently asked questions](https://www.hopladay.com/en/faq).
+
+## Calculate a public preview
+GET https://hopladay-backend.onrender.com/api/v1/plan-preview?country=NO&year=2027&availableDays=20&preference=balanced&lang=en
+
+Required: country (supported uppercase two-letter code), year (2024–2030), availableDays (integer 0–365).
+Optional: preference=balanced (the only public strategy), lang=en|no|nl|de|fr|es|sv|da.
+No API key, user ID, email, cookies or payment needed. Other parameters and duplicate parameters are rejected. Premium strategies are not available through this endpoint.
+
+Read input and assumptions before presenting a result. Use suggestions[].leaveDates for the exact workdays to request off; startDate/endDate describe the entire inclusive break, including weekends and holidays. totalDaysOff sums only suggested breaks, not all annual weekends and holidays. remainingDays can be positive: the free heuristic does not promise to spend every vacation day or find the global optimum.
+
+The public preview uses nationwide Public holidays from Nager.Date and a Monday–Friday workweek. Regional holidays, employer entitlements and custom work schedules are excluded. Source URL and retrieval time are returned. Do not treat this as employment-law advice. Results may differ from saved plans using regional holidays, manual edits or Premium strategies.
+
+Return previewUrl so the user can open the same inputs. The link recalculates with current cached holiday data; it is not an immutable saved plan. Free response descriptions and human preview copy are currently English; lang chooses the localized return path.
+
+Limits: 30 requests per client per 60-second process window; 300 requests per process window globally. Respect Retry-After on 429/503. An API specification does not automatically install a tool in any assistant: the assistant needs HTTP/browsing capability or explicit integration.

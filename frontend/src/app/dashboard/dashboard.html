@@ -189,6 +189,11 @@
     </div>
   </header>
 
+  <p class="w-full max-w-3xl mb-6 text-sm text-gray-700">
+    <a [routerLink]="getLocalizedRoute('/preview')" class="inline-block min-h-11 py-2 underline underline-offset-4">Preview a free plan without an account</a>
+    · <a href="/api-docs.html" class="inline-block min-h-11 py-2 underline underline-offset-4">Public API documentation</a>
+  </p>
+
   <!-- Onboarding Message for First-Time Users -->
   <section *ngIf="!plan && !isLoading && !isUserClaimed()" class="w-full max-w-3xl mb-10 mx-auto" aria-labelledby="welcome-heading">
     <div

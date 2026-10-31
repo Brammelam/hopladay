@@ -1,5 +1,6 @@
 import {
   AngularNodeAppEngine,
+  createNodeRequestHandler,
   isMainModule,
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
@@ -25,7 +26,14 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.use(express.static(browserDistFolder, {
-  maxAge: '1y',
+  maxAge: 0,
+  setHeaders(res, path) {
+    if (/[-.][A-Z0-9]{8}\.(js|css)$/.test(path)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    }
+  },
   index: false,
 }));
 
@@ -49,3 +57,5 @@ if (isMainModule(import.meta.url)) {
   });
 }
 
+
+export const reqHandler = createNodeRequestHandler(app);

@@ -5,5 +5,10 @@ Disallow: /payment/success
 Disallow: /payment/cancel
 Disallow: /unsubscribe
 
-Sitemap: https://hopladay.com/sitemap.xml
+Disallow: /*/auth/
+Disallow: /*/payment/success
+Disallow: /*/payment/cancel
+Disallow: /*/unsubscribe
+
+Sitemap: https://www.hopladay.com/sitemap.xml
 

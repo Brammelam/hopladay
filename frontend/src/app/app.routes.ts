@@ -4,6 +4,10 @@ const SUPPORTED_LANGUAGES = ['en', 'no', 'nl', 'de', 'fr', 'es', 'sv', 'da'];
 
 const appRoutes: Routes = [
   {
+    path: 'preview',
+    loadComponent: () => import('./plan-preview/plan-preview').then(m => m.PlanPreviewComponent)
+  },
+  {
     path: 'auth/verify',
     loadComponent: () => import('./auth-verify/auth-verify').then(m => m.AuthVerifyComponent)
   },

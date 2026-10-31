@@ -99,3 +99,8 @@ jest-html-reporters-*
 test-results/
 .cache/
 .parcel-cache/
+
+# Local payment credentials and recovery files
+hopladay_stripe_live_key.rtf
+payment-details-with-stripe.json
+stripe_backup_code.txt

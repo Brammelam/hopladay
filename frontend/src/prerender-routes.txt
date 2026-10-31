@@ -31,3 +31,11 @@
 /es/refunds
 /sv/refunds
 /da/refunds
+/en/preview
+/no/preview
+/nl/preview
+/de/preview
+/fr/preview
+/es/preview
+/sv/preview
+/da/preview
