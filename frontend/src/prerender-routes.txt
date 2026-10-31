@@ -39,3 +39,11 @@
 /es/preview
 /sv/preview
 /da/preview
+/en/optimize
+/no/optimize
+/nl/optimize
+/de/optimize
+/fr/optimize
+/es/optimize
+/sv/optimize
+/da/optimize

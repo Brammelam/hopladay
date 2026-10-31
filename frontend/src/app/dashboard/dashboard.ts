@@ -14,6 +14,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { HolidayInputComponent } from '../holiday-input/holiday-input';
 import { HolidayCalendarComponent } from '../holiday-calendar/holiday-calendar';
 import { HolidaySummaryComponent } from '../holiday-summary/holiday-summary';
+import { AnnualPlannerService } from '../services/annual-planner.service';
 import { ApiService } from '../services/api';
 import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
@@ -43,6 +44,7 @@ import { LanguageSwitcherComponent } from '../shared/language-switcher';
   ]
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  private annualPlanner = inject(AnnualPlannerService);
   private readonly platformId = inject(PLATFORM_ID);
 
   holidays: any[] = [];
@@ -812,7 +814,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     } catch (err: any) {
       console.error('Auth error:', err);
-      if (err.error?.error?.includes('already has a passkey')) {
+      if (err.status === 403 && this.authMode === 'register') {
+        this.switchAuthMethod('email');
+        this.toast(this.translationService.translate('auth.emailLinkDescription'));
+      } else if (err.error?.error?.includes('already has a passkey')) {
         this.toast('This email already has a passkey. Please sign in.');
         this.authMode = 'signin';
       } else if (err.error?.error?.includes('No passkey found')) {
@@ -881,6 +886,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
+    this.authService.clearSessionToken();
     // Clear authentication info first - this will trigger the subscription to reset state
     this.userService.clearCurrentUser();
 
@@ -1009,6 +1015,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.annualPlanner.track('upgrade_initiated');
+
     // If anonymous user, we need email to create/find user account
     if (!this.isUserClaimed()) {
       if (!this.premiumEmail || !this.premiumEmail.includes('@')) {
@@ -1093,6 +1101,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.api.checkSession(sessionId).subscribe({
           next: (response: any) => {
             if (response.success && response.premium) {
+              this.annualPlanner.track('purchase_completed');
               // Update user premium status
               if (response.user) {
                 this.userService.setCurrentUser(response.user);

@@ -1,0 +1,13 @@
+# Holiday reliability for the version 2 optimizer
+
+The version 2 holiday catalog retains the applicability fields that the legacy database-backed holiday service discarded. It keeps distinct names and applicability records even when they share a date. The existing service and version 1 preview are unchanged.
+
+`loadHolidayCatalog(year, country, region?)` returns public holiday rows, available provider subdivision codes, and source metadata. Supported years are 2024–2100; country codes use the existing public-preview allowlist. With no region selected, only rows marked `global: true` and type `Public` apply. Selecting a subdivision adds rows whose `counties` array contains that exact code. An unknown subdivision returns an input error and never silently falls back to another region.
+
+The catalog validates the provider's dates, country, types and subdivision-code prefixes. It preserves provider-supplied observed/substitute dates and does not invent replacement weekdays when a holiday falls on a weekend. The working-calendar model decides whether a holiday actually removes leave cost for the user's schedule. `retrievedAt` records the local provider fetch, not the date legislation changed.
+
+The provider request times out after eight seconds and accepts at most one megabyte of response content. A validated country-year response is cached for 24 hours, with at most 128 entries per process. Requests for the same country-year share one in-flight provider request, including across region selections. Failures are not cached and expired data is not silently returned. Provider or validation failures produce `status: 503`; invalid inputs and unavailable subdivision codes produce `status: 400`.
+
+The official [Nager.Date client example](https://github.com/nager/Nager.Date#examples) documents `Global`, `Counties` and `Types`. A live [Germany 2027 response](https://date.nager.at/api/v3/PublicHolidays/2027/DE), retrieved on 2026-10-31, confirmed the regression-test subset: New Year's Day is nationwide; Epiphany lists `DE-BW`, `DE-BY`, `DE-ST`; International Women's Day lists `DE-BE`, `DE-MV`. This verifies source interpretation, not every holiday or legal change in every supported jurisdiction. Other tests use small synthetic provider records to exercise validation and failure behavior.
+
+A subdivision code is the provider's supported granularity. Municipality-specific entitlements and employer rules can be finer than that code; this catalog cannot infer them. Users still need to verify their actual entitlement, and the interface must identify the chosen region. The nationwide fallback is the conservative default. The backend's country list is intentionally narrower than the provider's entire advertised coverage.

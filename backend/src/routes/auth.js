@@ -9,6 +9,7 @@ import {
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import User from "../models/User.js";
 import MagicLink from "../models/MagicLink.js";
+import { issueSession, authenticateSession, ownsAccount, encodeRegistrationChallenge, decodeRegistrationChallenge, canCompleteRegistration } from "../services/sessionService.js";
 import emailService from "../services/emailService.js";
 import dotenv from "dotenv";
 dotenv.config();
@@ -46,21 +47,26 @@ router.post("/register/start", async (req, res) => {
   try {
     const { email, browserId } = req.body;
 
-    if (!email || !browserId) {
+    if (typeof email !== 'string' || email.length > 320 || !email.includes('@') || typeof browserId !== 'string' || !browserId || browserId.length > 256) {
       return res.status(400).json({ error: "email and browserId are required" });
     }
 
     // Check if email already exists
     let user = await User.findOne({ email });
     
-    if (user && user.authenticators && user.authenticators.length > 0) {
-      return res.status(400).json({ error: "This email already has a passkey. Please sign in instead." });
+    const owner = await authenticateSession(req);
+    if (user && !ownsAccount(user, owner)) {
+      return res.status(403).json({ error: "Verify this email with a magic link before adding a passkey." });
     }
+    const registrationOwnerId = user ? String(user._id) : null;
 
     // Get or create user by browserId (to claim their anonymous plans)
     if (!user) {
       const anonUser = await User.findOne({ browserId });
-      if (anonUser) {
+      if (anonUser && !anonUser.email) {
+        if (anonUser.isPremium && !ownsAccount(anonUser, owner)) {
+          return res.status(403).json({ error: "Verify this email with a magic link before adding a passkey." });
+        }
         // Claim anonymous plans with email
         anonUser.email = email;
         anonUser.name = email.split('@')[0];
@@ -90,7 +96,7 @@ router.post("/register/start", async (req, res) => {
     });
 
     // Save challenge
-    user.currentChallenge = options.challenge;
+    user.currentChallenge = encodeRegistrationChallenge(options.challenge, registrationOwnerId);
     await user.save();
 
     res.json(options);
@@ -109,19 +115,24 @@ router.post("/register/finish", async (req, res) => {
   try {
     const { email, credential } = req.body;
 
-    if (!email || !credential) {
+    if (typeof email !== 'string' || email.length > 320 || !email.includes('@') || !credential || typeof credential !== 'object') {
       return res.status(400).json({ error: "email and credential are required" });
     }
 
     const user = await User.findOne({ email });
-    if (!user || !user.currentChallenge) {
+    const registration = decodeRegistrationChallenge(user?.currentChallenge);
+    if (!user || !registration) {
       return res.status(400).json({ error: "No registration in progress" });
+    }
+    const owner = await authenticateSession(req);
+    if (!canCompleteRegistration(user, owner, registration)) {
+      return res.status(403).json({ error: "Verify this email with a magic link before adding a passkey." });
     }
 
     // Verify the credential
     const verification = await verifyRegistrationResponse({
       response: credential,
-      expectedChallenge: user.currentChallenge,
+      expectedChallenge: registration.challenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
     });
@@ -157,9 +168,17 @@ router.post("/register/finish", async (req, res) => {
     // Check if this is a new user (no authenticators before this one)
     const isNewUser = user.authenticators.length === 0;
     
-    user.authenticators.push(newAuthenticator);
-    user.currentChallenge = undefined;
-    await user.save();
+    const updated = await User.findOneAndUpdate(
+      {
+        _id: user._id,
+        email,
+        currentChallenge: user.currentChallenge,
+        ...(!ownsAccount(user, owner) ? { isPremium: { $ne: true }, authenticators: { $size: 0 } } : {}),
+      },
+      { $push: { authenticators: newAuthenticator }, $unset: { currentChallenge: 1 } },
+      { new: true, runValidators: true },
+    );
+    if (!updated) return res.status(400).json({ error: "Registration changed or completed. Please start again." });
 
     // Send passkey registration email
     emailService.sendPasskeyRegistered(user.email);
@@ -169,8 +188,9 @@ router.post("/register/finish", async (req, res) => {
       emailService.sendWelcome(user.email, user.name);
     }
 
-    res.json({
+    res.set('Cache-Control', 'no-store').json({
       verified: true,
+      sessionToken: await issueSession(user._id),
       user: {
         _id: user._id,
         email: user.email,
@@ -193,7 +213,7 @@ router.post("/login/start", async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email) {
+    if (typeof email !== 'string' || email.length > 320 || !email.includes('@')) {
       return res.status(400).json({ error: "email is required" });
     }
 
@@ -250,7 +270,7 @@ router.post("/login/finish", async (req, res) => {
   try {
     const { email, credential } = req.body;
 
-    if (!email || !credential) {
+    if (typeof email !== 'string' || email.length > 320 || !email.includes('@') || !credential || typeof credential !== 'object') {
       return res.status(400).json({ error: "email and credential are required" });
     }
 
@@ -330,8 +350,9 @@ router.post("/login/finish", async (req, res) => {
     user.currentChallenge = undefined;
     await user.save();
 
-    res.json({
+    res.set('Cache-Control', 'no-store').json({
       verified: true,
+      sessionToken: await issueSession(user._id),
       user: {
         _id: user._id,
         email: user.email,
@@ -355,7 +376,7 @@ router.post("/magic-link/send", async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email) {
+    if (typeof email !== 'string' || email.length > 320 || !email.includes('@')) {
       return res.status(400).json({ error: "email is required" });
     }
 
@@ -403,8 +424,8 @@ router.post("/magic-link/verify", async (req, res) => {
   try {
     const { token, browserId } = req.body;
 
-    if (!token) {
-      return res.status(400).json({ error: "token is required" });
+    if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(token) || (browserId !== undefined && (typeof browserId !== 'string' || browserId.length > 256))) {
+      return res.status(400).json({ error: "A valid magic-link token is required" });
     }
 
     // Find the magic link
@@ -476,8 +497,9 @@ router.post("/magic-link/verify", async (req, res) => {
     await magicLink.save();
 
     // Return user
-    res.json({
+    res.set('Cache-Control', 'no-store').json({
       verified: true,
+      sessionToken: await issueSession(user._id),
       user: {
         _id: user._id,
         email: user.email,

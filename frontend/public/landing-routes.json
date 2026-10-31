@@ -1,0 +1,23 @@
+[
+  {
+    "path": "/en/norway/2027",
+    "file": "en/norway/2027/index.html",
+    "country": "NO",
+    "year": 2027,
+    "lang": "en"
+  },
+  {
+    "path": "/en/sweden/2027",
+    "file": "en/sweden/2027/index.html",
+    "country": "SE",
+    "year": 2027,
+    "lang": "en"
+  },
+  {
+    "path": "/nl/nederland/2027",
+    "file": "nl/nederland/2027/index.html",
+    "country": "NL",
+    "year": 2027,
+    "lang": "nl"
+  }
+]

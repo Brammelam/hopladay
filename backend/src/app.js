@@ -6,6 +6,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 
+import optimizerRouter from "./routes/optimizer.js";
 import previewRouter from "./routes/preview.js";
 import holidaysRouter from "./routes/holidays.js";
 import usersRouter from "./routes/users.js";
@@ -32,6 +33,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/v1", previewRouter);
+app.use("/api/v2", optimizerRouter);
 app.use("/api/holidays", holidaysRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/plans", plansRouter);

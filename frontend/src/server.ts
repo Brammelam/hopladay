@@ -7,6 +7,7 @@ import {
 import express, { Request, Response, NextFunction } from 'express';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import landingManifest from '../public/landing-routes.json';
 
 const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
@@ -25,6 +26,13 @@ app.get('/', (req: Request, res: Response) => {
   res.redirect(302, `/${lang}`);
 });
 
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const parts=req.path.split('/').filter(Boolean);
+  if (SUPPORTED_LANGUAGES.includes(parts[0]) && parts[1]==='plans') res.set('X-Robots-Tag','noindex');
+  if (Object.keys(req.query).length && SUPPORTED_LANGUAGES.includes(parts[0]) && (parts.length===1 || (parts.length===2 && parts[1]==='optimize'))) res.set('X-Robots-Tag','noindex');
+  next();
+});
+
 app.use(express.static(browserDistFolder, {
   maxAge: 0,
   setHeaders(res, path) {
@@ -35,7 +43,19 @@ app.use(express.static(browserDistFolder, {
     }
   },
   index: false,
+  redirect: false,
 }));
+
+const landingRoutes: unknown = landingManifest;
+if (!Array.isArray(landingRoutes)) throw new Error('Invalid landing route manifest');
+for (const value of landingRoutes) {
+  const entry: unknown = value;
+  if (!entry || typeof entry !== 'object' || !('path' in entry) || !('file' in entry) || typeof entry.path !== 'string' || typeof entry.file !== 'string' || !/^\/[a-z]{2}\/[a-z]+\/\d{4}$/.test(entry.path) || entry.file !== `${entry.path.slice(1)}/index.html`) throw new Error('Invalid landing route');
+  const file = resolve(browserDistFolder, entry.file);
+  app.get(entry.path, (_req: Request, res: Response) => {
+    res.set('Cache-Control', 'public, max-age=0, must-revalidate').sendFile(file);
+  });
+}
 
 app.get('*', (req: Request, res: Response, next: NextFunction) => {
   angularApp
