@@ -12,7 +12,7 @@ function months(values, fallback) {
   return result;
 }
 
-export function optimizeAnnualLeave(input, holidays = []) {
+export function validateOptimizationInput(input) {
   if (!input || typeof input !== 'object') throw new Error('Planning input is required');
   const strategy = input.strategy ?? 'balanced';
   if (!strategies.includes(strategy)) throw new Error('Unsupported strategy');
@@ -29,6 +29,11 @@ export function optimizeAnnualLeave(input, holidays = []) {
   const summerMin = summer ? integer(summer.minDays, 14, 1, 90, 'requiredSummerBreak.minDays') : 0;
   const summerMonths = summer ? months(summer.months, [6,7,8]) : [];
   if (summer && !summerMonths.length) throw new Error('Required summer months cannot be empty');
+  return { strategy, availableDays, minLength, maxLength, maxBreaks, separation, preferredLength, seasonalWeight, preferredMonths, summer, summerMin, summerMonths };
+}
+
+export function optimizeAnnualLeave(input, holidays = []) {
+  const { strategy, availableDays, minLength, maxLength, maxBreaks, separation, preferredLength, seasonalWeight, preferredMonths, summer, summerMin, summerMonths } = validateOptimizationInput(input);
   const calendar = buildCalendar(input, holidays);
   const n = calendar.length;
   const indices = new Map(calendar.map((day,i) => [day.date,i]));

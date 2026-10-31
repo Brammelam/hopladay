@@ -1,0 +1,1607 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Hopladay Annual Leave Optimizer API",
+    "version": "2.0.0",
+    "description": "Versioned deterministic annual leave optimization. Existing v1 preview and saved-plan APIs retain their semantics. Local calendar dates, verified Premium boundaries, owner-scoped snapshots and opt-in aggregate analytics. All routes use no-store and noindex; 30 requests/client and 300 requests/process in fixed 60-second windows."
+  },
+  "servers": [
+    {
+      "url": "https://hopladay-backend.onrender.com/api/v2"
+    }
+  ],
+  "security": [],
+  "paths": {
+    "/session": {
+      "get": {
+        "operationId": "getOptimizerSession",
+        "summary": "Check the current verified session and live Premium entitlement",
+        "security": [
+          {},
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Absent bearer token returns authenticated=false and premium=false.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authenticated": {
+                      "type": "boolean"
+                    },
+                    "premium": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "authenticated",
+                    "premium"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid verified session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-client or per-process fixed-minute request limit reached.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait; currently 60.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Holiday data or service dependency unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/holidays/{year}": {
+      "get": {
+        "operationId": "getOptimizerHolidays",
+        "summary": "Read applicable public holidays and available provider regions",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 2024,
+              "maximum": 2100
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "NO",
+                "SE",
+                "DK",
+                "FI",
+                "NL",
+                "IS",
+                "DE",
+                "BE",
+                "FR",
+                "ES",
+                "PT",
+                "IT",
+                "CH",
+                "AT",
+                "IE",
+                "GB",
+                "US",
+                "CA",
+                "AU",
+                "NZ",
+                "PL",
+                "CZ",
+                "SK",
+                "HU",
+                "SI",
+                "HR",
+                "EE",
+                "LV",
+                "LT",
+                "RO",
+                "BG",
+                "GR",
+                "TR",
+                "RU",
+                "UA",
+                "BR",
+                "MX",
+                "AR",
+                "CL",
+                "JP",
+                "CN",
+                "KR",
+                "ZA"
+              ]
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Nationwide Public holidays, plus the exact selected region when supplied.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "holidays": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Holiday"
+                      }
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "source": {
+                      "$ref": "#/components/schemas/HolidaySource"
+                    }
+                  },
+                  "required": [
+                    "holidays",
+                    "regions",
+                    "source"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid planning input, unsupported region or export mode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-client or per-process fixed-minute request limit reached.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait; currently 60.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Holiday data or service dependency unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/optimize": {
+      "post": {
+        "operationId": "optimizeAnnualLeave",
+        "summary": "Calculate a deterministic annual-leave plan without saving it",
+        "description": "Basic balanced planning is anonymous. Non-balanced strategies or the presence of advanced setting fields require a verified Premium session. Never pass isPremium or userId as proof of entitlement. Infeasibility is a 200 result with status=infeasible, constraintsSatisfied=false and violations.",
+        "security": [
+          {},
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OptimizationInput"
+              },
+              "example": {
+                "country": "NO",
+                "year": 2027,
+                "availableDays": 20,
+                "strategy": "balanced",
+                "lang": "en"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Structured result. No plan is saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid planning input, unsupported region or export mode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid verified session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Verified Premium entitlement required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-client or per-process fixed-minute request limit reached.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait; currently 60.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Holiday data or service dependency unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plans": {
+      "post": {
+        "operationId": "saveOptimizerPlan",
+        "summary": "Generate and save a new owner-scoped version 2 snapshot",
+        "description": "Requires a verified session. Free users can save basic balanced plans. Advanced inputs still require Premium. This creates a separate version 2 record; it does not overwrite a legacy plan or recalculate a previously saved record. Infeasible plans cannot be saved.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "$ref": "#/components/schemas/OptimizationInput"
+                  },
+                  "title": {
+                    "type": "string",
+                    "maxLength": 120
+                  }
+                },
+                "required": [
+                  "input"
+                ],
+                "additionalProperties": false
+              },
+              "example": {
+                "input": {
+                  "country": "NO",
+                  "year": 2027,
+                  "availableDays": 20,
+                  "strategy": "balanced",
+                  "lang": "en"
+                },
+                "title": "My 2027 plan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "New snapshot.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimizerPlan"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid planning input, unsupported region or export mode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid verified session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Verified Premium entitlement required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-client or per-process fixed-minute request limit reached.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait; currently 60.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Holiday data or service dependency unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listOptimizerPlans",
+        "summary": "Read up to 30 version 2 snapshots belonging to the current account",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest created first; no recalculation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OptimizerPlan"
+                  },
+                  "maxItems": 30
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid verified session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-client or per-process fixed-minute request limit reached.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait; currently 60.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Holiday data or service dependency unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plans/{id}/export": {
+      "post": {
+        "operationId": "exportOptimizerCalendar",
+        "summary": "Download leave requests or full breaks from an owned saved plan",
+        "description": "Requires a verified Premium owner and an existing version 2 snapshot. Calendar events are tentative planning events, not an employer leave submission or approval. The public calculation result does not grant access to this paid export.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{24}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "leave",
+                      "breaks"
+                    ]
+                  }
+                },
+                "required": [
+                  "mode"
+                ],
+                "additionalProperties": false
+              },
+              "example": {
+                "mode": "leave"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "iCalendar all-day DATE events. DTEND is exclusive. leave emits only newly required leave dates; breaks emits whole intervals.",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Attachment filename."
+              }
+            },
+            "content": {
+              "text/calendar": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid planning input, unsupported region or export mode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid verified session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Verified Premium entitlement required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No saved plan belonging to the caller has this ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-client or per-process fixed-minute request limit reached.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait; currently 60.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Holiday data or service dependency unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/events": {
+      "post": {
+        "operationId": "recordPlanningEvent",
+        "summary": "Record one opt-in aggregate planning-funnel event",
+        "description": "The frontend must obtain opt-in before sending. The server accepts only the event field and persists a UTC daily aggregate count, without vacation dates, account ID or personal planning data. This is not a session or purchase-authority endpoint.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "type": "string",
+                    "enum": [
+                      "opened",
+                      "generated",
+                      "strategy_selected",
+                      "recommendation_accepted",
+                      "regenerated",
+                      "saved",
+                      "export_requested",
+                      "upgrade_initiated",
+                      "purchase_completed"
+                    ]
+                  }
+                },
+                "required": [
+                  "event"
+                ],
+                "additionalProperties": false
+              },
+              "example": {
+                "event": "opened"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Count recorded; no response body."
+          },
+          "400": {
+            "description": "Invalid planning input, unsupported region or export mode.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-client or per-process fixed-minute request limit reached.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait; currently 60.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Holiday data or service dependency unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Opaque 14-day sessionToken returned by successful verified authentication. Tokens are not user IDs."
+      }
+    },
+    "schemas": {
+      "OptimizationInput": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "description": "Supported uppercase national jurisdiction, not travel destination.",
+            "enum": [
+              "NO",
+              "SE",
+              "DK",
+              "FI",
+              "NL",
+              "IS",
+              "DE",
+              "BE",
+              "FR",
+              "ES",
+              "PT",
+              "IT",
+              "CH",
+              "AT",
+              "IE",
+              "GB",
+              "US",
+              "CA",
+              "AU",
+              "NZ",
+              "PL",
+              "CZ",
+              "SK",
+              "HU",
+              "SI",
+              "HR",
+              "EE",
+              "LV",
+              "LT",
+              "RO",
+              "BG",
+              "GR",
+              "TR",
+              "RU",
+              "UA",
+              "BR",
+              "MX",
+              "AR",
+              "CL",
+              "JP",
+              "CN",
+              "KR",
+              "ZA"
+            ]
+          },
+          "region": {
+            "type": "string",
+            "description": "Optional exact provider subdivision code, for example DE-BY. Empty or unknown codes are invalid at the catalog boundary.",
+            "maxLength": 20
+          },
+          "lang": {
+            "type": "string",
+            "description": "Suggestion descriptions/reasons and general error messages support these languages. Technical metadata and validation details can remain English.",
+            "enum": [
+              "en",
+              "no",
+              "nl",
+              "de",
+              "fr",
+              "es",
+              "sv",
+              "da"
+            ],
+            "default": "en"
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 2024,
+            "maximum": 2100
+          },
+          "availableDays": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 366,
+            "description": "Maximum newly allocated leave. Approved leave is already off and is not charged again."
+          },
+          "strategy": {
+            "type": "string",
+            "description": "Only balanced is anonymous/free. Both alternatives require verified Premium.",
+            "enum": [
+              "maximum_time_off",
+              "longest_vacation",
+              "balanced"
+            ],
+            "default": "balanced"
+          },
+          "horizon": {
+            "type": "object",
+            "properties": {
+              "startDate": {
+                "type": "string",
+                "description": "Local calendar date; never convert between time zones.",
+                "format": "date"
+              },
+              "endDate": {
+                "type": "string",
+                "description": "Local calendar date; never convert between time zones.",
+                "format": "date"
+              }
+            },
+            "required": [
+              "startDate",
+              "endDate"
+            ],
+            "description": "Premium. Ordered inclusive range entirely within year; default is the full year."
+          },
+          "workingDays": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "maxItems": 7,
+            "uniqueItems": true,
+            "description": "Premium. 0=Sunday through 6=Saturday. Default [1,2,3,4,5]; an empty list is supported."
+          },
+          "companyHolidays": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Local calendar date; never convert between time zones.",
+              "format": "date"
+            },
+            "maxItems": 366,
+            "uniqueItems": true,
+            "description": "Premium. Additional employer-provided non-working dates."
+          },
+          "approvedLeave": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Local calendar date; never convert between time zones.",
+              "format": "date"
+            },
+            "maxItems": 366,
+            "uniqueItems": true,
+            "description": "Existing approved leave, fixed as non-working and not deducted from availableDays."
+          },
+          "excludedDates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Local calendar date; never convert between time zones.",
+              "format": "date"
+            },
+            "maxItems": 366,
+            "uniqueItems": true,
+            "description": "No recommended interval may contain these dates, including otherwise non-working dates."
+          },
+          "holidayWorkingDates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Local calendar date; never convert between time zones.",
+              "format": "date"
+            },
+            "maxItems": 366,
+            "uniqueItems": true,
+            "description": "Premium. Listed public holidays are working days when they are in workingDays, unless also company holiday or approved leave."
+          },
+          "preferredMonths": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "maxItems": 12,
+            "uniqueItems": true,
+            "description": "Premium soft preference; not a guarantee."
+          },
+          "minBreakLength": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90,
+            "description": "Premium. Default 3 inclusive calendar days."
+          },
+          "maxBreakLength": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90,
+            "description": "Premium. Must be >= minBreakLength. Default 21 for balanced; 90 otherwise."
+          },
+          "preferredBreakLength": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 90,
+            "description": "Premium score preference. Default 9 days."
+          },
+          "maxBreaks": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12,
+            "description": "Premium. Default 4 for balanced; 12 otherwise."
+          },
+          "minSeparationDays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 365,
+            "description": "Premium. Unselected calendar dates between breaks. Default 21 for balanced; 1 otherwise."
+          },
+          "seasonalWeight": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10,
+            "description": "Premium seasonal-score weight; default 1."
+          },
+          "requiredSummerBreak": {
+            "type": "object",
+            "properties": {
+              "minDays": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 90,
+                "description": "Default 14."
+              },
+              "months": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "maxItems": 12,
+                "uniqueItems": true,
+                "minItems": 1,
+                "description": "Default [6,7,8]. The entire qualifying break must fall in these months."
+              }
+            },
+            "description": "Premium hard requirement; infeasible requests return status=infeasible rather than violating it."
+          },
+          "lockedBreaks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "startDate": {
+                  "type": "string",
+                  "description": "Local calendar date; never convert between time zones.",
+                  "format": "date"
+                },
+                "endDate": {
+                  "type": "string",
+                  "description": "Local calendar date; never convert between time zones.",
+                  "format": "date"
+                }
+              },
+              "required": [
+                "startDate",
+                "endDate"
+              ]
+            },
+            "maxItems": 12,
+            "description": "Fixed intervals retained during regeneration and charged only for newly required leave. They must fit all hard constraints and include adjacent non-working dates."
+          }
+        },
+        "required": [
+          "country",
+          "year",
+          "availableDays"
+        ],
+        "additionalProperties": false
+      },
+      "OptimizationResult": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 2
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "infeasible"
+            ]
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 2024,
+            "maximum": 2100
+          },
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "maximum_time_off",
+              "longest_vacation",
+              "balanced"
+            ]
+          },
+          "availableDays": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 366
+          },
+          "usedDays": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 366
+          },
+          "remainingDays": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 366
+          },
+          "totalDaysOff": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 366,
+            "description": "Union of distinct calendar dates in selected breaks, not all annual days off."
+          },
+          "longestVacation": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 90
+          },
+          "breakCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 12
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "startDate": {
+                  "type": "string",
+                  "description": "Local calendar date; never convert between time zones.",
+                  "format": "date"
+                },
+                "endDate": {
+                  "type": "string",
+                  "description": "Local calendar date; never convert between time zones.",
+                  "format": "date"
+                },
+                "totalDaysOff": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 90
+                },
+                "vacationDaysUsed": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 90
+                },
+                "leaveDates": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Local calendar date; never convert between time zones.",
+                    "format": "date"
+                  },
+                  "maxItems": 366,
+                  "uniqueItems": true
+                },
+                "publicHolidays": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "description": "Local calendar date; never convert between time zones.",
+                        "format": "date"
+                      },
+                      "names": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "names"
+                    ]
+                  }
+                },
+                "approvedLeave": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Local calendar date; never convert between time zones.",
+                    "format": "date"
+                  },
+                  "maxItems": 366,
+                  "uniqueItems": true
+                },
+                "locked": {
+                  "type": "boolean"
+                },
+                "reasonCode": {
+                  "type": "string",
+                  "enum": [
+                    "maximum_time_off",
+                    "longest_vacation",
+                    "balanced"
+                  ]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "startDate",
+                "endDate",
+                "totalDaysOff",
+                "vacationDaysUsed",
+                "leaveDates",
+                "publicHolidays",
+                "approvedLeave",
+                "locked",
+                "reasonCode",
+                "description",
+                "reason"
+              ]
+            },
+            "maxItems": 12
+          },
+          "calendar": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Local calendar date; never convert between time zones.",
+                  "format": "date"
+                },
+                "ordinal": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Internal day ordinal; date is the public day-level identifier."
+                },
+                "weekday": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 6
+                },
+                "month": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "publicHoliday": {
+                  "type": "boolean"
+                },
+                "companyHoliday": {
+                  "type": "boolean"
+                },
+                "approvedLeave": {
+                  "type": "boolean"
+                },
+                "excluded": {
+                  "type": "boolean"
+                },
+                "regularNonWorking": {
+                  "type": "boolean"
+                },
+                "requiresLeave": {
+                  "type": "boolean"
+                },
+                "recommendedLeave": {
+                  "type": "boolean"
+                },
+                "holidayNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "date",
+                "ordinal",
+                "weekday",
+                "month",
+                "publicHoliday",
+                "companyHoliday",
+                "approvedLeave",
+                "excluded",
+                "regularNonWorking",
+                "requiresLeave",
+                "recommendedLeave",
+                "holidayNames"
+              ]
+            },
+            "maxItems": 366
+          },
+          "constraintsSatisfied": {
+            "type": "boolean"
+          },
+          "violations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "locked_budget",
+                "locked_break_count",
+                "required_summer_break"
+              ]
+            }
+          },
+          "constraints": {
+            "type": "object",
+            "properties": {
+              "minBreakLength": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 90
+              },
+              "maxBreakLength": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 90
+              },
+              "preferredBreakLength": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 90
+              },
+              "maxBreaks": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 12
+              },
+              "minSeparationDays": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 365
+              },
+              "preferredMonths": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "maxItems": 12,
+                "uniqueItems": true
+              },
+              "seasonalWeight": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10
+              },
+              "requiredSummerBreak": {
+                "type": "object",
+                "properties": {
+                  "minDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 90
+                  },
+                  "months": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "maxItems": 12,
+                    "uniqueItems": true
+                  }
+                },
+                "nullable": true
+              }
+            },
+            "required": [
+              "minBreakLength",
+              "maxBreakLength",
+              "preferredBreakLength",
+              "maxBreaks",
+              "minSeparationDays",
+              "preferredMonths",
+              "seasonalWeight",
+              "requiredSummerBreak"
+            ]
+          },
+          "optimality": {
+            "type": "object",
+            "properties": {
+              "exact": {
+                "type": "boolean"
+              },
+              "objective": {
+                "type": "string"
+              },
+              "method": {
+                "type": "string"
+              },
+              "bounds": {
+                "type": "object",
+                "properties": {
+                  "maxBreakLength": {
+                    "type": "integer",
+                    "minimum": 90,
+                    "maximum": 90
+                  },
+                  "maxBreaks": {
+                    "type": "integer",
+                    "minimum": 12,
+                    "maximum": 12
+                  }
+                },
+                "required": [
+                  "maxBreakLength",
+                  "maxBreaks"
+                ]
+              }
+            },
+            "required": [
+              "exact",
+              "objective",
+              "method",
+              "bounds"
+            ]
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "input": {
+            "$ref": "#/components/schemas/OptimizationInput"
+          },
+          "source": {
+            "$ref": "#/components/schemas/HolidaySource"
+          },
+          "regions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "previewUrl": {
+            "type": "string",
+            "description": "Ready-filled basic inputs only; private date constraints are deliberately excluded. Not a saved snapshot.",
+            "format": "uri"
+          },
+          "linkScope": {
+            "type": "string",
+            "enum": [
+              "basic-inputs-only"
+            ]
+          }
+        },
+        "required": [
+          "version",
+          "status",
+          "year",
+          "strategy",
+          "availableDays",
+          "usedDays",
+          "remainingDays",
+          "totalDaysOff",
+          "longestVacation",
+          "breakCount",
+          "suggestions",
+          "calendar",
+          "constraintsSatisfied",
+          "violations",
+          "constraints",
+          "optimality",
+          "limitations",
+          "input",
+          "source",
+          "regions",
+          "previewUrl",
+          "linkScope"
+        ]
+      },
+      "HolidaySource": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "Nager.Date"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "retrievedAt": {
+            "type": "string",
+            "description": "Local validated-data retrieval time, not legislative update time.",
+            "format": "date-time"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "nationwide-public-holidays",
+              "national-and-selected-region"
+            ]
+          },
+          "region": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "retrievedAt",
+          "scope",
+          "region"
+        ]
+      },
+      "Holiday": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Local calendar date; never convert between time zones.",
+            "format": "date"
+          },
+          "name": {
+            "type": "string"
+          },
+          "localName": {
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string"
+          },
+          "global": {
+            "type": "boolean"
+          },
+          "counties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "date",
+          "name",
+          "localName",
+          "countryCode",
+          "global",
+          "counties",
+          "types"
+        ]
+      },
+      "OptimizerPlan": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{24}$"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 2
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "input": {
+            "$ref": "#/components/schemas/OptimizationInput"
+          },
+          "result": {
+            "$ref": "#/components/schemas/OptimizationResult"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "__v": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "_id",
+          "userId",
+          "version",
+          "title",
+          "input",
+          "result"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "INVALID_INPUT",
+                  "AUTH_REQUIRED",
+                  "PREMIUM_REQUIRED",
+                  "RATE_LIMITED",
+                  "HOLIDAY_DATA_UNAVAILABLE",
+                  "SERVICE_UNAVAILABLE",
+                  "NOT_FOUND"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "string",
+                "description": "Optional technical validation information; may be English."
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    }
+  }
+}

@@ -23,3 +23,17 @@ The public preview uses nationwide Public holidays from Nager.Date and a Monday�
 Return previewUrl so the user can open the same inputs. The link recalculates with current cached holiday data; it is not an immutable saved plan. Free response descriptions and human preview copy are currently English; lang chooses the localized return path.
 
 Limits: 30 requests per client per 60-second process window; 300 requests per process window globally. Respect Retry-After on 429/503. An API specification does not automatically install a tool in any assistant: the assistant needs HTTP/browsing capability or explicit integration.
+
+
+## Version 2 annual leave optimizer
+- [Annual planner](https://www.hopladay.com/en/optimize): basic balanced previews work without sign-in.
+- [Version 2 API reference](https://www.hopladay.com/optimizer-api.html): deterministic strategies, work calendars, input constraints, session/Premium access, snapshots and export.
+- [Version 2 OpenAPI contract](https://www.hopladay.com/openapi-v2.json).
+
+POST https://hopladay-backend.onrender.com/api/v2/optimize with JSON {"country":"NO","year":2027,"availableDays":20,"strategy":"balanced","lang":"en"}. Years 2024–2100 and allowance 0–366 are accepted. Basic balanced calculations, approvedLeave, excludedDates and lockedBreaks are available anonymously. Region selection uses only the provider's supported subdivision codes. Non-balanced strategies and advanced settings require a verified Premium bearer session; never pass userId or isPremium as credentials.
+
+Read status, constraintsSatisfied and violations before presenting a plan. totalDaysOff is distinct calendar days within selected breaks, usedDays is newly allocated leave, and leaveDates gives the exact workdays to request off. Already approved leave is not charged again. Classification flags can overlap. Day identifiers are YYYY-MM-DD, independent of timezone conversion. Bounded exactness applies only to the declared objective, with maximum 90-day breaks and 12 breaks; balanced quality is an explicit score rather than a universal optimum. Suggestion explanations and general errors support en/no/nl/de/fr/es/sv/da; technical metadata can remain English.
+
+previewUrl contains basic inputs only and omits private date constraints; linkScope is basic-inputs-only. It is not a full private-plan sharing link. Version 2 snapshots are separate from legacy plans; reading a snapshot never silently recalculates it. Verified users can save permitted basic plans. All-day iCalendar export requires a saved plan and verified Premium ownership; the public calculation does not grant that paid capability. Importing calendar events does not submit or approve leave with an employer.
+
+POST /api/v2/events accepts exactly {"event":"generated"} or another documented event name, only after client opt-in. No vacation dates, account IDs or personal settings belong in analytics. All v2 routes share 30-client/300-process fixed-minute request limits; respect Retry-After. Provider data is cached 24h with an 8-second fetch timeout. Source retrieval time is not a legislative update time; regional/municipal and employer entitlements can differ. The version 1 API and its original limits/semantics remain unchanged.

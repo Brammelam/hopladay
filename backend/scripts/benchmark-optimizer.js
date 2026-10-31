@@ -8,6 +8,7 @@ const cases = [
   { name:'balanced-25',year:2027,availableDays:25,strategy:'balanced' },
   { name:'maximum-25',year:2027,availableDays:25,strategy:'maximum_time_off' },
   { name:'longest-summer-25',year:2027,availableDays:25,strategy:'longest_vacation',requiredSummerBreak:{minDays:14,months:[6,7,8]} },
+  { name:'seven-day-longest-summer-366',year:2028,availableDays:366,strategy:'longest_vacation',workingDays:[0,1,2,3,4,5,6],requiredSummerBreak:{minDays:14,months:[6,7,8]},maxBreakLength:90,maxBreaks:12 },
   { name:'bounded-maximum-366',year:2028,availableDays:366,strategy:'maximum_time_off',maxBreakLength:90,maxBreaks:12 },
 ];
 const holidays = [{ date:'2027-01-01',name:'New Year' },{date:'2027-05-06',name:'Holiday'},{date:'2027-12-25',name:'Christmas'}];
