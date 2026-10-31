@@ -10,5 +10,7 @@ Disallow: /*/payment/success
 Disallow: /*/payment/cancel
 Disallow: /*/unsubscribe
 
+Disallow: /*/plans
+
 Sitemap: https://www.hopladay.com/sitemap.xml
 

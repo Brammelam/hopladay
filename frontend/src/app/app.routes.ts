@@ -4,6 +4,14 @@ const SUPPORTED_LANGUAGES = ['en', 'no', 'nl', 'de', 'fr', 'es', 'sv', 'da'];
 
 const appRoutes: Routes = [
   {
+    path: 'optimize',
+    loadComponent: () => import('./annual-planner/annual-planner').then(m => m.AnnualPlannerComponent)
+  },
+  {
+    path: 'plans',
+    loadComponent: () => import('./dashboard/dashboard').then(m => m.DashboardComponent)
+  },
+  {
     path: 'preview',
     loadComponent: () => import('./plan-preview/plan-preview').then(m => m.PlanPreviewComponent)
   },
@@ -37,7 +45,7 @@ const appRoutes: Routes = [
   },
   {
     path: '',
-    loadComponent: () => import('./dashboard/dashboard').then(m => m.DashboardComponent)
+    loadComponent: () => import('./annual-planner/annual-planner').then(m => m.AnnualPlannerComponent)
   }
 ];
 

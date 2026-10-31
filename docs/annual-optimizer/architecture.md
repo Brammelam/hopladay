@@ -7,7 +7,7 @@ Use a new pure calendar model (ISO local-date strings and integer ordinals) and 
 Objectives and bounds:
 - maximum_time_off: maximize distinct days in qualifying nonadjacent breaks, then preferred-month days, then minimize leave used, then break count; deterministic chronological tie-breaking.
 - longest_vacation: first maximize the longest break, then maximize distinct covered days, preferred-month days, and minimize leave use/break count. A feasibility scan identifies the longest feasible principal break accounting for locks and the required summer interval; the interval DP then requires a break of that length.
-- balanced: maximize a documented additive utility: 10*min(length,preferredLength) - 3*abs(length-preferredLength) + 2*preferredMonthDays + seasonalWeight*proximityToQuarterMidpoint. Minimum separation and number/length bounds are hard; seasonal utility is a preference, never a promise of one break each season.
+- balanced: maximize a documented additive utility: 10*min(length,preferredLength) - 3*abs(length-preferredLength) + 2*preferredMonthDays + seasonalWeight*proximityToQuarterMidpoint. Proximity is max(0,14 minus the distance in days to the nearest quarter midpoint of the selected horizon); full-year horizons use annual quarters. Minimum separation and number/length bounds are hard; seasonal utility is a preference, never a promise of one break each season.
 - Candidate intervals cover all starts/ends in the configured horizon, maxLength <=90 days, maxBreaks <=12, allowance <=366, year2024..2100. A recommended interval must require new leave or contain existing approved leave. Pure weekends are not recommended as newly earned vacation. Adjacent intervals are incompatible: choose their combined interval if feasible. Exclusions remove whole intervals containing an excluded date.
 - Dynamic programming over end boundary, exact new-leave cost, break count and at most two requirement flags. Stable first-seen ties; no stochastic or LLM calls. No exponential search. Output reports exactness only for the declared finite model. Locked intervals are validated and charged once, then remain fixed.
 
@@ -20,3 +20,6 @@ Delivery ledger (local reviewable commits; no remote publication authorized by t
 8. Small useful country/year landing-page set generated from the engine, public contracts and opt-in aggregate analytics. Collaborative planning stays a separate proposal.
 
 No new runtime dependencies, no framework/database replacement, no recalculation or migration of existing saved plans. Performance results are local observations, not claims about an unmeasured production deployment. Production funnel outcomes need real traffic after deployment.
+
+
+Verification: 68 backend tests and 36 frontend tests pass. An independent exhaustive oracle checks 177 reference configurations, including all three objectives, fixed locks, required summer periods, custom schedules, preferred months and tie-breaks. Production build/typecheck and HTTP serving checks pass. See release.md for operational limits and screenshots.

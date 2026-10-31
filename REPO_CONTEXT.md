@@ -33,3 +33,13 @@ Full-stack product: **Angular** frontend (`frontend/`) with SSR/prerender script
 - `/:lang/preview` is separate from the account dashboard and cannot replace saved plans.
 - Public reference: `frontend/public/api-docs.html`, `openapi.json`, `llms.txt`. Release checks and hosting rules: `docs/llm-preview-release.md`.
 - Tests: `npm --prefix backend test`; `npm --prefix frontend test -- --watch=false --browsers=ChromeHeadless`.
+
+## Annual optimizer (version2)
+
+- Pure engine: `backend/src/services/annualOptimizer.js` and `calendarModel.js`; exact budgeted interval DP with three declared objectives. Legacy planner remains unchanged.
+- `/api/v2` routes: anonymous balanced optimization; verified bearer sessions for saves, current Premium checks for advanced inputs/strategies and saved exports. New `Session` and `OptimizerPlan` collections; old `HolidayPlan` data is not recalculated.
+- New homepage and `/:lang/optimize`: `frontend/src/app/annual-planner`; original dashboard remains at `/:lang/plans`. All eight locales use existing TranslationService.
+- Region-aware source: `holidayCatalog.js`; immutable export snapshots use all-day dates and never submit employer requests.
+- Country/year pages: `backend/scripts/generate-landings.js`, audited public fixtures, and `frontend/public/landing-routes.json`. Node host disables directory redirects before serving these routes.
+- Public v2 reference: `frontend/public/optimizer-api.html`, `openapi-v2.json`; release/migration/limits under `docs/annual-optimizer/`.
+- Opt-in funnel counts store only UTC day/event totals. No external analytics service.

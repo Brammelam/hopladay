@@ -41,6 +41,7 @@ export function createOptimizerRouter({loadHolidays=loadHolidayCatalog,authentic
   async function generate(input,user) {
     permit(input,user);
     const catalog=await loadHolidays(input.year,input.country,input.region||undefined);
+    // shortcut: bounded DP runs in-process; use a bounded worker pool if measured production latency exceeds its budget.
     let optimized;
     try { optimized=optimizeAnnualLeave(input,catalog.holidays); }
     catch(error) { throw Object.assign(error,{status:400,code:'INVALID_INPUT'}); }
