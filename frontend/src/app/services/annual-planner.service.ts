@@ -8,7 +8,7 @@ import { AuthService } from './auth.service';
 export type AnnualStrategy = 'balanced' | 'maximum_time_off' | 'longest_vacation';
 export interface AnnualInterval { startDate: string; endDate: string }
 export interface AnnualInput {
-  country: string; year: number; availableDays: number; strategy: AnnualStrategy; lang: string; region?: string;
+  country: string; year: number; availableDays: number; strategy: AnnualStrategy; lang: string; region?: string; horizon?: AnnualInterval;
   approvedLeave?: string[]; excludedDates?: string[]; lockedBreaks?: AnnualInterval[];
   workingDays?: number[]; companyHolidays?: string[]; holidayWorkingDates?: string[]; preferredMonths?: number[];
   minBreakLength?: number; maxBreakLength?: number; preferredBreakLength?: number; maxBreaks?: number;

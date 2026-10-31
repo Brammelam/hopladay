@@ -1,0 +1,23 @@
+:host { display: block; }
+.field { display: flex; flex-direction: column; gap: .5rem; font-size: .875rem; font-weight: 500; }
+.field input, .field select, .field textarea { width: 100%; min-height: 44px; border: 1px solid #d1d5db; border-radius: 6px; padding: .625rem .75rem; background: white; font-weight: 400; color: #111827; }
+.field input:disabled, .field select:disabled, .field textarea:disabled { background: #f3f4f6; color: #6b7280; }
+.primary-button, .secondary-button, .small-button { min-height: 44px; border: 1px solid #d1d5db; border-radius: 6px; padding: .625rem 1rem; font-size: .875rem; font-weight: 500; transition: background-color 120ms ease-out; }
+.primary-button { color: white; background: #111827; border-color: #111827; }
+.secondary-button, .small-button { color: #111827; background: white; }
+.primary-button:hover { background: #374151; }
+.secondary-button:hover, .small-button:hover { background: #f3f4f6; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.small-button { padding: .5rem .75rem; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid #111827; outline-offset: 3px; }
+.month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.calendar-day { display: flex; min-height: 44px; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #e5e7eb; border-radius: 4px; background: white; font-size: .75rem; line-height: 1.25; }
+.calendar-day small { min-height: .75rem; font-size: .5625rem; font-weight: 600; }
+.day-nonworking { background: #f3f4f6; }
+.day-holiday { border-bottom: 2px solid #9f1239; }
+.day-approved { border-style: dashed; border-color: #166534; }
+.day-leave { background: #dbeafe; color: #1e3a8a; font-weight: 600; }
+.day-excluded { background: #f3f4f6; color: #6b7280; text-decoration: line-through; }
+.day-selected { outline: 2px solid #111827; outline-offset: -2px; }
+.selected-break { outline: 2px solid #111827; outline-offset: 2px; }
+::selection { background: #dbeafe; color: #111827; }

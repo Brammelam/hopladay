@@ -1,0 +1,159 @@
+<main class="min-h-screen bg-gray-50 px-4 py-8 text-gray-900 sm:px-6 sm:py-12">
+  <div class="mx-auto max-w-7xl space-y-8">
+    <nav class="flex flex-wrap items-center justify-between gap-3 text-sm" [attr.aria-label]="t('navigation')">
+      <a [routerLink]="['/' + translation.currentLang()]" class="min-h-11 py-3 font-semibold underline-offset-4 hover:underline">Hopladay</a>
+      <a [routerLink]="['/' + translation.currentLang() + '/plans']" class="min-h-11 py-3 underline underline-offset-4">{{ 'optimizer.accountPlans' | translate }}</a>
+    </nav>
+    <header class="max-w-3xl space-y-4">
+      <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">{{ 'optimizer.title' | translate }}</h1>
+      <p class="max-w-prose text-base leading-relaxed text-gray-700">{{ 'optimizer.intro' | translate }}</p>
+    </header>
+
+    <form ngNativeValidate (ngSubmit)="generate()" class="space-y-5 rounded-xl border border-gray-200 bg-white p-5 sm:p-6" [attr.aria-label]="t('configuration')">
+      <div class="grid gap-4 sm:grid-cols-3">
+        <label class="field">{{ 'optimizer.country' | translate }}<select name="country" [(ngModel)]="country" (ngModelChange)="region = ''; clearSelections()" required><option *ngFor="let code of countries" [value]="code">{{ countryName(code) }}</option></select></label>
+        <label class="field">{{ 'optimizer.year' | translate }}<input name="year" type="number" [(ngModel)]="year" (ngModelChange)="yearChanged()" required min="2024" max="2100" step="1" /></label>
+        <label class="field">{{ 'optimizer.allowance' | translate }}<input name="availableDays" type="number" [(ngModel)]="availableDays" required min="0" max="366" step="1" /></label>
+      </div>
+      <button type="submit" [disabled]="loading()" class="primary-button w-full sm:w-auto">{{ (loading() ? 'optimizer.calculating' : 'optimizer.generate') | translate }}</button>
+      <details [open]="advancedOpen" class="border-t border-gray-200 pt-2">
+        <summary class="min-h-11 cursor-pointer py-3 text-sm font-medium">{{ 'optimizer.advanced' | translate }}</summary>
+        <div class="space-y-5 pt-3">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <label class="field">{{ 'optimizer.strategy' | translate }}
+              <select name="strategy" [(ngModel)]="strategy" (ngModelChange)="strategyChanged()">
+                <option value="balanced">{{ 'optimizer.balanced' | translate }}</option>
+                <option data-premium value="maximum_time_off" [disabled]="!premium()">{{ 'optimizer.maximum_time_off' | translate }} · Premium</option>
+                <option data-premium value="longest_vacation" [disabled]="!premium()">{{ 'optimizer.longest_vacation' | translate }} · Premium</option>
+              </select>
+            </label>
+            <label class="field" *ngIf="result()?.regions?.length">{{ 'optimizer.region' | translate }}
+              <select name="region" [(ngModel)]="region"><option value="">{{ 'optimizer.nationwide' | translate }}</option><option *ngFor="let code of result()?.regions" [value]="code">{{ code }}</option></select>
+            </label>
+            <label class="field">{{ 'optimizer.approvedDates' | translate }}<textarea name="approvedLeave" [(ngModel)]="approvedText" rows="2" placeholder="2027-07-12, 2027-07-13" aria-describedby="annual-date-help"></textarea></label>
+            <label class="field">{{ 'optimizer.excludedDates' | translate }}<textarea name="excludedDates" [(ngModel)]="excludedText" rows="2" placeholder="2027-12-20, 2027-12-21" aria-describedby="annual-date-help"></textarea></label>
+          </div>
+          <p id="annual-date-help" class="text-sm text-gray-600">{{ 'optimizer.dateHelp' | translate }}</p>
+          <p *ngIf="!premium()" class="max-w-prose text-sm text-gray-700">{{ 'optimizer.premiumExplanation' | translate }} <a [routerLink]="['/' + translation.currentLang() + '/plans']" class="underline underline-offset-4">{{ 'optimizer.accountPlans' | translate }}</a>.</p>
+          <fieldset [disabled]="!premium()" class="grid gap-4 border-t border-gray-200 pt-5 sm:grid-cols-2 lg:grid-cols-3 disabled:opacity-60">
+            <legend class="py-2 text-sm font-semibold">{{ 'optimizer.premiumSettings' | translate }}</legend>
+            <label class="field">{{ 'optimizer.startDate' | translate }}<input name="horizonStart" type="date" [(ngModel)]="horizonStart" [min]="year + '-01-01'" [max]="year + '-12-31'" [required]="!!horizonEnd" /></label>
+            <label class="field">{{ 'optimizer.endDate' | translate }}<input name="horizonEnd" type="date" [(ngModel)]="horizonEnd" [min]="year + '-01-01'" [max]="year + '-12-31'" [required]="!!horizonStart" /></label>
+            <label class="field">{{ 'optimizer.workingDays' | translate }}<input name="workingDays" [(ngModel)]="workingDaysText" /></label>
+            <label class="field">{{ 'optimizer.companyDates' | translate }}<input name="companyHolidays" [(ngModel)]="companyText" placeholder="2027-12-24" /></label>
+            <label class="field">{{ 'optimizer.workedHolidays' | translate }}<input name="holidayWorkingDates" [(ngModel)]="holidayWorkingText" placeholder="2027-05-17" /></label>
+            <label class="field">{{ 'optimizer.preferredMonths' | translate }}<input name="preferredMonths" [(ngModel)]="preferredMonthsText" placeholder="6,7,8" /></label>
+            <label class="field">{{ 'optimizer.minimumBreak' | translate }}<input name="minBreakLength" type="number" [(ngModel)]="minBreakLength" min="1" max="90" step="1" /></label>
+            <label class="field">{{ 'optimizer.maximumBreak' | translate }}<input name="maxBreakLength" type="number" [(ngModel)]="maxBreakLength" min="1" max="90" step="1" /></label>
+            <label class="field">{{ 'optimizer.preferredBreak' | translate }}<input name="preferredBreakLength" type="number" [(ngModel)]="preferredBreakLength" min="1" max="90" step="1" /></label>
+            <label class="field">{{ 'optimizer.maximumBreaks' | translate }}<input name="maxBreaks" type="number" [(ngModel)]="maxBreaks" min="1" max="12" step="1" /></label>
+            <label class="field">{{ 'optimizer.separation' | translate }}<input name="minSeparationDays" type="number" [(ngModel)]="minSeparationDays" min="1" max="365" step="1" /></label>
+            <label class="field">{{ 'optimizer.seasonalWeight' | translate }}<input name="seasonalWeight" type="number" [(ngModel)]="seasonalWeight" min="0" max="10" step="1" /></label>
+            <label class="field">{{ 'optimizer.summerLength' | translate }}<input name="summerDays" type="number" [(ngModel)]="summerDays" min="0" max="90" step="1" /></label>
+            <label class="field">{{ 'optimizer.summerMonths' | translate }}<input name="summerMonths" [(ngModel)]="summerMonthsText" /></label>
+          </fieldset>
+          <p class="text-sm text-gray-600">{{ 'optimizer.advancedHelp' | translate }}</p>
+        </div>
+      </details>
+    </form>
+
+    <p *ngIf="loading()" role="status" class="text-gray-700">{{ 'optimizer.calculating' | translate }}</p>
+    <p *ngIf="error()" role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-900">{{ error() }}</p>
+    <p *ngIf="notice()" role="status" class="text-gray-700">{{ notice() }}</p>
+    <div *ngIf="!result() && !loading()" class="flex flex-wrap gap-3"><button *ngIf="initialInput" type="button" class="secondary-button" (click)="reset()" data-action="reset">{{ 'optimizer.reset' | translate }}</button></div>
+
+    <section *ngIf="result() as plan" data-results class="space-y-8" aria-labelledby="annual-results">
+      <header class="flex flex-wrap items-end justify-between gap-4">
+        <div><h2 id="annual-results" class="text-2xl font-semibold">{{ countryName(plan.input.country) }} · {{ plan.year }}</h2><p class="mt-2 text-gray-600">{{ ('optimizer.' + plan.strategy) | translate }}</p></div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" data-action="regenerate" class="secondary-button" (click)="regenerate()" [disabled]="loading()">{{ 'optimizer.regenerate' | translate }}</button>
+          <button type="button" class="secondary-button" (click)="reset()" data-action="reset">{{ 'optimizer.reset' | translate }}</button>
+          <button *ngIf="authenticated()" type="button" data-action="save" class="primary-button" (click)="save()" [disabled]="saving() || !plan.constraintsSatisfied">{{ 'common.save' | translate }}</button>
+        </div>
+      </header>
+      <p *ngIf="plan.status === 'infeasible'" role="alert" class="rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-950">{{ 'optimizer.infeasible' | translate }}</p>
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-5 border-y border-gray-200 py-6 lg:grid-cols-4">
+        <div><dt class="text-sm text-gray-600">{{ 'optimizer.used' | translate }}</dt><dd class="mt-1 text-2xl font-semibold tabular-nums">{{ plan.usedDays }} / {{ plan.availableDays }}</dd></div>
+        <div><dt class="text-sm text-gray-600">{{ 'optimizer.calendarDays' | translate }}</dt><dd class="mt-1 text-2xl font-semibold tabular-nums">{{ plan.totalDaysOff }}</dd></div>
+        <div><dt class="text-sm text-gray-600">{{ 'optimizer.remaining' | translate }}</dt><dd class="mt-1 text-2xl font-semibold tabular-nums">{{ plan.remainingDays }}</dd></div>
+        <div><dt class="text-sm text-gray-600">{{ 'optimizer.longest' | translate }}</dt><dd class="mt-1 text-2xl font-semibold tabular-nums">{{ plan.longestVacation }}</dd></div>
+      </dl>
+      <p class="max-w-prose text-sm text-gray-600">{{ 'optimizer.metricsHelp' | translate }}</p>
+      <div class="grid gap-8 xl:grid-cols-[minmax(18rem,1fr)_minmax(0,2fr)]">
+        <section class="min-w-0 space-y-4" aria-labelledby="annual-recommendations">
+          <h3 id="annual-recommendations" class="text-xl font-semibold">{{ 'optimizer.recommendations' | translate }} ({{ plan.breakCount }})</h3>
+          <p *ngIf="!plan.suggestions.length" class="text-gray-600">{{ 'optimizer.empty' | translate }}</p>
+          <ol class="space-y-4">
+            <li *ngFor="let interval of plan.suggestions" class="rounded-xl border border-gray-200 bg-white p-5" [class.selected-break]="selected() === key(interval)">
+              <button type="button" (click)="chooseBreak(interval)" class="min-h-11 text-left font-semibold underline underline-offset-4">{{ formatDate(interval.startDate) }} – {{ formatDate(interval.endDate) }}</button>
+              <p class="mt-2 text-sm text-gray-700">{{ interval.vacationDaysUsed }} {{ 'optimizer.leaveDays' | translate }} · {{ interval.totalDaysOff }} {{ 'optimizer.breakDays' | translate }}</p>
+              <p class="mt-2 text-sm text-gray-600">{{ ('optimizer.reason_' + interval.reasonCode) | translate }}</p>
+              <p class="mt-3 text-sm"><strong>{{ 'optimizer.requestDates' | translate }}:</strong> {{ interval.leaveDates.join(', ') || t('none') }}</p>
+              <p *ngIf="interval.publicHolidays.length" class="mt-2 text-sm"><strong>{{ 'optimizer.publicHoliday' | translate }}:</strong> <span *ngFor="let holiday of interval.publicHolidays; let last = last">{{ formatDate(holiday.date) }} {{ holiday.names.join(' / ') }}{{ last ? '' : '; ' }}</span></p>
+              <p *ngIf="interval.approvedLeave.length" class="mt-2 text-sm"><strong>{{ 'optimizer.approved' | translate }}:</strong> {{ interval.approvedLeave.join(', ') }}</p>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <button type="button" class="small-button" (click)="accept(interval)" [disabled]="accepted().has(key(interval))">{{ (accepted().has(key(interval)) ? 'optimizer.accepted' : 'optimizer.accept') | translate }}</button>
+                <button type="button" data-action="lock" class="small-button" (click)="lock(interval)">{{ (interval.locked ? 'optimizer.unlock' : 'optimizer.lock') | translate }}</button>
+                <button type="button" data-action="reject" class="small-button" (click)="reject(interval)" [disabled]="interval.locked">{{ 'optimizer.reject' | translate }}</button>
+                <button type="button" class="small-button" (click)="startEdit(interval)">{{ 'optimizer.adjust' | translate }}</button>
+              </div>
+              <form *ngIf="editing() === key(interval)" ngNativeValidate (ngSubmit)="applyEdit(interval)" class="mt-4 space-y-3 border-t border-gray-200 pt-4">
+                <label class="field">{{ 'optimizer.startDate' | translate }}<input name="editStart" type="date" [(ngModel)]="editStart" [min]="plan.year + '-01-01'" [max]="plan.year + '-12-31'" required /></label>
+                <label class="field">{{ 'optimizer.endDate' | translate }}<input name="editEnd" type="date" [(ngModel)]="editEnd" [min]="plan.year + '-01-01'" [max]="plan.year + '-12-31'" required /></label>
+                <button type="submit" class="small-button">{{ 'optimizer.applyAndLock' | translate }}</button>
+                <button type="button" class="small-button" (click)="editing.set('')">{{ 'common.cancel' | translate }}</button>
+              </form>
+            </li>
+          </ol>
+        </section>
+        <section class="min-w-0 space-y-5" aria-labelledby="annual-calendar">
+          <h3 id="annual-calendar" class="text-xl font-semibold">{{ 'optimizer.calendar' | translate }}</h3>
+          <ul class="flex flex-wrap gap-x-4 gap-y-2 text-xs leading-relaxed text-gray-700" [attr.aria-label]="t('legend')">
+            <li>H · {{ 'optimizer.publicHoliday' | translate }}</li><li>C · {{ 'optimizer.companyHoliday' | translate }}</li><li>A · {{ 'optimizer.approved' | translate }}</li><li>L · {{ 'optimizer.proposed' | translate }}</li><li>X · {{ 'optimizer.excluded' | translate }}</li><li>N · {{ 'optimizer.nonWorking' | translate }}</li>
+          </ul>
+          <p class="text-xs text-gray-600">{{ 'optimizer.calendarHelp' | translate }}</p>
+          <p *ngIf="selectedDay() as day" role="status" class="text-sm text-gray-700">{{ dayLabel(day) }}</p>
+          <div class="grid gap-5 md:grid-cols-2">
+            <section *ngFor="let month of calendarMonths()" data-calendar-month class="min-w-0 rounded-xl border border-gray-200 bg-white p-3" [attr.aria-label]="month.name">
+              <h4 class="mb-3 text-base font-semibold capitalize">{{ month.name }}</h4>
+              <div class="month-grid mb-1 text-center text-xs text-gray-600" aria-hidden="true"><span *ngFor="let weekday of weekdayNumbers">{{ weekdayLabel(weekday) }}</span></div>
+              <div class="month-grid">
+                <ng-container *ngFor="let day of month.cells">
+                  <button *ngIf="day; else emptyDay" type="button" [id]="'annual-day-' + day.date" [attr.data-date]="day.date" [attr.aria-label]="dayLabel(day)" [attr.aria-pressed]="inSelected(day)" (click)="chooseDay(day)" (keydown)="navigateDay($event, day)" class="calendar-day" [class.day-leave]="day.recommendedLeave" [class.day-holiday]="day.publicHoliday" [class.day-approved]="day.approvedLeave" [class.day-excluded]="day.excluded" [class.day-nonworking]="day.regularNonWorking" [class.day-selected]="inSelected(day)"><span>{{ dayNumber(day.date) }}</span><small aria-hidden="true">{{ dayMarker(day) }}</small></button>
+                  <ng-template #emptyDay><span aria-hidden="true"></span></ng-template>
+                </ng-container>
+              </div>
+            </section>
+          </div>
+        </section>
+      </div>
+      <section class="space-y-3 border-t border-gray-200 pt-6 text-sm text-gray-700" aria-labelledby="annual-assumptions">
+        <h3 id="annual-assumptions" class="font-semibold">{{ 'optimizer.assumptions' | translate }}</h3>
+        <p *ngIf="plan.constraintsSatisfied">{{ 'optimizer.constraintsOk' | translate }}</p>
+        <p>{{ 'optimizer.objectiveHelp' | translate }}</p>
+        <p>{{ 'optimizer.minimumBreak' | translate }}: {{ plan.constraints['minBreakLength'] }} · {{ 'optimizer.maximumBreak' | translate }}: {{ plan.constraints['maxBreakLength'] }} · {{ 'optimizer.maximumBreaks' | translate }}: {{ plan.constraints['maxBreaks'] }} · {{ 'optimizer.separation' | translate }}: {{ plan.constraints['minSeparationDays'] }}</p>
+        <ul class="list-disc space-y-2 pl-5"><li>{{ 'optimizer.limitJurisdiction' | translate }}</li><li>{{ 'optimizer.limitBreaks' | translate }}</li><li>{{ 'optimizer.limitApproved' | translate }}</li></ul>
+        <p *ngIf="plan.input.horizon as horizon">{{ 'optimizer.startDate' | translate }}: {{ formatDate(horizon.startDate) }} · {{ 'optimizer.endDate' | translate }}: {{ formatDate(horizon.endDate) }}</p>
+        <p>{{ 'optimizer.source' | translate }}: <a [href]="plan.source.url" class="underline underline-offset-4" rel="external">{{ plan.source.name }}</a> · {{ plan.source.region || t('nationwide') }} · {{ formatRetrieved(plan.source.retrievedAt) }} UTC</p>
+        <a [href]="plan.previewUrl" class="inline-block min-h-11 py-3 underline underline-offset-4">{{ 'optimizer.shareBasic' | translate }}</a>
+        <p *ngIf="!authenticated()">{{ 'optimizer.saveExplanation' | translate }} <a [routerLink]="['/' + translation.currentLang() + '/plans']" class="underline underline-offset-4">{{ 'optimizer.accountPlans' | translate }}</a>.</p>
+        <div *ngIf="premium()" class="flex flex-wrap gap-2">
+          <button *ngIf="savedId()" type="button" data-action="export-leave" class="secondary-button" [disabled]="exporting()" (click)="export('leave')">{{ 'optimizer.exportLeave' | translate }}</button>
+          <button *ngIf="savedId()" type="button" class="secondary-button" [disabled]="exporting()" (click)="export('breaks')">{{ 'optimizer.exportBreaks' | translate }}</button>
+          <p *ngIf="!savedId()">{{ 'optimizer.saveBeforeExport' | translate }}</p>
+        </div>
+        <p>{{ 'optimizer.exportHelp' | translate }}</p>
+      </section>
+    </section>
+
+    <section *ngIf="savedPlans().length" class="space-y-3 border-t border-gray-200 pt-6" aria-labelledby="annual-saved">
+      <h2 id="annual-saved" class="text-xl font-semibold">{{ 'optimizer.savedPlans' | translate }}</h2>
+      <ul class="flex flex-wrap gap-2"><li *ngFor="let saved of savedPlans()"><button type="button" class="secondary-button" (click)="load(saved)" data-action="load-saved">{{ saved.title || countryName(saved.input.country) + ' · ' + saved.input.year }} · {{ saved.result.usedDays }}/{{ saved.input.availableDays }}</button></li></ul>
+    </section>
+    <footer class="border-t border-gray-200 pt-5 text-sm text-gray-600">
+      <label class="inline-flex min-h-11 cursor-pointer items-start gap-3 py-2"><input name="analytics" type="checkbox" [(ngModel)]="analytics" (ngModelChange)="analyticsChanged()" class="mt-1" /><span>{{ 'optimizer.analyticsConsent' | translate }}</span></label>
+      <nav class="flex flex-wrap gap-x-5" [attr.aria-label]="t('opportunities')"><a href="/en/norway/2027" class="inline-block min-h-11 py-3 underline underline-offset-4">Norway 2027</a><a href="/en/sweden/2027" class="inline-block min-h-11 py-3 underline underline-offset-4">Sweden 2027</a><a href="/nl/nederland/2027" class="inline-block min-h-11 py-3 underline underline-offset-4">Nederland 2027</a></nav>
+      <p><a href="/optimizer-api.html" class="inline-block min-h-11 py-3 underline underline-offset-4">{{ 'optimizer.apiDocs' | translate }}</a></p>
+    </footer>
+  </div>
+</main>

@@ -814,7 +814,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     } catch (err: any) {
       console.error('Auth error:', err);
-      if (err.error?.error?.includes('already has a passkey')) {
+      if (err.status === 403 && this.authMode === 'register') {
+        this.switchAuthMethod('email');
+        this.toast(this.translationService.translate('auth.emailLinkDescription'));
+      } else if (err.error?.error?.includes('already has a passkey')) {
         this.toast('This email already has a passkey. Please sign in.');
         this.authMode = 'signin';
       } else if (err.error?.error?.includes('No passkey found')) {
