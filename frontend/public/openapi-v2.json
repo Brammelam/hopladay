@@ -243,7 +243,7 @@
       "post": {
         "operationId": "optimizeAnnualLeave",
         "summary": "Calculate a deterministic annual-leave plan without saving it",
-        "description": "Basic balanced planning is anonymous. Non-balanced strategies or the presence of advanced setting fields require a verified Premium session. Never pass isPremium or userId as proof of entitlement. Infeasibility is a 200 result with status=infeasible, constraintsSatisfied=false and violations.",
+        "description": "Basic maximum_time_off (default) and explicit balanced planning are anonymous. The longest_vacation strategy or the presence of advanced setting fields require a verified Premium session. Never pass isPremium or userId as proof of entitlement. Infeasibility is a 200 result with status=infeasible, constraintsSatisfied=false and violations.",
         "security": [
           {},
           {
@@ -261,7 +261,7 @@
                 "country": "NO",
                 "year": 2027,
                 "availableDays": 20,
-                "strategy": "balanced",
+                "strategy": "maximum_time_off",
                 "lang": "en"
               }
             }
@@ -328,7 +328,7 @@
             }
           },
           "503": {
-            "description": "Holiday data or service dependency unavailable.",
+            "description": "Holiday data or service dependency unavailable. OPTIMIZATION_CAPACITY_EXCEEDED indicates a supported custom configuration exceeds the calculation capacity; shorten its horizon or relax a break constraint. No partial plan is returned.",
             "content": {
               "application/json": {
                 "schema": {
@@ -344,7 +344,7 @@
       "post": {
         "operationId": "saveOptimizerPlan",
         "summary": "Generate and save a new owner-scoped version 2 snapshot",
-        "description": "Requires a verified session. Free users can save basic balanced plans. Advanced inputs still require Premium. This creates a separate version 2 record; it does not overwrite a legacy plan or recalculate a previously saved record. Infeasible plans cannot be saved.",
+        "description": "Requires a verified session. Free users can save basic maximum_time_off or balanced plans. Advanced inputs still require Premium. This creates a separate version 2 record; it does not overwrite a legacy plan or recalculate a previously saved record. Infeasible plans cannot be saved.",
         "security": [
           {
             "BearerAuth": []
@@ -375,7 +375,7 @@
                   "country": "NO",
                   "year": 2027,
                   "availableDays": 20,
-                  "strategy": "balanced",
+                  "strategy": "maximum_time_off",
                   "lang": "en"
                 },
                 "title": "My 2027 plan"
@@ -444,7 +444,7 @@
             }
           },
           "503": {
-            "description": "Holiday data or service dependency unavailable.",
+            "description": "Holiday data or service dependency unavailable. OPTIMIZATION_CAPACITY_EXCEEDED indicates a supported custom configuration exceeds the calculation capacity; shorten its horizon or relax a break constraint. No partial plan is returned.",
             "content": {
               "application/json": {
                 "schema": {
@@ -837,13 +837,13 @@
           },
           "strategy": {
             "type": "string",
-            "description": "Only balanced is anonymous/free. Both alternatives require verified Premium.",
+            "description": "maximum_time_off is the anonymous/free default; balanced is also free when explicitly selected. longest_vacation requires verified Premium.",
             "enum": [
               "maximum_time_off",
               "longest_vacation",
               "balanced"
             ],
-            "default": "balanced"
+            "default": "maximum_time_off"
           },
           "horizon": {
             "type": "object",
@@ -934,14 +934,16 @@
           "minBreakLength": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 90,
-            "description": "Premium. Default 3 inclusive calendar days."
+            "maximum": 366,
+            "description": "Premium when supplied. Default 1 for maximum_time_off and longest_vacation; 3 for explicitly selected balanced. Inclusive calendar days.",
+            "default": 1
           },
           "maxBreakLength": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 90,
-            "description": "Premium. Must be >= minBreakLength. Default 21 for balanced; 90 otherwise."
+            "maximum": 366,
+            "description": "Premium when supplied. Default 366 for maximum_time_off and longest_vacation; 21 for explicitly selected balanced. Inclusive calendar days.",
+            "default": 366
           },
           "preferredBreakLength": {
             "type": "integer",
@@ -952,14 +954,16 @@
           "maxBreaks": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 12,
-            "description": "Premium. Default 4 for balanced; 12 otherwise."
+            "maximum": 366,
+            "description": "Premium when supplied. Default 366 for maximum_time_off and longest_vacation; 4 for explicitly selected balanced. No shorter default break-count cap.",
+            "default": 366
           },
           "minSeparationDays": {
             "type": "integer",
             "minimum": 1,
             "maximum": 365,
-            "description": "Premium. Unselected calendar dates between breaks. Default 21 for balanced; 1 otherwise."
+            "description": "Premium when supplied. Default 1 for maximum_time_off and longest_vacation; 21 for explicitly selected balanced. Unselected calendar dates between breaks.",
+            "default": 1
           },
           "seasonalWeight": {
             "type": "integer",
@@ -1012,7 +1016,7 @@
                 "endDate"
               ]
             },
-            "maxItems": 12,
+            "maxItems": 366,
             "description": "Fixed intervals retained during regeneration and charged only for newly required leave. They must fit all hard constraints and include adjacent non-working dates."
           }
         },
@@ -1070,17 +1074,17 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 366,
-            "description": "Union of distinct calendar dates in selected breaks, not all annual days off."
+            "description": "Union of distinct calendar dates in selected breaks containing new leave, approved leave or an explicit lock; unrelated weekends and holidays do not count."
           },
           "longestVacation": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 90
+            "maximum": 366
           },
           "breakCount": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 12
+            "maximum": 366
           },
           "suggestions": {
             "type": "array",
@@ -1100,12 +1104,12 @@
                 "totalDaysOff": {
                   "type": "integer",
                   "minimum": 1,
-                  "maximum": 90
+                  "maximum": 366
                 },
                 "vacationDaysUsed": {
                   "type": "integer",
                   "minimum": 0,
-                  "maximum": 90
+                  "maximum": 366
                 },
                 "leaveDates": {
                   "type": "array",
@@ -1182,7 +1186,7 @@
                 "reason"
               ]
             },
-            "maxItems": 12
+            "maxItems": 366
           },
           "calendar": {
             "type": "array",
@@ -1274,12 +1278,12 @@
               "minBreakLength": {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 90
+                "maximum": 366
               },
               "maxBreakLength": {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 90
+                "maximum": 366
               },
               "preferredBreakLength": {
                 "type": "integer",
@@ -1289,7 +1293,7 @@
               "maxBreaks": {
                 "type": "integer",
                 "minimum": 1,
-                "maximum": 12
+                "maximum": 366
               },
               "minSeparationDays": {
                 "type": "integer",
@@ -1361,13 +1365,13 @@
                 "properties": {
                   "maxBreakLength": {
                     "type": "integer",
-                    "minimum": 90,
-                    "maximum": 90
+                    "minimum": 366,
+                    "maximum": 366
                   },
                   "maxBreaks": {
                     "type": "integer",
-                    "minimum": 12,
-                    "maximum": 12
+                    "minimum": 366,
+                    "maximum": 366
                   }
                 },
                 "required": [
@@ -1411,6 +1415,17 @@
             "enum": [
               "basic-inputs-only"
             ]
+          },
+          "unusedAllowanceReason": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "infeasible_constraints",
+              "balanced_objective",
+              "no_additional_leave_within_optimal_plan_and_constraints",
+              null
+            ],
+            "description": "Null when all allowance is used. Otherwise identifies infeasible hard constraints, the explicit balanced score objective, or inability to allocate additional leave within the optimal plan and constraints."
           }
         },
         "required": [
@@ -1435,7 +1450,8 @@
           "source",
           "regions",
           "previewUrl",
-          "linkScope"
+          "linkScope",
+          "unusedAllowanceReason"
         ]
       },
       "HolidaySource": {

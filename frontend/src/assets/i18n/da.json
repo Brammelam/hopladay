@@ -387,6 +387,12 @@
     "lastUpdated": "Senest opdateret:"
   },
   "optimizer": {
+    "errorCapacity": "Denne kombination af krav er for kompleks at beregne. Forkort planlægningsperioden, eller hæv eller fjern grænsen for antallet af friperioder, og beregn igen.",
+    "unusedBalanced": "Den balancerede strategi kan lade feriedage være ubrugte for at sprede friperioderne. Vælg maksimal fritid for at prioritere det samlede antal fridage.",
+    "unusedInfeasible": "Alle krav kan ikke opfyldes. Juster dem, og beregn igen.",
+    "unusedConstraints": "Der kan ikke bruges flere feriedage i denne optimale plan med de valgte krav. Gennemgå udelukkede datoer, arbejdsdage og grænser for friperioder.",
+    "maximumDefaultsHelp": "For maksimal fritid kan maksimal længde, antal friperioder og afstand stå tomme for at bruge standardværdierne for hele året.",
+
     "accept": "Accepter",
     "accepted": "Accepteret",
     "accountPlans": "Konto og gemte planer",

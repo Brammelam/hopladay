@@ -31,7 +31,7 @@ describe('Annual leave planner', () => {
     spyOn(TestBed.inject(AuthService), 'getSessionToken').and.returnValue(null);
     spyOn(TestBed.inject(TranslationService), 'translate').and.callFake(key => key);
   });
-  afterEach(() => http.verify());
+  afterEach(() => { http.match(r => r.url.includes('/v2/holidays/')).forEach(r => { if (!r.cancelled) r.flush({ regions: [] }); }); http.verify(); });
   async function open(premium = false) {
     const harness = await RouterTestingHarness.create('/en/optimize');
     http.expectOne(`${environment.apiUrl}/v2/session`).flush({ authenticated: premium, premium });
@@ -44,6 +44,48 @@ describe('Annual leave planner', () => {
     http.expectOne(`${environment.apiUrl}/v2/optimize`).flush(result);
     harness.detectChanges();
   }
+  it('loads German subdivisions before the first calculation', async () => {
+    const harness = await open();
+    const component = await harness.navigateByUrl('/en/optimize', AnnualPlannerComponent);
+    const country = harness.routeNativeElement!.querySelector<HTMLSelectElement>('select[name="country"]')!;
+    country.value = 'DE'; country.dispatchEvent(new Event('change')); harness.detectChanges();
+    const catalog = http.expectOne(r => r.url.includes('/v2/holidays/') && r.params.get('country') === 'DE');
+    catalog.flush({ regions: ['DE-BY', 'DE-BE'] }); harness.detectChanges();
+    expect(harness.routeNativeElement!.querySelector('select[name="region"]')!.textContent).toContain('Bayern');
+    http.expectNone(`${environment.apiUrl}/v2/optimize`);
+    component.region = 'DE-BY'; component.generate();
+    const calculate = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(calculate.request.body.region).toBe('DE-BY'); calculate.flush(result);
+  });
+  it('explains why a feasible plan leaves allowance unused', async () => {
+    const harness = await open();
+    harness.routeNativeElement?.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    http.expectOne(`${environment.apiUrl}/v2/optimize`).flush({ ...result, unusedAllowanceReason: 'no_additional_leave_within_optimal_plan_and_constraints' });
+    harness.detectChanges();
+    expect(harness.routeNativeElement?.querySelector('[data-unused-allowance]')?.textContent).toContain('optimizer.unusedConstraints');
+  });
+  it('defaults to free maximum time off without hidden break limits', async () => {
+    const harness = await open(true);
+    harness.routeNativeElement?.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    const request = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(request.request.body.strategy).toBe('maximum_time_off');
+    expect(request.request.body.minBreakLength).toBe(1);
+    expect(request.request.body.maxBreakLength).toBeUndefined();
+    expect(request.request.body.maxBreaks).toBeUndefined();
+    expect(request.request.body.minSeparationDays).toBeUndefined();
+    request.flush(result);
+  });
+  it('uses unrestricted API defaults for the Premium longest-vacation strategy', async () => {
+    const harness = await open(true);
+    const component = await harness.navigateByUrl('/en/optimize', AnnualPlannerComponent);
+    component.strategy = 'longest_vacation'; component.strategyChanged(); component.generate();
+    const request = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(request.request.body.strategy).toBe('longest_vacation');
+    expect(request.request.body.minBreakLength).toBe(1);
+    expect(request.request.body.maxBreakLength).toBeUndefined();
+    expect(request.request.body.maxBreaks).toBeUndefined();
+    expect(request.request.body.minSeparationDays).toBeUndefined(); request.flush(result);
+  });
   it('generates anonymously, displays twelve calendar months and exact leave labels', async () => {
     const harness = await open();
     await generate(harness);
@@ -74,13 +116,75 @@ describe('Annual leave planner', () => {
     expect(req.request.body.excludedDates).toEqual(['2027-05-06', '2027-05-07', '2027-05-08', '2027-05-09']);
     req.flush({ ...result, suggestions: [], breakCount: 0, usedDays: 0, totalDaysOff: 0 });
   });
+  it('clears every year-specific constraint after rejecting a German 2027 break and switching to 2028', async () => {
+    const harness = await open(true);
+    const component = await harness.navigateByUrl('/en/optimize', AnnualPlannerComponent);
+    component.country = 'DE'; component.year = 2027;
+    await generate(harness);
+    component.reject(component.result()!.suggestions[0]);
+    http.expectOne(`${environment.apiUrl}/v2/optimize`).flush(result);
+    component.approvedText = '2027-07-01'; component.companyText = '2027-12-24';
+    component.holidayWorkingText = '2027-05-01'; component.horizonStart = '2027-01-01'; component.horizonEnd = '2027-12-31';
+    component.year = 2028; component.yearChanged(); component.generate();
+    const changed = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(changed.request.body.year).toBe(2028);
+    expect(changed.request.body.excludedDates).toBeUndefined();
+    expect(changed.request.body.approvedLeave).toBeUndefined();
+    expect(changed.request.body.companyHolidays).toEqual([]);
+    expect(changed.request.body.holidayWorkingDates).toEqual([]);
+    expect(changed.request.body.horizon).toBeUndefined();
+    expect(changed.request.body.lockedBreaks).toBeUndefined();
+    changed.flush({ ...result, year: 2028 });
+  });
+  it('reset recovers the last successful configuration after an invalid form submission', async () => {
+    const harness = await open(); await generate(harness);
+    const component = await harness.navigateByUrl('/en/optimize', AnnualPlannerComponent);
+    component.excludedText = '2026-01-01'; component.generate();
+    http.expectOne(`${environment.apiUrl}/v2/optimize`).flush({}, { status: 400, statusText: 'Bad Request' });
+    component.reset();
+    const reset = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(reset.request.body.excludedDates).toBeUndefined(); reset.flush(result);
+  });
   it('keeps Premium strategies and exports unavailable to anonymous users', async () => {
     const harness = await open();
     await generate(harness);
     const premiumOptions = harness.routeNativeElement?.querySelectorAll<HTMLOptionElement>('option[data-premium]');
-    expect(premiumOptions?.length).toBe(2);
+    expect(premiumOptions?.length).toBe(1);
     expect(Array.from(premiumOptions ?? []).every(option => option.disabled)).toBeTrue();
     expect(harness.routeNativeElement?.querySelector('[data-action="export-leave"]')).toBeNull();
+  });
+  it('explains capacity rejection separately from unavailable holiday data', async () => {
+    const harness = await open();
+    harness.routeNativeElement?.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    http.expectOne(`${environment.apiUrl}/v2/optimize`).flush({ error: { code: 'OPTIMIZATION_CAPACITY_EXCEEDED' } }, { status: 503, statusText: 'Unavailable' });
+    harness.detectChanges();
+    expect(harness.routeNativeElement?.querySelector('[role="alert"]')?.textContent).toContain('optimizer.errorCapacity');
+  });
+  it('migrates only legacy automatic balanced limits while preserving dated constraints', async () => {
+    const lockedBreaks = [{ startDate: '2027-05-06', endDate: '2027-05-09' }];
+    localStorage.setItem('hopladay_annual_settings', JSON.stringify({ country: 'DE', year: 2027, strategy: 'balanced', minBreakLength: 3, maxBreakLength: 21, maxBreaks: 4, minSeparationDays: 21, approvedText: '2027-07-01', excludedText: '2027-04-01', companyText: '2027-12-24', lockedBreaks }));
+    const harness = await open(true);
+    const component = await harness.navigateByUrl('/en/optimize', AnnualPlannerComponent);
+    component.generate();
+    const request = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(request.request.body.strategy).toBe('maximum_time_off');
+    expect(request.request.body.minBreakLength).toBe(1);
+    expect(request.request.body.maxBreakLength).toBeUndefined();
+    expect(request.request.body.maxBreaks).toBeUndefined();
+    expect(request.request.body.minSeparationDays).toBeUndefined();
+    expect(request.request.body.approvedLeave).toEqual(['2027-07-01']);
+    expect(request.request.body.excludedDates).toEqual(['2027-04-01']);
+    expect(request.request.body.companyHolidays).toEqual(['2027-12-24']);
+    expect(request.request.body.lockedBreaks).toEqual(lockedBreaks); request.flush(result);
+  });
+  it('preserves explicitly chosen balanced defaults with the new settings marker', async () => {
+    localStorage.setItem('hopladay_annual_settings', JSON.stringify({ country: 'DE', year: 2027, strategy: 'balanced', minBreakLength: 3, maxBreakLength: 21, maxBreaks: 4, minSeparationDays: 21, editedLimits: [] }));
+    const harness = await open(true);
+    const component = await harness.navigateByUrl('/en/optimize', AnnualPlannerComponent);
+    component.generate();
+    const request = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(request.request.body.strategy).toBe('balanced');
+    expect(request.request.body.maxBreakLength).toBe(21); request.flush(result);
   });
   it('shows recoverable API errors without keeping stale metrics', async () => {
     const harness = await open();
@@ -160,6 +264,53 @@ describe('Annual leave planner', () => {
     http.expectOne(`${environment.apiUrl}/v2/optimize`).flush(result);
   });
 
+  it('restores twenty accepted and locked breaks without silently discarding them', async () => {
+    const lockedBreaks = Array.from({ length: 20 }, (_, i) => {
+      const date = `2027-01-${String(i + 1).padStart(2, '0')}`;
+      return { startDate: date, endDate: date };
+    });
+    const accepted = lockedBreaks.map(interval => `${interval.startDate}:${interval.endDate}`);
+    localStorage.setItem('hopladay_annual_settings', JSON.stringify({ country: 'DE', year: 2027, strategy: 'maximum_time_off', lockedBreaks, accepted }));
+    const harness = await open();
+    const component = await harness.navigateByUrl('/en/optimize', AnnualPlannerComponent);
+    expect(component.accepted().size).toBe(20);
+    component.generate();
+    const request = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(request.request.body.lockedBreaks).toEqual(lockedBreaks); request.flush(result);
+    component.regenerate();
+    const again = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(again.request.body.lockedBreaks).toEqual(lockedBreaks); again.flush(result);
+  });
+  it('accepts and locks twenty breaks, then preserves them through regeneration and reload', async () => {
+    const harness = await open();
+    let component = await harness.navigateByUrl('/en/optimize', AnnualPlannerComponent);
+    const suggestions = Array.from({ length: 20 }, (_, i) => ({ ...result.suggestions[0], startDate: `2027-01-${String(i + 1).padStart(2, '0')}`, endDate: `2027-01-${String(i + 1).padStart(2, '0')}`, reasonCode: 'balanced' as const }));
+    component.generate(); http.expectOne(`${environment.apiUrl}/v2/optimize`).flush({ ...result, suggestions });
+    for (const interval of suggestions) {
+      component.accept(interval); component.lock(interval);
+      http.expectOne(`${environment.apiUrl}/v2/optimize`).flush({ ...result, suggestions });
+    }
+    component.regenerate();
+    const regenerated = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(regenerated.request.body.lockedBreaks.length).toBe(20); regenerated.flush({ ...result, suggestions });
+    await harness.navigateByUrl('/en/auth/verify', AuthVerifyStub);
+    component = await harness.navigateByUrl('/en/optimize', AnnualPlannerComponent);
+    http.expectOne(`${environment.apiUrl}/v2/session`).flush({ authenticated: false, premium: false });
+    expect(component.accepted().size).toBe(20);
+    component.generate();
+    const restored = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(restored.request.body.lockedBreaks.length).toBe(20); restored.flush({ ...result, suggestions });
+  });
+  it('keeps explicitly edited break limits when changing strategy', async () => {
+    const harness = await open(true);
+    const component = await harness.navigateByUrl('/en/optimize', AnnualPlannerComponent);
+    const maximum = harness.routeNativeElement!.querySelector<HTMLInputElement>('input[name="maxBreakLength"]')!;
+    maximum.value = '14'; maximum.dispatchEvent(new Event('input')); harness.detectChanges();
+    component.strategy = 'balanced'; component.strategyChanged();
+    component.strategy = 'maximum_time_off'; component.strategyChanged(); component.generate();
+    const request = http.expectOne(`${environment.apiUrl}/v2/optimize`);
+    expect(request.request.body.maxBreakLength).toBe(14); request.flush(result);
+  });
   it('restores valid same-year locks, rejected dates and advanced settings', async () => {
     localStorage.setItem('hopladay_annual_settings', JSON.stringify({ country: 'NO', year: 2027, availableDays: 20, strategy: 'balanced', lockedBreaks: [{ startDate: '2027-05-06', endDate: '2027-05-09' }], excludedText: '2027-04-01', workingDaysText: '0,1,2,3,4', companyText: '2027-12-24', maxBreakLength: 30 }));
     const harness = await open(true);
@@ -169,6 +320,7 @@ describe('Annual leave planner', () => {
     expect(restored.request.body.excludedDates).toEqual(['2027-04-01']);
     expect(restored.request.body.workingDays).toEqual([0, 1, 2, 3, 4]);
     expect(restored.request.body.maxBreakLength).toBe(30);
+    expect(restored.request.body.strategy).toBe('balanced');
     restored.flush(result);
   });
   it('does not inherit private stored constraints through a shared basic-input link and waits for session verification', async () => {
@@ -185,7 +337,7 @@ describe('Annual leave planner', () => {
     expect(request.request.body.lockedBreaks).toBeUndefined();
     expect(request.request.body.companyHolidays).toEqual([]);
     expect(request.request.body.workingDays).toEqual([1, 2, 3, 4, 5]);
-    expect(request.request.body.maxBreakLength).toBe(90);
+    expect(request.request.body.maxBreakLength).toBeUndefined();
     request.flush(result); harness.detectChanges();
   });
 

@@ -150,9 +150,8 @@ export class AuthVerifyComponent implements OnInit, OnDestroy {
     this.authService.verifyMagicLink(token, browserId).subscribe({
       next: (result) => {
         if (result.verified && result.user) {
-          // Clear any anonymous user data
-          this.userService.clearCurrentUser();
-          
+          // Replace the profile while retaining the session issued by verification.
+          // clearCurrentUser is reserved for logout and would erase the new bearer.
           // Set authenticated user
           this.userService.setCurrentUser(result.user as any);
           

@@ -31,11 +31,11 @@ test('production server serves readable localized HTML and revalidates mutable d
       assert.equal(response.status, 200, path);
       assert.match(response.headers.get('cache-control'), /max-age=0.*must-revalidate/, path);
     }
-    for (const path of ['/en/norway/2027','/en/norway/2027/','/en/sweden/2027','/nl/nederland/2027']) {
+    for (const path of ['/en/norway/2027','/en/norway/2027/','/en/sweden/2027','/nl/nederland/2027','/en/norway/2027/index.html','/en/sweden/2027/index.html','/nl/nederland/2027/index.html']) {
       const response = await fetch(base+path);
       assert.equal(response.status,200);
       const page = await response.text();
-      assert.ok(page.includes(`href="https://www.hopladay.com${path.replace(/\/$/,'')}"`));
+      assert.ok(page.includes(`href="https://www.hopladay.com${path.replace(/\/index\.html$/, '').replace(/\/$/,'')}/index.html"`));
       assert.ok(page.includes('2027-'));
       assert.ok(!page.includes('<app-root'));
     }

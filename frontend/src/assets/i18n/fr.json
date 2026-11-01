@@ -387,6 +387,12 @@
     "lastUpdated": "Dernière mise à jour :"
   },
   "optimizer": {
+    "errorCapacity": "Cette combinaison de contraintes est trop complexe à calculer. Raccourcissez la période de planification ou augmentez ou supprimez le nombre maximal de pauses, puis relancez le calcul.",
+    "unusedBalanced": "La stratégie équilibrée peut conserver des jours de congé pour espacer les pauses. Choisissez le maximum de temps libre pour privilégier le nombre total de jours libres.",
+    "unusedInfeasible": "Toutes les contraintes ne peuvent pas être satisfaites. Modifiez-les et relancez le calcul.",
+    "unusedConstraints": "Ce plan optimal ne permet pas de poser davantage de congés avec ces contraintes. Vérifiez les dates exclues, les jours travaillés et les limites des pauses.",
+    "maximumDefaultsHelp": "Pour maximiser le temps libre, laissez la durée maximale, le nombre de pauses et leur espacement vides pour utiliser les valeurs par défaut sur toute l’année.",
+
     "accept": "Accepter",
     "accepted": "Accepté",
     "accountPlans": "Compte et plans enregistrés",

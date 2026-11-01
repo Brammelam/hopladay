@@ -387,6 +387,12 @@
     "lastUpdated": "Última actualización:"
   },
   "optimizer": {
+    "errorCapacity": "Esta combinación de condiciones es demasiado compleja para calcularla. Acorta el período de planificación o aumenta o elimina el número máximo de descansos y vuelve a calcular.",
+    "unusedBalanced": "La estrategia equilibrada puede dejar días sin usar para espaciar los descansos. Elige el máximo tiempo libre para priorizar el total de días libres.",
+    "unusedInfeasible": "No se pueden cumplir todas las condiciones. Ajústalas y vuelve a calcular.",
+    "unusedConstraints": "No se pueden usar más vacaciones en este plan óptimo con estas condiciones. Revisa las fechas excluidas, los días laborables y los límites de los descansos.",
+    "maximumDefaultsHelp": "Para maximizar el tiempo libre, deja vacíos la duración máxima, el número de descansos y la separación para usar los valores predeterminados del año completo.",
+
     "accept": "Aceptar",
     "accepted": "Aceptado",
     "accountPlans": "Cuenta y planes guardados",

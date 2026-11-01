@@ -3,7 +3,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { UserService } from '../services/user.service';
+import { ApiService } from '../services/api';
 import { DashboardComponent } from './dashboard';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
@@ -39,4 +41,31 @@ describe('Existing-account passkey registration', () => {
     expect(toast).toHaveBeenCalledWith('Use the secure email link to verify ownership.', 'info');
     expect(send).not.toHaveBeenCalled();
   });
+  it('requires email verification before an anonymous premium purchase', async () => {
+    await TestBed.configureTestingModule({
+      imports: [DashboardComponent],
+      providers: [provideZonelessChangeDetection(), provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    }).overrideComponent(DashboardComponent, { set: { template: '' } }).compileComponents();
+    const users = TestBed.inject(UserService);
+    users.setCurrentUser({ _id: 'anonymous', name: 'Anonymous', availableDays: 25 });
+    const initialize = spyOn(users, 'initUser').and.returnValue(of({ _id: 'unsafe-email-lookup', name: 'Owner', email: 'owner@example.test', availableDays: 25 }));
+    const checkout = spyOn(TestBed.inject(ApiService), 'createCheckoutSession').and.returnValue(of({}));
+    const toast = spyOn(TestBed.inject(ToastService), 'show');
+    const fixture = TestBed.createComponent(DashboardComponent);
+    const component = fixture.componentInstance;
+    component.premiumEmail = 'owner@example.test';
+    component.showPremiumModal = true;
+    await component.upgradeToPremium();
+    expect(initialize).not.toHaveBeenCalled();
+    expect(checkout).not.toHaveBeenCalled();
+    expect(component.showPremiumModal).toBeFalse();
+    expect(component.showAuthModal).toBeTrue();
+    expect(component.authEmail).toBe('owner@example.test');
+    expect(component.authMethod).toBe('email');
+    expect(component.isProcessingPayment).toBeFalse();
+    expect(toast).toHaveBeenCalledWith('Please verify your email, then continue with your upgrade.', 'info');
+    users.clearCurrentUser();
+    fixture.destroy();
+  });
+
 });

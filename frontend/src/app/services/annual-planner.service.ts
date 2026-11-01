@@ -30,6 +30,7 @@ export interface AnnualPlan {
   input: AnnualInput; suggestions: AnnualBreak[]; calendar: AnnualDay[]; constraintsSatisfied: boolean;
   violations: string[]; constraints: Record<string, unknown>;
   optimality: { exact: boolean; objective: string; method: string; bounds: { maxBreakLength: number; maxBreaks: number } };
+  unusedAllowanceReason?: 'infeasible_constraints' | 'balanced_objective' | 'no_additional_leave_within_optimal_plan_and_constraints' | null;
   limitations: string[]; source: { name: string; url: string; retrievedAt: string; scope: string; region: string | null };
   regions: string[]; previewUrl: string;
 }
@@ -49,6 +50,7 @@ export class AnnualPlannerService {
     const token = this.auth.getSessionToken();
     return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
   }
+  holidays(country: string, year: number): Observable<{ regions: string[] }> { return this.http.get<{ regions: string[] }>(`${this.baseUrl}/holidays/${year}`, { params: { country } }); }
   session(): Observable<AnnualSession> { return this.http.get<AnnualSession>(`${this.baseUrl}/session`, { headers: this.headers() }); }
   optimize(input: AnnualInput): Observable<AnnualPlan> { return this.http.post<AnnualPlan>(`${this.baseUrl}/optimize`, input, { headers: this.headers() }); }
   save(input: AnnualInput): Observable<SavedAnnualPlan> { return this.http.post<SavedAnnualPlan>(`${this.baseUrl}/plans`, { input }, { headers: this.headers() }); }

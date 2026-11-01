@@ -24,8 +24,8 @@ const copy = {
     calendar: 'Your full-year calendar', legend: 'Calendar legend', working: 'Working day', weekend: 'Weekend', holiday: 'Public holiday', leave: 'Proposed vacation day', inBreak: 'Part of a suggested break',
     holidayMark: 'P', leaveMark: 'L', breakMark: 'B', weekendMark: 'W',
     method: 'How this example is calculated',
-    criteria: constraints => `The balanced strategy uses a defined length and seasonal score: at most ${constraints.maxBreaks} breaks, ${constraints.minBreakLength}–${constraints.maxBreakLength} days per break, a preferred length of ${constraints.preferredBreakLength} days, and at least ${constraints.minSeparationDays} days between breaks. No preferred months, company holidays or approved leave were supplied for this example.`,
-    methodNote: 'The deterministic engine optimizes that declared balanced score under the allowance and separation constraints. This is not a claim that one plan is universally best. It can leave part of the allowance unused rather than force an unsuitable break.',
+    criteria: constraints => `The free maximum-time-off strategy maximizes calendar days in leave-containing breaks, then used allowance, then preferred-month days, then prefers fewer breaks with stable date ties. Default limits span the full year: ${constraints.minBreakLength}–${constraints.maxBreakLength} days per break, up to ${constraints.maxBreaks} breaks, and ${constraints.minSeparationDays} unselected day between breaks. No preferred months, company holidays or approved leave were supplied for this example.`,
+    methodNote: 'The deterministic engine optimizes that declared objective under the calendar and allowance constraints. Unrelated weekends and holidays are not counted. Any remaining allowance cannot improve those priorities within the constraints.',
     assumptions: 'Assumptions and holiday data',
     workweek: 'This example assumes a Monday–Friday workweek and nationwide public holidays only. Regional holidays, custom work schedules and employer-specific entitlement can change the result. A public holiday does not guarantee a day off for every worker; verify your entitlement with your employer.',
     source: 'Source', retrieved: 'Snapshot retrieved', refresh: 'This page is generated offline from the stored provider snapshot. The interactive planner fetches current data, so its result can change after a provider update.',
@@ -44,8 +44,8 @@ const copy = {
     calendar: 'Je volledige jaarkalender', legend: 'Legenda van de kalender', working: 'Werkdag', weekend: 'Weekend', holiday: 'Feestdag', leave: 'Voorgestelde vakantiedag', inBreak: 'Onderdeel van een voorgesteld vakantieblok',
     holidayMark: 'F', leaveMark: 'V', breakMark: 'B', weekendMark: 'W',
     method: 'Zo wordt dit voorbeeld berekend',
-    criteria: constraints => `De evenwichtige strategie gebruikt een vastgelegde score voor duur en spreiding over het jaar: maximaal ${constraints.maxBreaks} periodes, ${constraints.minBreakLength}–${constraints.maxBreakLength} dagen per periode, een voorkeursduur van ${constraints.preferredBreakLength} dagen en minimaal ${constraints.minSeparationDays} dagen tussen periodes. Voor dit voorbeeld zijn geen voorkeursmaanden, bedrijfsvrije dagen of eerder goedgekeurd verlof opgegeven.`,
-    methodNote: 'De deterministische berekening optimaliseert die vastgelegde score binnen het dagbudget en de spreidingseisen. Dat betekent niet dat één planning voor iedereen de beste is. Een deel van je vakantiedagen kan overblijven als er geen geschikte periode meer past.',
+    criteria: constraints => `De gratis strategie voor maximale vrije tijd maximaliseert eerst kalenderdagen in periodes met verlof, daarna gebruikte vakantiedagen en dagen in voorkeursmaanden, en kiest vervolgens minder periodes met een vaste datumvolgorde. De standaardgrenzen omvatten het hele jaar: ${constraints.minBreakLength}–${constraints.maxBreakLength} dagen per periode, maximaal ${constraints.maxBreaks} periodes en ${constraints.minSeparationDays} niet-geselecteerde dag tussen periodes. Voor dit voorbeeld zijn geen voorkeursmaanden, bedrijfsvrije dagen of eerder goedgekeurd verlof opgegeven.`,
+    methodNote: 'De deterministische berekening optimaliseert dat doel binnen de kalender en het dagbudget. Losstaande weekenden en feestdagen tellen niet mee. Resterende vakantiedagen kunnen deze prioriteiten niet verbeteren binnen de opgegeven grenzen.',
     assumptions: 'Uitgangspunten en feestdaggegevens',
     workweek: 'Dit voorbeeld gaat uit van een werkweek van maandag tot en met vrijdag en uitsluitend landelijke feestdagen. Regionale feestdagen, andere werkroosters en werkgeversafspraken kunnen het resultaat veranderen. Een feestdag betekent niet automatisch dat iedere werknemer vrij is. Controleer je aanspraak bij je werkgever.',
     source: 'Gegevensbron', retrieved: 'Gegevens opgehaald op', refresh: 'Deze pagina wordt offline opgebouwd uit de opgeslagen gegevens van de bron. De interactieve planner haalt actuele gegevens op; een bronwijziging kan daarom een ander resultaat geven.',
@@ -91,12 +91,12 @@ function renderCalendar(result, lang, text, holidays) {
 export function renderLandingPage(route, snapshot) {
   if (snapshot.year !== route.year || snapshot.country !== route.country || !Number.isFinite(Date.parse(snapshot.retrievedAt)) || snapshot.sourceUrl !== `https://date.nager.at/api/v3/PublicHolidays/${route.year}/${route.country}`) throw new Error('Invalid landing-page holiday snapshot');
   const holidays = normalizeHolidayCatalog(snapshot.rows, route.year, route.country).filter(holiday => holiday.global && holiday.types.includes('Public'));
-  const result = optimizeAnnualLeave({ year: route.year, availableDays: 20, strategy: 'balanced' }, holidays);
+  const result = optimizeAnnualLeave({ year: route.year, availableDays: 20, strategy: 'maximum_time_off' }, holidays);
   if (result.status !== 'ok') throw new Error(`Could not generate a valid example for ${route.path}`);
   const text = copy[route.lang];
   const country = text.countries[route.country];
   const title = text.title(country);
-  const canonical = `https://www.hopladay.com${route.path}`;
+  const canonical = `https://www.hopladay.com/${route.file}`;
   const planner = `/${route.lang}/optimize?country=${route.country}&year=${route.year}&availableDays=20`;
   const holidayName = holiday => route.lang === 'nl' ? holiday.localName : holiday.name;
   const structuredData = JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebPage', name: title, description: text.description(country), url: canonical, inLanguage: route.lang }).replace(/</g, '\\u003c');
@@ -114,7 +114,7 @@ export function renderLandingPage(route, snapshot) {
 <section aria-labelledby="holiday-heading" class="reading"><h2 id="holiday-heading">${escape(text.holidayHeading)}</h2><p>${escape(text.holidayNote)}</p><ul>${holidays.map(holiday => `<li>${time(holiday.date)} — ${escape(holidayName(holiday))}</li>`).join('')}</ul></section>
 <section aria-labelledby="method-heading" class="reading"><h2 id="method-heading">${escape(text.method)}</h2><p>${escape(text.criteria(result.constraints))}</p><p>${escape(text.methodNote)}</p></section>
 <section aria-labelledby="source-heading" class="reading"><h2 id="source-heading">${escape(text.assumptions)}</h2><p>${escape(text.workweek)}</p><p class="source">${escape(text.source)}: <a href="${escape(snapshot.sourceUrl)}">Nager.Date</a>. ${escape(text.retrieved)}: <time datetime="${escape(snapshot.retrievedAt)}">${escape(snapshot.retrievedAt)}</time>.</p><p>${escape(text.refresh)}</p></section>
-<footer class="reading"><p>${escape(text.footer)}</p><a class="cta" href="${escape(planner)}">${escape(text.cta)}</a><p><a href="/api-docs.html">${escape(text.api)}</a></p></footer>
+<footer class="reading"><p>${escape(text.footer)}</p><a class="cta" href="${escape(planner)}">${escape(text.cta)}</a><p><a href="/optimizer-api.html">${escape(text.api)}</a></p></footer>
 </main></body></html>
 `;
   return { route, snapshot, result, html };

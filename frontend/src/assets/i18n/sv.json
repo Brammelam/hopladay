@@ -387,6 +387,12 @@
     "lastUpdated": "Senast uppdaterad:"
   },
   "optimizer": {
+    "errorCapacity": "Den här kombinationen av villkor är för komplex att beräkna. Korta planeringsperioden eller höj eller ta bort gränsen för antalet ledighetsperioder och beräkna igen.",
+    "unusedBalanced": "Den balanserade strategin kan lämna semesterdagar oanvända för att sprida ledigheten. Välj maximal ledighet för att prioritera det totala antalet lediga dagar.",
+    "unusedInfeasible": "Alla villkor kan inte uppfyllas. Justera dem och beräkna igen.",
+    "unusedConstraints": "Inga fler semesterdagar kan användas i denna optimala plan med de valda villkoren. Kontrollera uteslutna datum, arbetsdagar och gränser för ledigheten.",
+    "maximumDefaultsHelp": "För maximal ledighet kan maximal längd, antal perioder och mellanrum lämnas tomma för att använda standardvärden för hela året.",
+
     "accept": "Acceptera",
     "accepted": "Accepterad",
     "accountPlans": "Konto och sparade planer",

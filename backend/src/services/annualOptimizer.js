@@ -14,12 +14,12 @@ function months(values, fallback) {
 
 export function validateOptimizationInput(input) {
   if (!input || typeof input !== 'object') throw new Error('Planning input is required');
-  const strategy = input.strategy ?? 'balanced';
+  const strategy = input.strategy ?? 'maximum_time_off';
   if (!strategies.includes(strategy)) throw new Error('Unsupported strategy');
   const availableDays = integer(input.availableDays, undefined, 0, 366, 'availableDays');
-  const minLength = integer(input.minBreakLength, 3, 1, 90, 'minBreakLength');
-  const maxLength = integer(input.maxBreakLength, strategy === 'balanced' ? 21 : 90, minLength, 90, 'maxBreakLength');
-  const maxBreaks = integer(input.maxBreaks, strategy === 'balanced' ? 4 : 12, 1, 12, 'maxBreaks');
+  const minLength = integer(input.minBreakLength, strategy === 'balanced' ? 3 : 1, 1, 366, 'minBreakLength');
+  const maxLength = integer(input.maxBreakLength, strategy === 'balanced' ? 21 : 366, minLength, 366, 'maxBreakLength');
+  const maxBreaks = integer(input.maxBreaks, strategy === 'balanced' ? 4 : 366, 1, 366, 'maxBreaks');
   const separation = integer(input.minSeparationDays, strategy === 'balanced' ? 21 : 1, 1, 365, 'minSeparationDays');
   const preferredLength = integer(input.preferredBreakLength, 9, 1, 90, 'preferredBreakLength');
   const seasonalWeight = integer(input.seasonalWeight, 1, 0, 10, 'seasonalWeight');
@@ -49,10 +49,13 @@ export function optimizeAnnualLeave(input, holidays = []) {
     const preferredDays = preferred[end+1]-preferred[start];
     const midpoint = (start+end)/2;
     const seasonalBonus = Math.max(0, 14-Math.min(...[0.125,0.375,0.625,0.875].map(q => Math.abs(midpoint-n*q))));
-    return { start, end, length, cost: cost[end+1]-cost[start], summer: length>=summerMin && notSummer[end+1]===notSummer[start], utility: strategy === 'balanced' ? Math.round(100*(10*Math.min(length,preferredLength)-3*Math.abs(length-preferredLength)+2*preferredDays+seasonalWeight*seasonalBonus)) : length*1000000+preferredDays*100 };
+    const leaveCost = cost[end+1]-cost[start];
+    // Integer weights encode lexicographic objectives; each lower-priority
+    // annual sum is smaller than one unit of the next priority (<=366 days).
+    return { start, end, length, cost: cost[end+1]-cost[start], summer: length>=summerMin && notSummer[end+1]===notSummer[start], utility: strategy === 'balanced' ? Math.round(100*(10*Math.min(length,preferredLength)-3*Math.abs(length-preferredLength)+2*preferredDays+seasonalWeight*seasonalBonus))*1000000-leaveCost*1000-1 : strategy === 'maximum_time_off' ? length*1000000000+leaveCost*1000000+preferredDays*1000-1 : length*1000000000+preferredDays*1000000-leaveCost*1000-1 };
   }
   const locks = input.lockedBreaks ?? [];
-  if (!Array.isArray(locks) || locks.length > 12) throw new Error('lockedBreaks must contain at most 12 intervals');
+  if (!Array.isArray(locks) || locks.length > 366) throw new Error('lockedBreaks must contain at most 366 intervals');
   const fixed = locks.map(lock => {
     const start = indices.get(lock?.startDate), end = indices.get(lock?.endDate);
     if (start===undefined || end===undefined || start>end || end-start+1<minLength || end-start+1>maxLength) throw new Error('A locked break falls outside the horizon or length constraints');
@@ -63,7 +66,8 @@ export function optimizeAnnualLeave(input, holidays = []) {
   for (let i=1;i<fixed.length;i++) if (fixed[i].start-fixed[i-1].end<=separation) throw new Error('Locked breaks overlap or violate minimum separation');
   const fixedCost = fixed.reduce((sum,c) => sum+c.cost,0);
   const fixedLongest = Math.max(0,...fixed.map(c => c.length));
-  const remaining = Math.min(availableDays-fixedCost, cost[n]);
+  const eligibleCost = calendar.reduce((sum, day) => sum + Number(day.requiresLeave && !day.excluded), 0);
+  const remaining = Math.min(availableDays-fixedCost, eligibleCost);
   const slots = maxBreaks-fixed.length;
   const needsSummer = !!summer && !fixed.some(c => c.summer);
   const candidates = [];
@@ -96,9 +100,21 @@ export function optimizeAnnualLeave(input, holidays = []) {
   const flagCount = (needsSummer?2:1)*(needsPrincipal?2:1);
   const required = summerBit|principalBit;
   let selected = [], feasible = remaining>=0 && slots>=0;
-  if (feasible) {
-    const width = (remaining+1)*(slots+1)*flagCount;
+  function solve(counted) {
+    const selected = [];
+    // Omit the count dimension when the limit cannot bind. This keeps the
+    // unrestricted free planner O(days * budget) in memory.
+    const countSlots = counted ? slots : 0;
+    const maxCandidateCost = candidates.reduce((max, c) => Math.max(max, c.cost), 0);
+    // If even the most expensive allowed collection fits, only count is
+    // binding. Omitting budget avoids a huge redundant count-by-budget grid.
+    const budgeted = !counted || remaining < Math.min(slots * maxCandidateCost, eligibleCost - fixedCost);
+    const budgetSlots = budgeted ? remaining : 0;
+    const width = (budgetSlots+1)*(countSlots+1)*flagCount;
     const size = (n+1)*width;
+    // Bound each solve to ~61 MiB of typed buffers. Never silently alter an
+    // explicit constraint or label a partial calculation as optimal.
+    if (size > 4000000) throw Object.assign(new Error('These constraints exceed calculation capacity. Shorten the planning horizon or relax a break constraint.'), {status:503, code:'OPTIMIZATION_CAPACITY_EXCEEDED'});
     const values = new Float64Array(size).fill(-Infinity);
     const trace = new Int32Array(size).fill(-1);
     const previous = new Int32Array(size).fill(-1);
@@ -114,10 +130,10 @@ export function optimizeAnnualLeave(input, holidays = []) {
         const c=candidates[id];
         const source=Math.max(0,c.start-separation)*width;
         const bits=(c.summer?summerBit:0)|(c.length===principal?principalBit:0);
-        for (let budget=c.cost;budget<=remaining;budget++) {
-          for (let count=1;count<=slots;count++) {
-            const from=source+((budget-c.cost)*(slots+1)+count-1)*flagCount;
-            const to=offset+(budget*(slots+1)+count)*flagCount;
+        for (let budget=budgeted ? c.cost : 0;budget<=budgetSlots;budget++) {
+          for (let count=counted ? 1 : 0;count<=countSlots;count++) {
+            const from=source+((budget-(budgeted ? c.cost : 0))*(countSlots+1)+count-(counted ? 1 : 0))*flagCount;
+            const to=offset+(budget*(countSlots+1)+count)*flagCount;
             for (let flags=0;flags<flagCount;flags++) {
               const value=values[from+flags]+c.utility;
               if (value>values[to+(flags|bits)]) { values[to+(flags|bits)]=value;trace[to+(flags|bits)]=id;previous[to+(flags|bits)]=from+flags; }
@@ -127,12 +143,20 @@ export function optimizeAnnualLeave(input, holidays = []) {
       }
     }
     let best=-1, score=-Infinity;
-    for (let budget=0;budget<=remaining;budget++) for (let count=0;count<=slots;count++) {
-      const index=n*width+(budget*(slots+1)+count)*flagCount+required;
+    for (let budget=0;budget<=budgetSlots;budget++) for (let count=0;count<=countSlots;count++) {
+      const index=n*width+(budget*(countSlots+1)+count)*flagCount+required;
       if (values[index]>score) {score=values[index];best=index;}
     }
-    feasible=best>=0 && score!==-Infinity;
+    const feasible=best>=0 && score!==-Infinity;
     while (feasible && trace[best]>=0) { selected.push(candidates[trace[best]]);best=previous[best]; }
+    return {feasible, selected};
+  }
+  if (feasible) {
+    // A relaxed optimum that respects the requested cap also solves the capped
+    // problem exactly. Allocate the count dimension only when the cap binds.
+    let solution = solve(false);
+    if (solution.feasible && solution.selected.length > slots) solution = solve(true);
+    ({feasible, selected} = solution);
   }
   const suggestions = feasible ? [...fixed,...selected].sort((a,b)=>a.start-b.start).map(c => {
     const days=calendar.slice(c.start,c.end+1);
@@ -143,9 +167,10 @@ export function optimizeAnnualLeave(input, holidays = []) {
   return {
     version:2,status:feasible?'ok':'infeasible',year:input.year,strategy,availableDays,usedDays,remainingDays:availableDays-usedDays,totalDaysOff:suggestions.reduce((sum,s)=>sum+s.totalDaysOff,0),longestVacation:Math.max(0,...suggestions.map(s=>s.totalDaysOff)),breakCount:suggestions.length,suggestions,
     calendar:calendar.map(day=>({...day,recommendedLeave:leaveDates.has(day.date)})),
+    unusedAllowanceReason:availableDays===usedDays?null:!feasible?'infeasible_constraints':strategy==='balanced'?'balanced_objective':'no_additional_leave_within_optimal_plan_and_constraints',
     constraintsSatisfied:feasible,violations:feasible?[]:[fixedCost>availableDays?'locked_budget':slots<0?'locked_break_count':'required_summer_break'],
     constraints:{minBreakLength:minLength,maxBreakLength:maxLength,preferredBreakLength:preferredLength,maxBreaks,minSeparationDays:separation,preferredMonths,seasonalWeight,requiredSummerBreak:summer??null},
-    optimality:{exact:true,objective:strategy==='balanced'?'Defined additive balanced utility; not a universal measure of vacation quality.':strategy==='longest_vacation'?'Longest break, then maximum covered days.':'Maximum distinct calendar days in qualifying breaks.',method:'Budgeted weighted interval dynamic programming',bounds:{maxBreakLength:90,maxBreaks:12}},
+    optimality:{exact:true,objective:strategy==='balanced'?'Defined additive balanced utility; not a universal measure of vacation quality.':strategy==='longest_vacation'?'Longest break, then maximum covered days.':'Maximum distinct calendar days in qualifying breaks, then most allowance used, preferred days, and fewer breaks.',method:'Budgeted weighted interval dynamic programming',bounds:{maxBreakLength:366,maxBreaks:366}},
     limitations:['Only the provided holiday jurisdiction and work calendar apply.','Breaks cannot touch or overlap; exclusions block whole intervals.','Existing approved leave is not charged to the new allowance.','Only suggested breaks contribute to calendar days; unrelated weekends are excluded.'],
   };
 }

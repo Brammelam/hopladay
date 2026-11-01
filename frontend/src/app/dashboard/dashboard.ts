@@ -1017,49 +1017,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.annualPlanner.track('upgrade_initiated');
 
-    // If anonymous user, we need email to create/find user account
+    // Anonymous purchases must verify ownership before checkout.
     if (!this.isUserClaimed()) {
       if (!this.premiumEmail || !this.premiumEmail.includes('@')) {
         this.toast('Please enter a valid email address', 'error');
         return;
       }
       
-      // Initialize user with email (creates or finds existing user)
-      this.isProcessingPayment = true;
-      try {
-        const user = await this.userService.initUser(this.premiumEmail).toPromise();
-        if (!user || !user._id) {
-          this.toast('Failed to create account. Please try again.', 'error');
-          this.isProcessingPayment = false;
-          return;
-        }
-        
-        // Check if user is already premium - redirect to login without revealing premium status
-        // This prevents the backend error and avoids revealing premium status for security
-        if (user.isPremium === true) {
-          this.isProcessingPayment = false;
-          this.closePremiumModal();
-          this.toast('This email is already registered. Please sign in.', 'info');
-          // Open auth modal with the email pre-filled
-          this.openAuthModal('signin', this.premiumEmail);
-          return;
-        }
-        
-        this.userId = user._id;
-        // Update user in service
-        this.userService.setCurrentUser(user);
-      } catch (err) {
-        console.error('Failed to initialize user:', err);
-        this.toast('Failed to create account. Please try again.', 'error');
-        this.isProcessingPayment = false;
-        return;
-      }
+      const email = this.premiumEmail;
+      this.closePremiumModal();
+      this.openAuthModal('signin', email);
+      this.authMethod = 'email';
+      this.magicLinkSent = false;
+      this.toast('Please verify your email, then continue with your upgrade.', 'info');
+      return;
     } else if (!this.userId) {
       this.toast('Session not ready. Please try again.', 'error');
       return;
     }
 
-    // isProcessingPayment already set for anonymous users above
+    // Payment begins only after a verified account is available.
     if (this.isUserClaimed()) {
       this.isProcessingPayment = true;
     }

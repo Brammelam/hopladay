@@ -56,7 +56,7 @@ function exhaustive(input, holidays = []) {
         const preferredLength = input.preferredBreakLength ?? 9;
         return n + Math.round(100 * (10 * Math.min(length, preferredLength) - 3 * Math.abs(length - preferredLength) + 2 * preferredDays + (input.seasonalWeight ?? 1) * seasonal));
       }, 0);
-      const objective = input.strategy === 'balanced' ? [balanced, -booked.size, -selected.length] : input.strategy === 'longest_vacation' ? [longest, total, preferred, -booked.size, -selected.length] : [total, preferred, -booked.size, -selected.length];
+      const objective = input.strategy === 'balanced' ? [balanced, -booked.size, -selected.length] : input.strategy === 'longest_vacation' ? [longest, total, preferred, -booked.size, -selected.length] : [total, booked.size, preferred, -selected.length];
       const candidate = { total, longest, preferred, used: booked.size, count: selected.length, balanced, objective, selected };
       if (!best || compare(objective, best.objective) > 0) best = candidate;
     }
@@ -68,7 +68,8 @@ function compare(a, b) {
   return 0;
 }
 function check(input, holidays = []) {
-  const expected = exhaustive(input, holidays);
+  const normalized = {strategy:'maximum_time_off',minBreakLength:1,maxBreakLength:366,maxBreaks:366,minSeparationDays:1,...input};
+  const expected = exhaustive(normalized, holidays);
   const actual = optimizeAnnualLeave(input, holidays);
   assert.equal(actual.status, expected ? 'ok' : 'infeasible', JSON.stringify(input));
   if (!expected) return;
@@ -156,5 +157,12 @@ test('seeded small reference calendars exercise budgets, workweeks, exclusions a
 test('a summer lock can satisfy the hard requirement with no remaining break slots', () => {
   for (const strategy of ['maximum_time_off', 'longest_vacation', 'balanced']) {
     check({ ...base, strategy, availableDays: 1, maxBreaks: 1, lockedBreaks: [{ startDate: '2027-02-05', endDate: '2027-02-07' }], requiredSummerBreak: { minDays: 3, months: [2] } });
+  }
+});
+
+ test('unrestricted free defaults match exhaustive subsets across all small budgets', () => {
+  for (let allowance=0;allowance<=12;allowance++) {
+    check({year:2027,horizon:base.horizon,availableDays:allowance});
+    check({year:2027,horizon:base.horizon,availableDays:allowance,excludedDates:['2027-02-02'],approvedLeave:['2027-01-29']},[{date:'2027-02-01'}]);
   }
 });

@@ -387,6 +387,12 @@
     "lastUpdated": "Laatst bijgewerkt:"
   },
   "optimizer": {
+    "errorCapacity": "Deze combinatie van voorwaarden is te complex om te berekenen. Verkort de planningsperiode of verhoog of verwijder het maximumaantal vakanties en bereken opnieuw.",
+    "unusedBalanced": "De gebalanceerde strategie kan verlofdagen overhouden om vakanties te spreiden. Kies maximale vrije tijd om het totale aantal vrije dagen te prioriteren.",
+    "unusedInfeasible": "Niet alle voorwaarden kunnen worden vervuld. Pas ze aan en bereken opnieuw.",
+    "unusedConstraints": "Binnen dit optimale plan en de voorwaarden kan geen extra verlof worden gebruikt. Controleer uitgesloten datums, werkdagen en vakantielimieten.",
+    "maximumDefaultsHelp": "Laat bij maximale vrije tijd de maximale duur, het aantal vakanties en de tussenruimte leeg voor de standaardwaarden voor het hele jaar.",
+
     "accept": "Accepteren",
     "accepted": "Geaccepteerd",
     "accountPlans": "Account en opgeslagen plannen",

@@ -14,7 +14,7 @@ const advanced=['horizon','workingDays','companyHolidays','holidayWorkingDates',
 const events=['opened','generated','strategy_selected','recommendation_accepted','regenerated','saved','export_requested','upgrade_initiated','purchase_completed'];
 function normalize(body) {
   if (!body || typeof body!=='object' || Array.isArray(body) || Object.keys(body).some(key=>!fields.includes(key))) throw new Error('Use only the documented optimization fields');
-  const input={...body,strategy:body.strategy??'balanced',lang:body.lang??'en'};
+  const input={...body,strategy:body.strategy??'maximum_time_off',lang:body.lang??'en'};
   if (!PREVIEW_COUNTRIES.includes(input.country) || !OPTIMIZER_LANGS.includes(input.lang)) throw new Error('Unsupported country or language');
   if (input.region!==undefined && (typeof input.region!=='string' || input.region.length>20)) throw new Error('Invalid region');
   validateOptimizationInput(input);validateCalendarInput(input);
@@ -36,7 +36,7 @@ export function createOptimizerRouter({loadHolidays=loadHolidayCatalog,authentic
     return user;
   }
   function permit(input,user) {
-    if((input.strategy!=='balanced'||advanced.some(key=>Object.hasOwn(input,key))) && user?.isPremium!==true)throw Object.assign(new Error('Premium required'),{status:403,code:'PREMIUM_REQUIRED'});
+    if((input.strategy==='longest_vacation'||advanced.some(key=>Object.hasOwn(input,key))) && user?.isPremium!==true)throw Object.assign(new Error('Premium required'),{status:403,code:'PREMIUM_REQUIRED'});
   }
   async function generate(input,user) {
     permit(input,user);
@@ -44,12 +44,15 @@ export function createOptimizerRouter({loadHolidays=loadHolidayCatalog,authentic
     // shortcut: bounded DP runs in-process; use a bounded worker pool if measured production latency exceeds its budget.
     let optimized;
     try { optimized=optimizeAnnualLeave(input,catalog.holidays); }
-    catch(error) { throw Object.assign(error,{status:400,code:'INVALID_INPUT'}); }
+    catch(error) {
+      if (error.code === 'OPTIMIZATION_CAPACITY_EXCEEDED') throw Object.assign(error,{details:error.message});
+      throw Object.assign(error,{status:400,code:'INVALID_INPUT'});
+    }
     const result=localizeOptimization(optimized,input.lang);
     const query=new URLSearchParams({country:input.country,year:String(input.year),availableDays:String(input.availableDays),strategy:input.strategy,...(input.region?{region:input.region}:{})});
     return {...result,input,source:catalog.source,regions:catalog.regions,previewUrl:`https://www.hopladay.com/${input.lang}/optimize?${query}`,linkScope:'basic-inputs-only'};
   }
-  const handle=fn=>async(req,res)=>{try{await fn(req,res);}catch(error){const status=error.status??503;fail(res,status,error.code??(status===400?'INVALID_INPUT':'SERVICE_UNAVAILABLE'),req.body?.lang);}};
+  const handle=fn=>async(req,res)=>{try{await fn(req,res);}catch(error){const status=error.status??503;fail(res,status,error.code??(status===400?'INVALID_INPUT':'SERVICE_UNAVAILABLE'),req.body?.lang,error.code==='OPTIMIZATION_CAPACITY_EXCEEDED'?error.details:undefined);}};
   router.get('/session',handle(async(req,res)=>{const user=await identity(req);res.json({authenticated:!!user,premium:user?.isPremium===true});}));
   router.get('/holidays/:year',handle(async(req,res)=>{
     if(Object.keys(req.query).some(key=>!['country','region'].includes(key)) || typeof req.query.country!=='string' || (req.query.region!==undefined && typeof req.query.region!=='string'))return fail(res,400,'INVALID_INPUT');

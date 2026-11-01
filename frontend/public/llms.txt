@@ -3,13 +3,30 @@
 > Hopladay suggests vacation dates by combining a vacation-day allowance with public holidays and weekends. It is a time-off planner, not a travel booking or itinerary service.
 
 ## Public resources
-- [Website](https://www.hopladay.com/en): interactive planner; core planning is free. Advanced strategies and exports require Premium.
-- [Anonymous preview](https://www.hopladay.com/en/preview): a separate read-only preview; no account or saved-plan changes.
-- [API reference](https://www.hopladay.com/api-docs.html): inputs, outputs, countries, assumptions, limits and examples.
-- [OpenAPI 3.0 specification](https://www.hopladay.com/openapi.json): machine-readable HTTP contract.
+- [Website](https://www.hopladay.com/en): free maximum-time-off planning; advanced controls and exports require Premium.
+- [Current API reference](https://www.hopladay.com/optimizer-api.html).
+- [Current OpenAPI specification](https://www.hopladay.com/openapi-v2.json).
 - [Frequently asked questions](https://www.hopladay.com/en/faq).
 
-## Calculate a public preview
+## Version 2 annual leave optimizer
+- [Annual planner](https://www.hopladay.com/en/optimize): default maximum-time-off previews work without sign-in.
+- [Version 2 API reference](https://www.hopladay.com/optimizer-api.html): deterministic strategies, work calendars, input constraints, session/Premium access, snapshots and export.
+- [Version 2 OpenAPI contract](https://www.hopladay.com/openapi-v2.json).
+
+POST https://hopladay-backend.onrender.com/api/v2/optimize with JSON {"country":"NO","year":2027,"availableDays":20,"strategy":"maximum_time_off","lang":"en"}. Years 2024–2100 and allowance 0–366 are accepted. Basic maximum_time_off (default) and explicit balanced calculations, approvedLeave, excludedDates and lockedBreaks are available anonymously. Region selection uses only the provider's supported subdivision codes. The longest_vacation strategy and advanced settings require a verified Premium bearer session; never pass userId or isPremium as credentials.
+
+Unusually complex custom constraints can return HTTP 503 with OPTIMIZATION_CAPACITY_EXCEEDED and no plan. Shorten the horizon or relax a break constraint rather than repeatedly retrying identical inputs.
+
+Read status, constraintsSatisfied and violations before presenting a plan. totalDaysOff is distinct calendar days within selected breaks containing new leave, approved leave or an explicit lock; unrelated weekends and holidays do not count, usedDays is newly allocated leave, and leaveDates gives the exact workdays to request off. Already approved leave is not charged again. The default objective maximizes totalDaysOff, then usedDays, then preferred-month days, then prefers fewer breaks with stable date ties. Allowance may remain only when it cannot improve those priorities under the calendar and constraints. Read unusedAllowanceReason: null means all allowance used; infeasible_constraints, balanced_objective or no_additional_leave_within_optimal_plan_and_constraints explain unused allowance. Classification flags can overlap. Day identifiers are YYYY-MM-DD, independent of timezone conversion. Bounded exactness applies only to the declared objective, within the selected year, with maximum_time_off/longest_vacation default minimum break length 1, maximum break length 366, maximum break count 366 and minimum separation 1 unselected day; no shorter default length, count or spacing cap applies; explicit balanced retains minimum length 3, maximum length 21, maximum count 4 and separation 21, and its quality is an explicit score rather than a universal optimum. Suggestion explanations and general errors support en/no/nl/de/fr/es/sv/da; technical metadata can remain English.
+
+previewUrl contains basic inputs only and omits private date constraints; linkScope is basic-inputs-only. It is not a full private-plan sharing link. Version 2 snapshots are separate from legacy plans; reading a snapshot never silently recalculates it. Verified users can save permitted basic plans. All-day iCalendar export requires a saved plan and verified Premium ownership; the public calculation does not grant that paid capability. Importing calendar events does not submit or approve leave with an employer.
+
+POST /api/v2/events accepts exactly {"event":"generated"} or another documented event name, only after client opt-in. No vacation dates, account IDs or personal settings belong in analytics. All v2 routes share 30-client/300-process fixed-minute request limits; respect Retry-After. Provider data is cached 24h with an 8-second fetch timeout. Source retrieval time is not a legislative update time; regional/municipal and employer entitlements can differ. The version 1 API and its original limits/semantics remain unchanged.
+
+
+The v1 endpoint retains its legacy balanced heuristic and does not reproduce the main website’s v2 default. Prefer v2 for new integrations.
+
+## Legacy version 1 preview (not the main planner)
 GET https://hopladay-backend.onrender.com/api/v1/plan-preview?country=NO&year=2027&availableDays=20&preference=balanced&lang=en
 
 Required: country (supported uppercase two-letter code), year (2024–2030), availableDays (integer 0–365).
@@ -25,15 +42,5 @@ Return previewUrl so the user can open the same inputs. The link recalculates wi
 Limits: 30 requests per client per 60-second process window; 300 requests per process window globally. Respect Retry-After on 429/503. An API specification does not automatically install a tool in any assistant: the assistant needs HTTP/browsing capability or explicit integration.
 
 
-## Version 2 annual leave optimizer
-- [Annual planner](https://www.hopladay.com/en/optimize): basic balanced previews work without sign-in.
-- [Version 2 API reference](https://www.hopladay.com/optimizer-api.html): deterministic strategies, work calendars, input constraints, session/Premium access, snapshots and export.
-- [Version 2 OpenAPI contract](https://www.hopladay.com/openapi-v2.json).
-
-POST https://hopladay-backend.onrender.com/api/v2/optimize with JSON {"country":"NO","year":2027,"availableDays":20,"strategy":"balanced","lang":"en"}. Years 2024–2100 and allowance 0–366 are accepted. Basic balanced calculations, approvedLeave, excludedDates and lockedBreaks are available anonymously. Region selection uses only the provider's supported subdivision codes. Non-balanced strategies and advanced settings require a verified Premium bearer session; never pass userId or isPremium as credentials.
-
-Read status, constraintsSatisfied and violations before presenting a plan. totalDaysOff is distinct calendar days within selected breaks, usedDays is newly allocated leave, and leaveDates gives the exact workdays to request off. Already approved leave is not charged again. Classification flags can overlap. Day identifiers are YYYY-MM-DD, independent of timezone conversion. Bounded exactness applies only to the declared objective, with maximum 90-day breaks and 12 breaks; balanced quality is an explicit score rather than a universal optimum. Suggestion explanations and general errors support en/no/nl/de/fr/es/sv/da; technical metadata can remain English.
-
-previewUrl contains basic inputs only and omits private date constraints; linkScope is basic-inputs-only. It is not a full private-plan sharing link. Version 2 snapshots are separate from legacy plans; reading a snapshot never silently recalculates it. Verified users can save permitted basic plans. All-day iCalendar export requires a saved plan and verified Premium ownership; the public calculation does not grant that paid capability. Importing calendar events does not submit or approve leave with an employer.
-
-POST /api/v2/events accepts exactly {"event":"generated"} or another documented event name, only after client opt-in. No vacation dates, account IDs or personal settings belong in analytics. All v2 routes share 30-client/300-process fixed-minute request limits; respect Retry-After. Provider data is cached 24h with an 8-second fetch timeout. Source retrieval time is not a legislative update time; regional/municipal and employer entitlements can differ. The version 1 API and its original limits/semantics remain unchanged.
+- [Legacy v1 reference](https://www.hopladay.com/api-docs.html).
+- [Legacy OpenAPI specification](https://www.hopladay.com/openapi.json).

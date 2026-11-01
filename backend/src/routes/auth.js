@@ -9,7 +9,7 @@ import {
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import User from "../models/User.js";
 import MagicLink from "../models/MagicLink.js";
-import { issueSession, authenticateSession, ownsAccount, encodeRegistrationChallenge, decodeRegistrationChallenge, canCompleteRegistration } from "../services/sessionService.js";
+import { issueSession, authenticateSession, publicUser, ownsAccount, encodeRegistrationChallenge, decodeRegistrationChallenge, canCompleteRegistration } from "../services/sessionService.js";
 import emailService from "../services/emailService.js";
 import dotenv from "dotenv";
 dotenv.config();
@@ -58,11 +58,11 @@ router.post("/register/start", async (req, res) => {
     if (user && !ownsAccount(user, owner)) {
       return res.status(403).json({ error: "Verify this email with a magic link before adding a passkey." });
     }
-    const registrationOwnerId = user ? String(user._id) : null;
+    let registrationOwnerId = user ? String(user._id) : null;
 
-    // Get or create user by browserId (to claim their anonymous plans)
+    // Claim only the anonymous account authenticated by the bearer session.
     if (!user) {
-      const anonUser = await User.findOne({ browserId });
+      const anonUser = owner;
       if (anonUser && !anonUser.email) {
         if (anonUser.isPremium && !ownsAccount(anonUser, owner)) {
           return res.status(403).json({ error: "Verify this email with a magic link before adding a passkey." });
@@ -71,12 +71,13 @@ router.post("/register/start", async (req, res) => {
         anonUser.email = email;
         anonUser.name = email.split('@')[0];
         user = anonUser;
+        registrationOwnerId = String(anonUser._id);
       } else {
         // Create new user
         user = new User({
           email,
           name: email.split('@')[0],
-          browserId,
+          browserId: crypto.randomUUID(),
         });
       }
     }
@@ -191,12 +192,7 @@ router.post("/register/finish", async (req, res) => {
     res.set('Cache-Control', 'no-store').json({
       verified: true,
       sessionToken: await issueSession(user._id),
-      user: {
-        _id: user._id,
-        email: user.email,
-        name: user.name,
-        availableDays: user.availableDays,
-      },
+      user: publicUser(user),
     });
   } catch (err) {
     console.error(" Error finishing registration:", err);
@@ -353,13 +349,7 @@ router.post("/login/finish", async (req, res) => {
     res.set('Cache-Control', 'no-store').json({
       verified: true,
       sessionToken: await issueSession(user._id),
-      user: {
-        _id: user._id,
-        email: user.email,
-        name: user.name,
-        availableDays: user.availableDays,
-        browserId: user.browserId,
-      },
+      user: publicUser(user),
     });
   } catch (err) {
     console.error(" Error finishing login:", err);
@@ -453,24 +443,20 @@ router.post("/magic-link/verify", async (req, res) => {
         email: magicLink.email,
         name: magicLink.email.split('@')[0],
         availableDays: 25,
-        browserId: browserId || undefined,
+        browserId: crypto.randomUUID(),
       });
       await user.save();
       
       // Send welcome email
       emailService.sendWelcome(user.email, user.name);
-    } else if (browserId && browserId !== user.browserId) {
-      // Update browserId if provided
-      user.browserId = browserId;
-      await user.save();
     }
 
-    // Migrate anonymous plans (if browserId provided and user has plans)
-    if (browserId) {
+    // Browser IDs are public identifiers, never migration credentials.
+    const anonymousOwner = await authenticateSession(req);
+    if (anonymousOwner && !anonymousOwner.email && String(anonymousOwner._id) !== String(user._id)) {
       const HolidayPlan = (await import('../models/HolidayPlan.js')).default;
       const plansToMigrate = await HolidayPlan.find({ 
-        browserId: browserId, 
-        userId: { $exists: false } 
+        userId: anonymousOwner._id
       });
       
       if (plansToMigrate.length > 0) {
@@ -500,14 +486,7 @@ router.post("/magic-link/verify", async (req, res) => {
     res.set('Cache-Control', 'no-store').json({
       verified: true,
       sessionToken: await issueSession(user._id),
-      user: {
-        _id: user._id,
-        email: user.email,
-        name: user.name,
-        availableDays: user.availableDays,
-        browserId: user.browserId,
-        isPremium: user.isPremium || false,
-      },
+      user: publicUser(user),
     });
   } catch (err) {
     console.error(" Error verifying magic link:", err);

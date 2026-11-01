@@ -6,7 +6,23 @@ import { getHolidaysForYear } from '../services/holidayService.js';
 import { generateHolidayPlan } from "../services/plannerService.js";
 import { parseISODate } from "../utils/dateUtils.js";
 
+import { authenticateSession } from '../services/sessionService.js';
+
 const router = express.Router();
+router.use(async (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    req.user = await authenticateSession(req);
+    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+    next();
+  } catch {
+    res.status(503).json({ error: 'Authentication unavailable' });
+  }
+});
+router.param('userId', (req, res, next, userId) => {
+  if (userId !== String(req.user._id)) return res.status(404).json({ error: 'Plan not found' });
+  next();
+});
 
 /** Local calendar day yyyy-MM-dd (aligned with parseISODate / API holiday dates) */
 function calendarKey(d) {
@@ -285,6 +301,8 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'userId is required' });
     }
 
+    if (String(userId) !== String(req.user._id)) return res.status(403).json({ error: 'Account does not match session' });
+
     // Find user
     const user = await User.findById(userId);
     if (!user) {
@@ -361,7 +379,7 @@ router.get("/:userId", async (req, res) => {
 
 router.get("/details/:planId", async (req, res) => {
   const { planId } = req.params;
-  const plan = await HolidayPlan.findById(planId).populate("userId", "name email");
+  const plan = await HolidayPlan.findOne({ _id: planId, userId: req.user._id }).populate("userId", "name email");
   if (!plan) return res.status(404).json({ error: "Plan not found" });
   res.json(plan);
 });
@@ -380,7 +398,7 @@ router.post("/:planId/manual-days", async (req, res) => {
       return res.status(400).json({ error: "dates must be a non-empty array" });
     }
 
-    const plan = await HolidayPlan.findById(planId);
+    const plan = await HolidayPlan.findOne({ _id: planId, userId: req.user._id });
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
     // Find user for the plan
@@ -540,7 +558,7 @@ router.delete("/:planId/suggestions/:suggestionId", async (req, res) => {
   try {
     const { planId, suggestionId } = req.params;
 
-    const plan = await HolidayPlan.findById(planId);
+    const plan = await HolidayPlan.findOne({ _id: planId, userId: req.user._id });
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
     plan.suggestions = plan.suggestions.filter((s) => s._id.toString() !== suggestionId);
@@ -573,7 +591,7 @@ router.delete("/:planId/suggestions/:suggestionId/days/:date", async (req, res) 
   try {
     const { planId, suggestionId, date } = req.params;
 
-    const plan = await HolidayPlan.findById(planId);
+    const plan = await HolidayPlan.findOne({ _id: planId, userId: req.user._id });
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
     const suggestionIndex = plan.suggestions.findIndex((s) => s._id.toString() === suggestionId);
@@ -739,7 +757,7 @@ router.post("/:planId/regenerate", async (req, res) => {
     const { planId } = req.params;
     const { preference = "balanced", lang = 'en' } = req.body;
 
-    const plan = await HolidayPlan.findById(planId);
+    const plan = await HolidayPlan.findOne({ _id: planId, userId: req.user._id });
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
     // Find user for the plan
@@ -856,7 +874,7 @@ router.post("/:planId/optimize-remaining", async (req, res) => {
     const { planId } = req.params;
     const { preference = "balanced", lang = 'en' } = req.body;
 
-    const plan = await HolidayPlan.findById(planId);
+    const plan = await HolidayPlan.findOne({ _id: planId, userId: req.user._id });
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
     // Find user for the plan
@@ -994,7 +1012,7 @@ router.get("/:userId/:year", async (req, res) => {
 router.delete("/:planId", async (req, res) => {
   try {
     const { planId } = req.params;
-    const deleted = await HolidayPlan.findByIdAndDelete(planId);
+    const deleted = await HolidayPlan.findOneAndDelete({ _id: planId, userId: req.user._id });
     if (!deleted) {
       return res.status(404).json({ error: "Plan not found" });
     }

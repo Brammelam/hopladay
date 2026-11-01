@@ -11,7 +11,7 @@
 
     <form ngNativeValidate (ngSubmit)="generate()" class="space-y-5 rounded-xl border border-gray-200 bg-white p-5 sm:p-6" [attr.aria-label]="t('configuration')">
       <div class="grid gap-4 sm:grid-cols-3">
-        <label class="field">{{ 'optimizer.country' | translate }}<select name="country" [(ngModel)]="country" (ngModelChange)="region = ''; clearSelections()" required><option *ngFor="let code of countries" [value]="code">{{ countryName(code) }}</option></select></label>
+        <label class="field">{{ 'optimizer.country' | translate }}<select name="country" [(ngModel)]="country" (ngModelChange)="countryChanged()" required><option *ngFor="let code of countries" [value]="code">{{ countryName(code) }}</option></select></label>
         <label class="field">{{ 'optimizer.year' | translate }}<input name="year" type="number" [(ngModel)]="year" (ngModelChange)="yearChanged()" required min="2024" max="2100" step="1" /></label>
         <label class="field">{{ 'optimizer.allowance' | translate }}<input name="availableDays" type="number" [(ngModel)]="availableDays" required min="0" max="366" step="1" /></label>
       </div>
@@ -23,12 +23,12 @@
             <label class="field">{{ 'optimizer.strategy' | translate }}
               <select name="strategy" [(ngModel)]="strategy" (ngModelChange)="strategyChanged()">
                 <option value="balanced">{{ 'optimizer.balanced' | translate }}</option>
-                <option data-premium value="maximum_time_off" [disabled]="!premium()">{{ 'optimizer.maximum_time_off' | translate }} · Premium</option>
+                <option value="maximum_time_off">{{ 'optimizer.maximum_time_off' | translate }}</option>
                 <option data-premium value="longest_vacation" [disabled]="!premium()">{{ 'optimizer.longest_vacation' | translate }} · Premium</option>
               </select>
             </label>
-            <label class="field" *ngIf="result()?.regions?.length">{{ 'optimizer.region' | translate }}
-              <select name="region" [(ngModel)]="region"><option value="">{{ 'optimizer.nationwide' | translate }}</option><option *ngFor="let code of result()?.regions" [value]="code">{{ code }}</option></select>
+            <label class="field" *ngIf="regions().length">{{ 'optimizer.region' | translate }}
+              <select name="region" [(ngModel)]="region"><option value="">{{ 'optimizer.nationwide' | translate }}</option><option *ngFor="let code of regions()" [value]="code">{{ regionName(code) }}</option></select>
             </label>
             <label class="field">{{ 'optimizer.approvedDates' | translate }}<textarea name="approvedLeave" [(ngModel)]="approvedText" rows="2" placeholder="2027-07-12, 2027-07-13" aria-describedby="annual-date-help"></textarea></label>
             <label class="field">{{ 'optimizer.excludedDates' | translate }}<textarea name="excludedDates" [(ngModel)]="excludedText" rows="2" placeholder="2027-12-20, 2027-12-21" aria-describedby="annual-date-help"></textarea></label>
@@ -43,15 +43,16 @@
             <label class="field">{{ 'optimizer.companyDates' | translate }}<input name="companyHolidays" [(ngModel)]="companyText" placeholder="2027-12-24" /></label>
             <label class="field">{{ 'optimizer.workedHolidays' | translate }}<input name="holidayWorkingDates" [(ngModel)]="holidayWorkingText" placeholder="2027-05-17" /></label>
             <label class="field">{{ 'optimizer.preferredMonths' | translate }}<input name="preferredMonths" [(ngModel)]="preferredMonthsText" placeholder="6,7,8" /></label>
-            <label class="field">{{ 'optimizer.minimumBreak' | translate }}<input name="minBreakLength" type="number" [(ngModel)]="minBreakLength" min="1" max="90" step="1" /></label>
-            <label class="field">{{ 'optimizer.maximumBreak' | translate }}<input name="maxBreakLength" type="number" [(ngModel)]="maxBreakLength" min="1" max="90" step="1" /></label>
+            <label class="field">{{ 'optimizer.minimumBreak' | translate }}<input name="minBreakLength" type="number" [(ngModel)]="minBreakLength" (ngModelChange)="editedLimits.add('minBreakLength')" min="1" max="366" step="1" /></label>
+            <label class="field">{{ 'optimizer.maximumBreak' | translate }}<input name="maxBreakLength" type="number" [(ngModel)]="maxBreakLength" (ngModelChange)="editedLimits.add('maxBreakLength')" min="1" max="366" step="1" /></label>
             <label class="field">{{ 'optimizer.preferredBreak' | translate }}<input name="preferredBreakLength" type="number" [(ngModel)]="preferredBreakLength" min="1" max="90" step="1" /></label>
-            <label class="field">{{ 'optimizer.maximumBreaks' | translate }}<input name="maxBreaks" type="number" [(ngModel)]="maxBreaks" min="1" max="12" step="1" /></label>
-            <label class="field">{{ 'optimizer.separation' | translate }}<input name="minSeparationDays" type="number" [(ngModel)]="minSeparationDays" min="1" max="365" step="1" /></label>
+            <label class="field">{{ 'optimizer.maximumBreaks' | translate }}<input name="maxBreaks" type="number" [(ngModel)]="maxBreaks" (ngModelChange)="editedLimits.add('maxBreaks')" min="1" max="366" step="1" /></label>
+            <label class="field">{{ 'optimizer.separation' | translate }}<input name="minSeparationDays" type="number" [(ngModel)]="minSeparationDays" (ngModelChange)="editedLimits.add('minSeparationDays')" min="1" max="365" step="1" /></label>
             <label class="field">{{ 'optimizer.seasonalWeight' | translate }}<input name="seasonalWeight" type="number" [(ngModel)]="seasonalWeight" min="0" max="10" step="1" /></label>
             <label class="field">{{ 'optimizer.summerLength' | translate }}<input name="summerDays" type="number" [(ngModel)]="summerDays" min="0" max="90" step="1" /></label>
             <label class="field">{{ 'optimizer.summerMonths' | translate }}<input name="summerMonths" [(ngModel)]="summerMonthsText" /></label>
           </fieldset>
+          <p *ngIf="strategy === 'maximum_time_off'" class="text-sm text-gray-600">{{ 'optimizer.maximumDefaultsHelp' | translate }}</p>
           <p class="text-sm text-gray-600">{{ 'optimizer.advancedHelp' | translate }}</p>
         </div>
       </details>
@@ -78,6 +79,7 @@
         <div><dt class="text-sm text-gray-600">{{ 'optimizer.remaining' | translate }}</dt><dd class="mt-1 text-2xl font-semibold tabular-nums">{{ plan.remainingDays }}</dd></div>
         <div><dt class="text-sm text-gray-600">{{ 'optimizer.longest' | translate }}</dt><dd class="mt-1 text-2xl font-semibold tabular-nums">{{ plan.longestVacation }}</dd></div>
       </dl>
+      <p *ngIf="plan.remainingDays > 0 && plan.unusedAllowanceReason" data-unused-allowance class="max-w-prose text-sm text-gray-700">{{ ('optimizer.' + (plan.unusedAllowanceReason === 'balanced_objective' ? 'unusedBalanced' : plan.unusedAllowanceReason === 'infeasible_constraints' ? 'unusedInfeasible' : 'unusedConstraints')) | translate }}</p>
       <p class="max-w-prose text-sm text-gray-600">{{ 'optimizer.metricsHelp' | translate }}</p>
       <div class="grid gap-8 xl:grid-cols-[minmax(18rem,1fr)_minmax(0,2fr)]">
         <section class="min-w-0 space-y-4" aria-labelledby="annual-recommendations">
@@ -152,7 +154,7 @@
     </section>
     <footer class="border-t border-gray-200 pt-5 text-sm text-gray-600">
       <label class="inline-flex min-h-11 cursor-pointer items-start gap-3 py-2"><input name="analytics" type="checkbox" [(ngModel)]="analytics" (ngModelChange)="analyticsChanged()" class="mt-1" /><span>{{ 'optimizer.analyticsConsent' | translate }}</span></label>
-      <nav class="flex flex-wrap gap-x-5" [attr.aria-label]="t('opportunities')"><a href="/en/norway/2027" class="inline-block min-h-11 py-3 underline underline-offset-4">Norway 2027</a><a href="/en/sweden/2027" class="inline-block min-h-11 py-3 underline underline-offset-4">Sweden 2027</a><a href="/nl/nederland/2027" class="inline-block min-h-11 py-3 underline underline-offset-4">Nederland 2027</a></nav>
+      <nav class="flex flex-wrap gap-x-5" [attr.aria-label]="t('opportunities')"><a href="/en/norway/2027/index.html" class="inline-block min-h-11 py-3 underline underline-offset-4">Norway 2027</a><a href="/en/sweden/2027/index.html" class="inline-block min-h-11 py-3 underline underline-offset-4">Sweden 2027</a><a href="/nl/nederland/2027/index.html" class="inline-block min-h-11 py-3 underline underline-offset-4">Nederland 2027</a></nav>
       <p><a href="/optimizer-api.html" class="inline-block min-h-11 py-3 underline underline-offset-4">{{ 'optimizer.apiDocs' | translate }}</a></p>
     </footer>
   </div>

@@ -1,3 +1,6 @@
+import { DOCUMENT } from '@angular/common';
+import { inject } from '@angular/core';
+import landingRoutes from '../../public/landing-routes.json';
 import { Routes } from '@angular/router';
 
 const SUPPORTED_LANGUAGES = ['en', 'no', 'nl', 'de', 'fr', 'es', 'sv', 'da'];
@@ -50,6 +53,18 @@ const appRoutes: Routes = [
 ];
 
 export const routes: Routes = [
+  // Static hosts may return the SPA shell for directory URLs. Recover the real
+  // generated guide before the wildcard redirects it to the homepage.
+  ...landingRoutes.map(entry => ({
+    path: entry.path.slice(1),
+    pathMatch: 'full' as const,
+    canActivate: [() => {
+      const location = inject(DOCUMENT).location;
+      location.replace(`/${entry.file}${location.search}${location.hash}`);
+      return false;
+    }],
+    loadComponent: () => import('./annual-planner/annual-planner').then(m => m.AnnualPlannerComponent),
+  })),
   ...SUPPORTED_LANGUAGES.map(lang => ({
     path: lang,
     children: appRoutes

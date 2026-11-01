@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, take, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, throwError, take, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ApiService } from './api';
+import { AuthService } from './auth.service';
 
 export interface User {
   _id: string;
@@ -22,7 +23,7 @@ export class UserService {
   private currentUserSubject = new BehaviorSubject<User | null>(this.restoreUser());
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient, private api: ApiService) {}
+  constructor(private http: HttpClient, private api: ApiService, private auth: AuthService) {}
 
   private hasLocalStorage(): boolean {
     return typeof localStorage !== 'undefined';
@@ -122,25 +123,21 @@ export class UserService {
    * Returns Observable<User> with userId
    */
   initUser(email?: string | null): Observable<User> {
-    // If user already exists in localStorage with email, use that
-    const currentUser = this.getCurrentUser();
-    if (currentUser && currentUser.email && email && currentUser.email === email) {
-      return new Observable(observer => {
-        observer.next(currentUser);
-        observer.complete();
-      });
-    }
-
     // If email provided, use email; otherwise use browserId
     const browserId = email ? null : this.getBrowserId();
     
     return this.api.initUser(browserId, email || null).pipe(
-      tap((user: User) => {
-        // Store user after initialization (only if different from current)
-        const existingUser = this.getCurrentUser();
-        if (!existingUser || existingUser._id !== user._id) {
-          this.setCurrentUser(user);
+      catchError(error => {
+        if (error.status !== 401 || email || this.getCurrentUser()?.email) {
+          return throwError(() => error);
         }
+        // An expired anonymous session cannot be recovered from a browser ID.
+        // Retry once with a fresh anonymous identity; never downgrade an email account.
+        this.clearCurrentUser();
+        return this.api.initUser(this.getBrowserId());
+      }),
+      tap((user: User) => {
+        this.setCurrentUser(user);
       })
     );
   }
@@ -159,6 +156,7 @@ export class UserService {
   }
 
   clearCurrentUser() {
+    this.auth.clearSessionToken();
     this.currentUserSubject.next(null);
     if (!this.hasLocalStorage()) {
       return;

@@ -387,6 +387,12 @@
     "lastUpdated": "Zuletzt aktualisiert:"
   },
   "optimizer": {
+    "errorCapacity": "Diese Kombination von Bedingungen ist zu komplex für die Berechnung. Verkürze den Planungszeitraum oder erhöhe oder entferne die maximale Anzahl der Urlaubsperioden und berechne erneut.",
+    "unusedBalanced": "Die ausgewogene Strategie kann Urlaubstage übrig lassen, um Pausen zu verteilen. Wähle maximale Freizeit, um die Gesamtzahl freier Tage zu priorisieren.",
+    "unusedInfeasible": "Nicht alle Bedingungen können erfüllt werden. Passe sie an und berechne erneut.",
+    "unusedConstraints": "In diesem optimalen Plan können unter den gewählten Bedingungen keine weiteren Urlaubstage genutzt werden. Prüfe ausgeschlossene Daten, Arbeitstage und Urlaubsgrenzen.",
+    "maximumDefaultsHelp": "Lass für maximale Freizeit die maximale Länge, Anzahl und den Abstand leer, um die Standardwerte für das ganze Jahr zu nutzen.",
+
     "accept": "Annehmen",
     "accepted": "Angenommen",
     "accountPlans": "Konto und gespeicherte Pläne",

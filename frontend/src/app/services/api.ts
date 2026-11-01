@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 
 export interface PlanPreview {
@@ -20,7 +21,12 @@ export interface PlanPreview {
 export class ApiService {
   private baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
+
+  private sessionOptions(): { headers: Record<string, string> } {
+    const token = this.auth.getSessionToken();
+    return { headers: token ? { Authorization: `Bearer ${token}` } : {} };
+  }
 
   getPlanPreview(params: Record<string, string | string[]>): Observable<PlanPreview> {
     return this.http.get<PlanPreview>(`${this.baseUrl}/v1/plan-preview`, { params });
@@ -36,7 +42,9 @@ export class ApiService {
     if (email) body.email = email;
     if (name) body.name = name;
     if (availableDays) body.availableDays = availableDays;
-    return this.http.post(`${this.baseUrl}/users/init`, body);
+    return this.http.post<any>(`${this.baseUrl}/users/init`, body, this.sessionOptions()).pipe(
+      tap(user => this.auth.rememberSessionToken(user.sessionToken))
+    );
   }
 
   /**
@@ -69,21 +77,21 @@ export class ApiService {
       preference,
       generateAI,
       lang
-    });
+    }, this.sessionOptions());
   }
 
   /**
    * Get detailed plan info (for summaries, analytics, etc.).
    */
   getPlanDetails(planId: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/plans/details/${planId}`);
+    return this.http.get(`${this.baseUrl}/plans/details/${planId}`, this.sessionOptions());
   }
 
   /**
    * Get all plans for a user
    */
   getAllPlans(userId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/plans/${userId}`);
+    return this.http.get<any[]>(`${this.baseUrl}/plans/${userId}`, this.sessionOptions());
   }
 
   /**
@@ -91,7 +99,7 @@ export class ApiService {
    */
   deletePlan(planId: string): Observable<{ deleted: boolean; planId: string }> {
     return this.http.delete<{ deleted: boolean; planId: string }>(
-      `${this.baseUrl}/plans/${planId}`
+      `${this.baseUrl}/plans/${planId}`, this.sessionOptions()
     );
   }
 
@@ -102,46 +110,46 @@ export class ApiService {
     const url = country 
       ? `${this.baseUrl}/plans/${userId}/${year}?country=${country}`
       : `${this.baseUrl}/plans/${userId}/${year}`;
-    return this.http.get(url);
+    return this.http.get(url, this.sessionOptions());
   }
 
   /**
    * Add manual vacation days to a plan
    */
   addManualDays(planId: string, dates: { date: string; note?: string }[]): Observable<any> {
-    return this.http.post(`${this.baseUrl}/plans/${planId}/manual-days`, { dates });
+    return this.http.post(`${this.baseUrl}/plans/${planId}/manual-days`, { dates }, this.sessionOptions());
   }
 
   /**
    * Remove a manual vacation day
    */
   removeManualDay(planId: string, dayId: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/plans/${planId}/manual-days/${dayId}`);
+    return this.http.delete(`${this.baseUrl}/plans/${planId}/manual-days/${dayId}`, this.sessionOptions());
   }
 
   /**
    * Remove a suggestion from the plan
    */
   removeSuggestion(planId: string, suggestionId: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/plans/${planId}/suggestions/${suggestionId}`);
+    return this.http.delete(`${this.baseUrl}/plans/${planId}/suggestions/${suggestionId}`, this.sessionOptions());
   }
 
   /**
    * Remove a specific day from a suggestion
    */
   removeDayFromSuggestion(planId: string, suggestionId: string, date: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/plans/${planId}/suggestions/${suggestionId}/days/${date}`);
+    return this.http.delete(`${this.baseUrl}/plans/${planId}/suggestions/${suggestionId}/days/${date}`, this.sessionOptions());
   }
 
   /**
    * Optimize remaining vacation days (keeps existing suggestions, fills gaps)
    */
   optimizeRemainingDays(planId: string, preference: string = 'balanced', lang: string = 'en'): Observable<any> {
-    return this.http.post(`${this.baseUrl}/plans/${planId}/optimize-remaining`, { preference, lang });
+    return this.http.post(`${this.baseUrl}/plans/${planId}/optimize-remaining`, { preference, lang }, this.sessionOptions());
   }
 
   regeneratePlanWithStrategy(planId: string, preference: string, lang: string = 'en'): Observable<any> {
-    return this.http.post(`${this.baseUrl}/plans/${planId}/regenerate`, { preference, lang });
+    return this.http.post(`${this.baseUrl}/plans/${planId}/regenerate`, { preference, lang }, this.sessionOptions());
   }
 
   /**
@@ -160,7 +168,7 @@ export class ApiService {
       country,
       availableDays,
       preference: 'balanced'
-    }).pipe(
+    }, this.sessionOptions()).pipe(
       map((plan: any) => ({ plan, manualDays }))
     );
   }
@@ -169,7 +177,7 @@ export class ApiService {
    * Get user by ID (fetches latest premium status from backend)
    */
   getUserById(userId: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/users/${userId}`);
+    return this.http.get(`${this.baseUrl}/users/${userId}`, this.sessionOptions());
   }
 
   /**

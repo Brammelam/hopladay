@@ -5,13 +5,13 @@ Baseline (2026-10-31): Angular 20, Express 5, MongoDB. Existing suites: 12 backe
 Use a new pure calendar model (ISO local-date strings and integer ordinals) and a deterministic interval optimizer. Keep legacy routes, planner and stored records unchanged. Version new contracts at /api/v2. New optimizer records carry version2 and never silently replace version1 plans. Calendar/export UI consumes explicit leaveDates rather than inferring PTO from weekdays. New advanced API access uses server-issued bearer sessions; existing public userId fields are not credentials.
 
 Objectives and bounds:
-- maximum_time_off: maximize distinct days in qualifying nonadjacent breaks, then preferred-month days, then minimize leave used, then break count; deterministic chronological tie-breaking.
+- maximum_time_off: maximize distinct days in qualifying nonadjacent breaks, then maximize leave used, then preferred-month days, then minimize break count; deterministic chronological tie-breaking.
 - longest_vacation: first maximize the longest break, then maximize distinct covered days, preferred-month days, and minimize leave use/break count. A feasibility scan identifies the longest feasible principal break accounting for locks and the required summer interval; the interval DP then requires a break of that length.
 - balanced: maximize a documented additive utility: 10*min(length,preferredLength) - 3*abs(length-preferredLength) + 2*preferredMonthDays + seasonalWeight*proximityToQuarterMidpoint. Proximity is max(0,14 minus the distance in days to the nearest quarter midpoint of the selected horizon); full-year horizons use annual quarters. Minimum separation and number/length bounds are hard; seasonal utility is a preference, never a promise of one break each season.
-- Candidate intervals cover all starts/ends in the configured horizon, maxLength <=90 days, maxBreaks <=12, allowance <=366, year2024..2100. A recommended interval must require new leave or contain existing approved leave. Pure weekends are not recommended as newly earned vacation. Adjacent intervals are incompatible: choose their combined interval if feasible. Exclusions remove whole intervals containing an excluded date.
-- Dynamic programming over end boundary, exact new-leave cost, break count and at most two requirement flags. Stable first-seen ties; no stochastic or LLM calls. No exponential search. Output reports exactness only for the declared finite model. Locked intervals are validated and charged once, then remain fixed.
+- Candidate intervals cover all starts/ends in the configured horizon, maxLength <=366 days, maxBreaks <=366, allowance <=366, year2024..2100. A recommended interval must require new leave, contain existing approved leave or be explicitly locked. Pure weekends are not recommended as newly earned vacation. Adjacent intervals are incompatible: choose their combined interval if feasible. Exclusions remove whole intervals containing an excluded date.
+- Dynamic programming over end boundary, exact new-leave cost, break count when binding, and at most two requirement flags. The count dimension is omitted when the configured cap cannot bind. Stable first-seen ties; no stochastic or LLM calls. No exponential search. Output reports exactness only for the declared finite model. Locked intervals are validated and charged once, then remain fixed.
 
-Delivery ledger (local reviewable commits; no remote publication authorized by this request):
+Original delivery ledger (2026-10-31 local reviewable commits):
 1. Calendar model, fixtures and reference tests.
 2. Exact interval engine, brute-force and generated property tests, reproducible benchmark.
 3. Versioned API, explanations, server entitlement and versioned persistence.
@@ -22,4 +22,8 @@ Delivery ledger (local reviewable commits; no remote publication authorized by t
 No new runtime dependencies, no framework/database replacement, no recalculation or migration of existing saved plans. Performance results are local observations, not claims about an unmeasured production deployment. Production funnel outcomes need real traffic after deployment.
 
 
-Verification: 68 backend tests and 36 frontend tests pass. An independent exhaustive oracle checks 177 reference configurations, including all three objectives, fixed locks, required summer periods, custom schedules, preferred months and tie-breaks. Production build/typecheck and HTTP serving checks pass. See release.md for operational limits and screenshots.
+Original-release verification (2026-10-31): 68 backend tests and 36 frontend tests pass. An independent exhaustive oracle checks 177 reference configurations, including all three objectives, fixed locks, required summer periods, custom schedules, preferred months and tie-breaks. Production build/typecheck and HTTP serving checks pass. See release.md for operational limits and screenshots.
+
+## Calculation capacity
+
+The solver first computes the optimum without a break-count dimension. If that optimum meets an explicit count cap, it also solves the capped problem. Otherwise it includes count, and omits budget if the allowance covers every possible candidate collection. A pre-allocation guard rejects more than 4,000,000 DP states with `OPTIMIZATION_CAPACITY_EXCEEDED` (HTTP 503), rather than altering constraints or reporting a partial optimum. The typed buffers use about 61 MiB at that bound per solve; this is not a total-process memory or latency guarantee. Unrestricted free defaults omit count and stay below the guard.

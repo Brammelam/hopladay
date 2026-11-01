@@ -51,10 +51,14 @@ export class AuthService {
   private rememberSession(result: AuthResult): void {
     if (!result.verified) return;
     this.clearSessionToken();
-    if (!this.platform.isBrowser() || typeof result.sessionToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(result.sessionToken)) return;
-    this.sessionToken = result.sessionToken;
+    this.rememberSessionToken(result.sessionToken);
+  }
+
+  rememberSessionToken(token: unknown): void {
+    if (!this.platform.isBrowser() || typeof token !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(token)) return;
+    this.sessionToken = token;
     try {
-      this.platform.safeSetItem(this.sessionKey, result.sessionToken);
+      this.platform.safeSetItem(this.sessionKey, token);
     } catch {
       // Keep login usable for this tab when browser storage is disabled.
     }
@@ -135,9 +139,11 @@ export class AuthService {
    * @param browserId - Optional browserId for migrating anonymous plans
    */
   verifyMagicLink(token: string, browserId?: string) {
+    const session = this.getSessionToken();
     return this.http.post<AuthResult>(
       `${this.baseUrl}/auth/magic-link/verify`,
-      { token, browserId }
+      { token, browserId },
+      session ? { headers: { Authorization: `Bearer ${session}` } } : {}
     ).pipe(tap(result => this.rememberSession(result)));
   }
 }

@@ -44,7 +44,7 @@ test('documented required result fields and Premium rejection agree with real HT
   assert.equal(result.linkScope, 'basic-inputs-only');
   assert.ok(!new URL(result.previewUrl).searchParams.has('approvedLeave'));
   for (const day of result.calendar) for (const key of schema.properties.calendar.items.required) assert.ok(Object.hasOwn(day, key), key);
-  for (const strategy of contract.components.schemas.OptimizationInput.properties.strategy.enum.filter(value => value !== 'balanced')) {
+  for (const strategy of contract.components.schemas.OptimizationInput.properties.strategy.enum.filter(value => value === 'longest_vacation')) {
     const denied = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...example, strategy }) });
     assert.equal(denied.status, 403);
     assert.equal((await denied.json()).error.code, 'PREMIUM_REQUIRED');

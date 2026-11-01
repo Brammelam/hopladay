@@ -5,6 +5,9 @@ import { optimizeAnnualLeave } from '../src/services/annualOptimizer.js';
 
 // Measures the complete pure engine, including calendar, candidates, DP and explanations.
 const cases = [
+  { name:'free-unrestricted-366',year:2028,availableDays:366 },
+  { name:'nonbinding-large-cap-366',year:2028,availableDays:366,maxBreaks:182 },
+  { name:'binding-singleton-cap-182',year:2028,availableDays:366,strategy:'longest_vacation',workingDays:[0,1,2,3,4,5,6],maxBreakLength:1,maxBreaks:182,requiredSummerBreak:{minDays:1,months:[6,7,8]} },
   { name:'balanced-25',year:2027,availableDays:25,strategy:'balanced' },
   { name:'maximum-25',year:2027,availableDays:25,strategy:'maximum_time_off' },
   { name:'longest-summer-25',year:2027,availableDays:25,strategy:'longest_vacation',requiredSummerBreak:{minDays:14,months:[6,7,8]} },

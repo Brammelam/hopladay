@@ -8,7 +8,7 @@
 <nav aria-label="Public resources"><a href="/en">Hopladay</a><a href="/en/preview">Free preview</a><a href="/openapi.json">OpenAPI JSON</a><a href="/llms.txt">llms.txt</a></nav>
 <h1>Public vacation preview API</h1>
 <p>For the new annual leave engine, read the <a href="/optimizer-api.html">version 2 reference</a> and <a href="/openapi-v2.json">OpenAPI v2 contract</a>. This page documents the unchanged version 1 preview.</p>
-<p>Hopladay helps people choose vacation dates around public holidays and weekends. This anonymous endpoint returns the same free balanced strategy as the planner, using nationwide holidays only. It does not create accounts or change saved plans. Advanced strategies and exports remain Premium features.</p>
+<p>Hopladay helps people choose vacation dates around public holidays and weekends. This legacy v1 endpoint retains the original balanced heuristic using nationwide holidays only. It does not reproduce the main planner’s v2 default. Use the <a href="/optimizer-api.html">current v2 API</a> for free maximum-time-off planning. It does not create accounts or change saved plans. Advanced strategies and exports remain Premium features.</p>
 <h2>Make a request</h2>
 <p>No API key, user ID, cookies, email or payment is required. Use HTTP GET:</p>
 <pre><code>https://hopladay-backend.onrender.com/api/v1/plan-preview?country=NO&amp;year=2027&amp;availableDays=20&amp;preference=balanced&amp;lang=en</code></pre>

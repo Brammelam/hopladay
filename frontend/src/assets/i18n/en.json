@@ -387,6 +387,12 @@
     "lastUpdated": "Last updated:"
   },
   "optimizer": {
+    "errorCapacity": "This combination of constraints is too complex to calculate. Shorten the planning period or relax the maximum number of breaks, then calculate again.",
+    "unusedBalanced": "The balanced strategy may keep leave unused to favor spaced breaks. Choose maximum time off to prioritize total days off.",
+    "unusedInfeasible": "The current constraints cannot all be met. Adjust them and calculate again.",
+    "unusedConstraints": "No more leave can be used within this optimal plan and its constraints. Review excluded dates, working days and break limits.",
+    "maximumDefaultsHelp": "For maximum time off, leave maximum length, number of breaks and separation blank to use the full-year defaults.",
+
     "accept": "Accept",
     "accepted": "Accepted",
     "accountPlans": "Account and saved plans",

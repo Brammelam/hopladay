@@ -2,7 +2,7 @@
 
 ## Behavior
 
-The homepage now previews a real balanced annual plan from country, year and allowance without creating an account. Optional settings follow the main action. Results distinguish new leave from calendar days in breaks, show a twelve-month keyboard-accessible calendar, and support accept, reject, lock, adjust, regenerate and reset. Basic edits remain free. Maximum-time and longest-break strategies, custom working calendars and other advanced controls require verified Premium access.
+The homepage now previews a real maximum-time-off annual plan from country, year and allowance without creating an account. Optional settings follow the main action. Results distinguish new leave from calendar days in breaks, show a twelve-month keyboard-accessible calendar, and support accept, reject, lock, adjust, regenerate and reset. Basic edits remain free. The longest-break strategy, custom working calendars and other advanced controls require verified Premium access.
 
 The original planner remains at `/:lang/plans`; payment callbacks, authentication routes and `/api/v1/plan-preview` remain available. Existing saved `HolidayPlan` documents are neither migrated nor recalculated. New saves use versioned `OptimizerPlan` snapshots. Expired or pre-session sign-ins must verify again for protected version 2 actions. Existing email owners must verify ownership before adding a passkey; the form switches to the existing email verification path rather than automatically sending mail.
 
@@ -14,6 +14,8 @@ Three useful country/year pages are generated from official snapshots and the sa
 
 Analytics are optional and off by default. The client sends only an allowed action name after opt-in; the server stores UTC day/action counters without vacation dates, allowance, account or plan identifiers. These are client-reported funnel counts, not an authoritative payment ledger. Checkout remains the entitlement authority. No new external analytics service or paid dependency was added.
 
+The default objective first maximizes distinct calendar days in breaks containing new leave, approved leave or an explicit lock, then used allowance, then preferred-month days, then prefers fewer breaks with stable date ties. Unrelated weekends and holidays do not inflate the result. Maximum-time-off and longest-vacation defaults use the full selected year: minimum break length 1, maximum length 366, maximum count 366, and one unselected day between breaks. Explicit balanced retains minimum length 3, maximum length 21, maximum count 4 and separation 21. Custom advanced fields remain Premium even when set to their default values. Existing snapshots retain their stored results.
+
 ## Review units
 
 1. `ccf378f`: canonical date/work-calendar model and fixtures.
@@ -22,7 +24,7 @@ Analytics are optional and off by default. The client sends only an allowed acti
 4. `043086d`: interactive result experience, progressive anonymous homepage, all eight existing locales, and regression tests.
 5. Engine-generated landing pages, static serving, screenshots and release checks.
 
-These are local reviewable increments. No pull request, push, deployment, payment configuration or production data change is part of this implementation.
+These review units describe the original release. The 2026-11-01 correction makes maximum-time-off planning the free default; balanced remains explicitly available for free. The correction does not change payment configuration or production data.
 
 ## Checks
 
@@ -43,7 +45,7 @@ node backend/scripts/benchmark-optimizer.js
 node backend/scripts/benchmark-optimizer-api.js
 ```
 
-The pure benchmark times calendar generation, candidate enumeration, optimization and explanations, verifies actual results, warms each case and reports five samples. The HTTP benchmark includes local network roundtrip, fixture holiday cache, engine execution, serialization and JSON parsing; authentication is a fixture and real provider/Mongo/production latency is excluded. A separate CPU profile identifies the interval DP as the dominant CPU cost. Worst-case memory for the bounded DP arrays is about 112 MB; seven-day workweeks, 366-day budgets, 12 breaks and both requirement flags are intentionally included in stress measurements. Typical local runs with 25 days are substantially smaller, but these measurements are not production service-level budgets. Calibrate latency, memory and concurrency limits on the deployment host before raising traffic limits.
+The pure benchmark times calendar generation, candidate enumeration, optimization and explanations, verifies actual results, warms each case and reports five samples. The HTTP benchmark includes local network roundtrip, fixture holiday cache, engine execution, serialization and JSON parsing; authentication is a fixture and real provider/Mongo/production latency is excluded. The original release profile identified interval DP as the dominant CPU cost and measured about 112 MB for its former 12-break bounded arrays. Those historical numbers are not a memory ceiling for the current 366-day/366-break contract. The current implementation omits the count dimension when it cannot constrain the result; rerun the scripts to measure the revised engine. These local measurements are not production service-level budgets. Calibrate latency, memory and concurrency limits on the deployment host before raising traffic limits.
 
 ## Remaining operational verification
 

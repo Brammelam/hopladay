@@ -45,3 +45,16 @@ export function canCompleteRegistration(user, actor, state) {
   if (state.ownerId !== null) return state.ownerId === String(user._id) && ownsAccount(user, actor);
   return ownsAccount(user, actor) || (user.isPremium !== true && !user.authenticators?.length);
 }
+
+// Explicit allowlist: never expose browser identifiers, challenges or credentials.
+export function publicUser(user) {
+  return {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    availableDays: user.availableDays,
+    isPremium: user.isPremium === true,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+}

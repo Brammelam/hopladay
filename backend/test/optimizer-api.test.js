@@ -16,7 +16,7 @@ test('anonymous balanced generation is versioned, structured and nonpersistent',
  const request=await serve(t);const {res,body}=await request('/optimize',input);assert.equal(res.status,200);assert.equal(body.version,2);assert.equal(body.input.country,'NO');assert.ok(body.calendar.length===365);assert.ok(body.constraintsSatisfied);assert.ok(body.usedDays<=20);assert.equal(body.source.region,null);assert.equal((await request('/plans',undefined,'GET')).res.status,401);
 });
 test('Premium strategies/settings/export reject anonymous and nonpremium callers',async t=>{
- const request=await serve(t);for(const extra of [{strategy:'maximum_time_off'},{workingDays:[1,2,3,4]},{requiredSummerBreak:{minDays:14}},{preferredMonths:[7]}])assert.equal((await request('/optimize',{...input,...extra})).res.status,403);
+ const request=await serve(t);for(const extra of [{strategy:'longest_vacation'},{workingDays:[1,2,3,4]},{requiredSummerBreak:{minDays:14}},{preferredMonths:[7]}])assert.equal((await request('/optimize',{...input,...extra})).res.status,403);
  assert.equal((await request('/optimize',{...input,isPremium:true})).res.status,400);
  const free=await serve(t,{authenticated:true});assert.equal((await free('/optimize',{...input,strategy:'longest_vacation'})).res.status,403);assert.equal((await free('/plans/'+'a'.repeat(24)+'/export',{mode:'leave'})).res.status,403);
 });
@@ -62,4 +62,19 @@ test('iCalendar folds content lines to the interoperable 75-octet limit',()=>{
  const ics=optimizerICS({suggestions:[{startDate:'2027-05-06',endDate:'2027-05-09',leaveDates:['2027-05-07']}]},'leave','stable');
  assert.ok(ics.split('\r\n').every(line=>Buffer.byteLength(line,'utf8')<=75));
  const unfolded=ics.replace(/\r\n /g,'');assert.match(unfolded,/UID:[a-f0-9]{64}@hopladay.com/);
+});
+
+test('anonymous default and maximum strategy spend the usable allowance without hidden break caps',async t=>{
+ const request=await serve(t);
+ for(const strategy of [undefined,'maximum_time_off']) {
+ const {res,body}=await request('/optimize',{country:'NO',year:2027,availableDays:20,strategy});
+ assert.equal(res.status,200);assert.equal(body.strategy,'maximum_time_off');assert.equal(body.usedDays,20);assert.ok(body.breakCount>12);
+ }
+});
+
+test('complex supported constraints return a capacity error rather than invalid input or a false optimum',async t=>{
+ const request=await serve(t,{authenticated:true,premium:true,loadHolidays:async()=>({...catalog,holidays:[]})});
+ const excludedDates=Array.from({length:168},(_,i)=>new Date(Date.UTC(2028,0,31+i*2)).toISOString().slice(0,10));
+ const {res,body}=await request('/optimize',{country:'NO',year:2028,availableDays:190,maxBreaks:150,strategy:'longest_vacation',workingDays:[0,1,2,3,4,5,6],requiredSummerBreak:{minDays:1,months:[6,7,8]},excludedDates});
+ assert.equal(res.status,503);assert.equal(body.error.code,'OPTIMIZATION_CAPACITY_EXCEEDED');assert.match(body.error.details,/horizon/);assert.equal(body.suggestions,undefined);
 });

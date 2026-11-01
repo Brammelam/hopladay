@@ -470,10 +470,10 @@
   </url>
   <url>
     <loc>https://www.hopladay.com/api-docs.html</loc>
-    <lastmod>2026-10-30</lastmod>
+    <lastmod>2026-11-01</lastmod>
   </url>
-  <url><loc>https://www.hopladay.com/en/norway/2027</loc><lastmod>2026-10-31</lastmod></url>
-  <url><loc>https://www.hopladay.com/en/sweden/2027</loc><lastmod>2026-10-31</lastmod></url>
-  <url><loc>https://www.hopladay.com/nl/nederland/2027</loc><lastmod>2026-10-31</lastmod></url>
-  <url><loc>https://www.hopladay.com/optimizer-api.html</loc><lastmod>2026-10-31</lastmod></url>
+  <url><loc>https://www.hopladay.com/en/norway/2027/index.html</loc><lastmod>2026-11-01</lastmod></url>
+  <url><loc>https://www.hopladay.com/en/sweden/2027/index.html</loc><lastmod>2026-11-01</lastmod></url>
+  <url><loc>https://www.hopladay.com/nl/nederland/2027/index.html</loc><lastmod>2026-11-01</lastmod></url>
+  <url><loc>https://www.hopladay.com/optimizer-api.html</loc><lastmod>2026-11-01</lastmod></url>
 </urlset>
